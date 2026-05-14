@@ -1,0 +1,139 @@
+
+<style>
+.stage{display:inline-block;width:52px;height:28px;line-height:28px;text-align:center;font-size:11px;font-weight:500;border-radius:5px;margin:1px}
+.if{background:var(--color-background-info);color:var(--color-text-info)}
+.id{background:#EEEDFE;color:#3C3489}
+.ex{background:#E1F5EE;color:#085041}
+.mem{background:#FAEEDA;color:#633806}
+.wb{background:#FAECE7;color:#712B13}
+.stall{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px dashed var(--color-border-secondary)}
+.flush{background:#FCEBEB;color:#A32D2D;border:0.5px dashed #F09595}
+.empty{display:inline-block;width:52px;height:28px;margin:1px}
+.instr-name{font-size:11px;color:var(--color-text-secondary);width:200px;display:inline-block;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cycle-hdr{font-size:10px;color:var(--color-text-tertiary);text-align:center;width:54px;display:inline-block}
+.hazard-badge{font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px}
+.fwd{background:#E1F5EE;color:#085041}
+.stl{background:#FAEEDA;color:#633806}
+.flsh{background:#FCEBEB;color:#A32D2D}
+table{border-collapse:collapse;width:100%}
+td,th{padding:3px 4px}
+</style>
+
+<h2 class="sr-only">RISC-V pipeline execution trace — 23 instructions over 30 cycles showing forwarding, stalls, and branch flushes</h2>
+
+<div style="margin:0 0 12px">
+  <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Pipeline execution trace</span>
+  <span style="font-size:12px;color:var(--color-text-secondary);margin-left:10px">first 30 cycles of the test program</span>
+</div>
+
+<!-- Legend -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:11px">
+  <span class="stage if" style="width:auto;padding:0 8px">IF</span>
+  <span class="stage id" style="width:auto;padding:0 8px">ID</span>
+  <span class="stage ex" style="width:auto;padding:0 8px">EX</span>
+  <span class="stage mem" style="width:auto;padding:0 8px">MEM</span>
+  <span class="stage wb" style="width:auto;padding:0 8px">WB</span>
+  <span class="stage stall" style="width:auto;padding:0 8px">stall</span>
+  <span class="stage flush" style="width:auto;padding:0 8px">flush</span>
+  <span class="hazard-badge fwd">▶ forward</span>
+  <span class="hazard-badge stl">⏸ load-use stall</span>
+  <span class="hazard-badge flsh">✕ branch flush</span>
+</div>
+
+<!-- Cycle header -->
+<div style="display:flex;align-items:center;margin-bottom:2px">
+  <span style="width:204px;font-size:10px;color:var(--color-text-tertiary)">Instruction</span>
+  <span class="cycle-hdr">1</span><span class="cycle-hdr">2</span><span class="cycle-hdr">3</span>
+  <span class="cycle-hdr">4</span><span class="cycle-hdr">5</span><span class="cycle-hdr">6</span>
+  <span class="cycle-hdr">7</span><span class="cycle-hdr">8</span><span class="cycle-hdr">9</span>
+  <span class="cycle-hdr">10</span><span class="cycle-hdr">11</span><span class="cycle-hdr">12</span>
+  <span class="cycle-hdr">13</span><span class="cycle-hdr">14</span><span class="cycle-hdr">15</span>
+  <span class="cycle-hdr">16</span><span class="cycle-hdr">17</span><span class="cycle-hdr">18</span>
+  <span class="cycle-hdr">19</span><span class="cycle-hdr">20</span><span class="cycle-hdr">21</span>
+  <span class="cycle-hdr">22</span><span class="cycle-hdr">23</span><span class="cycle-hdr">24</span>
+  <span class="cycle-hdr">25</span><span class="cycle-hdr">26</span><span class="cycle-hdr">27</span>
+  <span class="cycle-hdr">28</span><span class="cycle-hdr">29</span><span class="cycle-hdr">30</span>
+</div>
+
+<div id="trace"></div>
+
+<div style="margin-top:16px;border-top:0.5px solid var(--color-border-tertiary);padding-top:12px">
+  <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px">Hazard events in this run</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px">
+      <div style="font-size:20px;font-weight:500;color:var(--color-text-primary)">6</div>
+      <div style="font-size:11px;color:var(--color-text-secondary)">Data forwards<br>(EX-EX &amp; MEM-EX)</div>
+    </div>
+    <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px">
+      <div style="font-size:20px;font-weight:500;color:var(--color-text-primary)">1</div>
+      <div style="font-size:11px;color:var(--color-text-secondary)">Load-use stall<br>(LW → ADD)</div>
+    </div>
+    <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px">
+      <div style="font-size:20px;font-weight:500;color:var(--color-text-primary)">2</div>
+      <div style="font-size:11px;color:var(--color-text-secondary)">Branch flushes<br>(BEQ taken)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Pipeline trace data: [instr_label, [cycle_start, stages...]]
+// stages: 'if','id','ex','mem','wb','stall','flush','.'(empty)
+const instrs = [
+  {n:"addi x1,x0,5",     s:1,  p:['if','id','ex','mem','wb']},
+  {n:"addi x2,x0,3",     s:2,  p:['if','id','ex','mem','wb']},
+  {n:"add  x3,x1,x2 ▶",  s:3,  p:['if','id','ex','mem','wb'], note:"EX-EX fwd x1,x2"},
+  {n:"sub  x4,x3,x2 ▶",  s:4,  p:['if','id','ex','mem','wb'], note:"EX-EX fwd x3"},
+  {n:"and  x5,x1,x2",    s:5,  p:['if','id','ex','mem','wb']},
+  {n:"or   x6,x1,x2",    s:6,  p:['if','id','ex','mem','wb']},
+  {n:"xor  x7,x1,x2",    s:7,  p:['if','id','ex','mem','wb']},
+  {n:"sll  x8,x1,x2",    s:8,  p:['if','id','ex','mem','wb']},
+  {n:"srl  x9,x8,x2 ▶",  s:9,  p:['if','id','ex','mem','wb'], note:"MEM-EX fwd x8"},
+  {n:"slt  x10,x1,x2",   s:10, p:['if','id','ex','mem','wb']},
+  {n:"addi x11,x0,64",   s:11, p:['if','id','ex','mem','wb']},
+  {n:"sw   x3,0(x11) ▶", s:12, p:['if','id','ex','mem','wb'], note:"EX-EX fwd x11"},
+  {n:"lw   x12,0(x11)",  s:13, p:['if','id','ex','mem','wb']},
+  // load-use stall: lw result needed by add next cycle
+  {n:"⏸ stall bubble",   s:14, p:['stall','stall','stall'], stall:true},
+  {n:"add  x13,x1,x12 ▶",s:15, p:['if','id','ex','mem','wb'], note:"MEM-EX fwd x12"},
+  {n:"lui  x14,1",        s:16, p:['if','id','ex','mem','wb']},
+  {n:"addi x15,x0,8",    s:17, p:['if','id','ex','mem','wb']},
+  {n:"beq  x3,x15,+8",   s:18, p:['if','id','ex','mem','wb']},
+  {n:"✕ flush (addi x16)",s:19, p:['flush','flush'], flush:true},
+  {n:"✕ flush",           s:20, p:['flush'], flush:true},
+  {n:"addi x17,x0,42",   s:21, p:['if','id','ex','mem','wb']},
+  {n:"jal  x18,+8",      s:22, p:['if','id','ex','mem','wb']},
+  {n:"✕ flush (addi x19)",s:23, p:['flush','flush'], flush:true},
+  {n:"addi x20,x0,55",   s:24, p:['if','id','ex','mem','wb']},
+];
+
+const TOTAL = 30;
+const classMap = {if:'if',id:'id',ex:'ex',mem:'mem',wb:'wb',stall:'stall',flush:'flush'};
+
+const container = document.getElementById('trace');
+instrs.forEach(r => {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;margin-bottom:1px';
+
+  // instruction label
+  const lbl = document.createElement('span');
+  lbl.className = 'instr-name';
+  lbl.textContent = r.n;
+  if (r.note) lbl.title = r.note;
+  row.appendChild(lbl);
+
+  // pipeline cells
+  for (let c = 1; c <= TOTAL; c++) {
+    const idx = c - r.s;
+    const cell = document.createElement('span');
+    if (idx >= 0 && idx < r.p.length) {
+      const st = r.p[idx];
+      cell.className = 'stage ' + (classMap[st] || 'stall');
+      cell.textContent = st === 'stall' ? '—' : st === 'flush' ? '✕' : st.toUpperCase();
+    } else {
+      cell.className = 'empty';
+    }
+    row.appendChild(cell);
+  }
+  container.appendChild(row);
+});
+</script>
