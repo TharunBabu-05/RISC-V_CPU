@@ -2,8 +2,8 @@
 """Run the Phase 5 RV32 compliance harness.
 
 The runner can execute either the repository's directed regressions or an
-external compliance suite checkout once a suite root or explicit command
-template is provided.
+external compliance suite checkout. It will auto-discover a sibling checkout
+when one exists, or fall back to the local regression targets.
 """
 
 from __future__ import annotations
@@ -46,6 +46,23 @@ def iter_selected_profiles(requested: str) -> Iterable[str]:
     return (requested,)
 
 
+def discover_suite_root(repo_root: Path) -> Path | None:
+    explicit_candidates = [
+        repo_root.parent / "riscv-tests",
+        repo_root.parent / "riscv-arch-test",
+        repo_root.parent / "compliance",
+        repo_root.parent / "tests",
+    ]
+    for candidate in explicit_candidates:
+        if candidate.exists():
+            return candidate.resolve()
+    return None
+
+
+def default_signature_dir(profile_name: str) -> str:
+    return str(Path("phase5") / "compliance" / "signature" / profile_name)
+
+
 def expand_command_template(template: str, context: Dict[str, str]) -> list[str]:
     return shlex.split(template.format(**context))
 
@@ -68,6 +85,7 @@ def resolve_command(
     xlen = profile.get("XLEN", "")
     extensions = profile.get("EXTENSIONS", "")
     suite = profile.get("TEST_SUITE", "riscv-tests")
+    signature_dir = profile.get("SIGNATURE_DIR", default_signature_dir(profile_name))
     local_target = PROFILE_TO_LOCAL_TARGET.get(profile_name, "sim")
 
     context = {
@@ -78,10 +96,13 @@ def resolve_command(
         "extensions": extensions,
         "test_suite": suite,
         "suite_root": str(suite_root) if suite_root is not None else "",
+        "signature_dir": signature_dir,
         "local_target": local_target,
     }
 
-    template = command_template or profile.get("COMMAND_TEMPLATE") or os.environ.get("PHASE5_COMPLIANCE_COMMAND_TEMPLATE")
+    template = command_template or os.environ.get("PHASE5_COMPLIANCE_COMMAND_TEMPLATE")
+    if not template and suite_root is not None:
+        template = profile.get("COMMAND_TEMPLATE")
     if template:
         return expand_command_template(template, context), repo_root
 
@@ -89,9 +110,17 @@ def resolve_command(
         makefile = suite_root / "Makefile"
         run_sh = suite_root / "run.sh"
         if makefile.is_file():
-            return ["make", "-C", str(suite_root), f"ISA={isa}", f"XLEN={xlen}", f"EXTENSIONS={extensions}"], suite_root
+            return [
+                "make",
+                "-C",
+                str(suite_root),
+                f"ISA={isa}",
+                f"XLEN={xlen}",
+                f"EXTENSIONS={extensions}",
+                f"SIGNATURE_DIR={signature_dir}",
+            ], suite_root
         if run_sh.is_file():
-            return [str(run_sh), profile_name], suite_root
+            return [str(run_sh), profile_name, signature_dir], suite_root
 
     return ["make", local_target], repo_root
 
@@ -125,10 +154,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    suite_root = Path(args.suite_root).resolve() if args.suite_root else None
+    suite_root = Path(args.suite_root).resolve() if args.suite_root else discover_suite_root(repo_root)
     if suite_root is not None and not suite_root.exists():
         print(f"[phase5] suite root does not exist: {suite_root}", file=sys.stderr)
         return 2
+    if suite_root is not None:
+        print(f"[phase5] discovered suite root: {suite_root}")
+    else:
+        print("[phase5] no external suite root discovered; using local regression targets")
 
     for profile_name in iter_selected_profiles(args.profile):
         profile_path = profile_dir / f"{profile_name}.profile"
@@ -140,12 +173,14 @@ def main() -> int:
         isa = profile.get("ISA", profile_name)
         xlen = profile.get("XLEN", "")
         extensions = profile.get("EXTENSIONS", "")
+        signature_dir = profile.get("SIGNATURE_DIR", default_signature_dir(profile_name))
         if profile_name not in PROFILE_TO_LOCAL_TARGET:
             print(f"[phase5] unsupported profile: {profile_name}", file=sys.stderr)
             return 2
 
         print(f"[phase5] profile: {profile_name}")
         print(f"[phase5]  ISA={isa} XLEN={xlen} EXTENSIONS={extensions}")
+        print(f"[phase5]  SIGNATURE_DIR={signature_dir}")
         print(f"[phase5]  description={PROFILE_TO_DESCRIPTION.get(profile_name, profile_name)}")
         command, cwd = resolve_command(
             profile_name=profile_name,
