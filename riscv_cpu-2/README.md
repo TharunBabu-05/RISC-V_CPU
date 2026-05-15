@@ -4,7 +4,7 @@ SystemVerilog implementation of a 5-stage RISC-V CPU.
 
 ## Current Status
 
-The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 has started with Sv32 MMU wiring and page-fault tests.
+The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 started with Sv32 MMU wiring and page-fault tests, and Phase 5 handoff artifacts are now documented in `docs/`.
 
 ## Architecture
 
@@ -97,3 +97,14 @@ make lint             # optional Verilator lint
 ```
 
 Icarus Verilog may print "constant selects in always_* processes" warnings for some SystemVerilog constructs. The current directed simulations complete successfully despite those warnings.
+
+## Phase 5 Handoff
+
+- `docs/production_plan.md`
+- `docs/phase5_synthesis.md`
+- `docs/phase5_formal_verification.md`
+- `docs/phase5_compliance.md`
+- `docs/architecture_overview.md`
+- `docs/isa_coverage.md`
+- `docs/build_simulation_guide.md`
+

@@ -58,7 +58,7 @@ SRCS_VEC := \
 	$(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) \
 	$(TB_DIR)/tb_vector.sv
 
-.PHONY: all sim sim_muldiv sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean
+.PHONY: all sim sim_muldiv sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean phase5_check formal_bmc synth_prep
 
 all: sim
 
@@ -101,3 +101,17 @@ wave: sim
 
 clean:
 	rm -f $(VVP) $(VCD)
+
+synth_prep:
+	@test -f constraints/core.sdc
+	@echo "Synthesis constraints ready: constraints/core.sdc"
+
+formal_bmc:
+	sby -f formal/phase5_checks.sby
+
+phase5_check:
+	@test -f constraints/core.sdc
+	@test -f formal/phase5_checks.sby
+	@test -f formal/phase5_properties.sv
+	@test -f compliance/isa_profile.yaml
+	@echo "Phase 5 project artifacts are present."
