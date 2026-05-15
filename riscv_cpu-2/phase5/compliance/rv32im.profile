@@ -1,0 +1,4 @@
+ISA=rv32im
+XLEN=32
+EXTENSIONS=IM
+TEST_SUITE=riscv-tests

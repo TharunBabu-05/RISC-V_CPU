@@ -37,3 +37,7 @@ sby -f formal/csr_checks.sby
 - All selected properties pass at the chosen bound.
 - Counterexamples (if any) are triaged and closed with RTL or property fixes.
 - Property suite is versioned and runnable in CI/dev environments.
+
+## Checklist Link
+
+See [Phase 5 checklist](phase5_checklist.md) for the consolidated repo handoff status.

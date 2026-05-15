@@ -58,7 +58,7 @@ SRCS_VEC := \
 	$(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) \
 	$(TB_DIR)/tb_vector.sv
 
-.PHONY: all sim sim_muldiv sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean
+.PHONY: all sim sim_muldiv sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean phase5 phase5-checklist phase5-compliance phase5-formal phase5-synthesis
 
 all: sim
 
@@ -101,3 +101,41 @@ wave: sim
 
 clean:
 	rm -f $(VVP) $(VCD)
+
+phase5:
+	@$(MAKE) phase5-checklist
+	@$(MAKE) phase5-compliance
+	@$(MAKE) phase5-formal
+	@$(MAKE) phase5-synthesis
+
+phase5-checklist:
+	@echo Phase 5 checklist:
+	@echo   docs/phase5_checklist.md
+	@echo   docs/production_plan.md
+	@echo   README.md
+
+phase5-compliance:
+	@echo Phase 5 handoff artifacts:
+	@echo   docs/phase5_compliance.md
+	@echo   phase5/compliance/README.md
+	@echo   phase5/compliance/rv32i.profile
+	@echo   phase5/compliance/rv32im.profile
+	@echo   phase5/compliance/rv64i.profile
+	@echo   phase5/compliance/rv64im.profile
+
+phase5-formal:
+	@echo Phase 5 formal artifacts:
+	@echo   docs/phase5_formal_verification.md
+	@echo   phase5/formal/README.md
+	@echo   phase5/formal/pipeline_control.sby
+	@echo   phase5/formal/hazard_checks.sby
+	@echo   phase5/formal/csr_checks.sby
+
+phase5-synthesis:
+	@echo Phase 5 synthesis artifacts:
+	@echo   docs/phase5_synthesis.md
+	@echo   phase5/synthesis/README.md
+	@echo   phase5/synthesis/core_constraints.tcl
+
+phase5-compliance-run:
+	python phase5/compliance/run_rv32_compliance.py

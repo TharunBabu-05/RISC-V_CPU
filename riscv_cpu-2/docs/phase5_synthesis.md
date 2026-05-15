@@ -44,3 +44,7 @@ For implementation:
 - Clean synthesis (no unresolved black-boxes).
 - STA passes setup/hold at target frequency.
 - Directed regressions still pass on the synthesized netlist flow.
+
+## Checklist Link
+
+See [Phase 5 checklist](phase5_checklist.md) for the consolidated repo handoff status.

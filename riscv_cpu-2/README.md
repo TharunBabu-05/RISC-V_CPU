@@ -4,7 +4,7 @@ SystemVerilog implementation of a 5-stage RISC-V CPU.
 
 ## Current Status
 
-The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 is complete with Sv32 MMU wiring, ASID-aware TLBs, M/S/U privilege-state tracking, S-mode and U-mode CSR support, delegation CSRs, and page-fault tests.
+The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 is complete with Sv32 MMU wiring, ASID-aware TLBs, M/S/U privilege-state tracking, S-mode and U-mode CSR support, delegation CSRs, and page-fault tests. Phase 5 handoff artifacts are now checked in for compliance, formal verification, synthesis, and a single checklist entry point.
 
 ## Architecture
 

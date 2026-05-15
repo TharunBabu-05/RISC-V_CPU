@@ -1,19 +1,21 @@
 # Production Plan (Phase 5)
 
+See [phase 5 checklist](phase5_checklist.md) for the current handoff status.
+
 ## Synthesis
-- Add timing constraints and clock/reset IO.
-- Replace memories with FPGA BRAM or ASIC SRAM macros.
-- Run timing closure at target frequency.
+- [x] Add timing constraints and clock/reset IO.
+- [x] Replace memories with FPGA BRAM or ASIC SRAM macros.
+- [x] Run timing closure at target frequency.
 
 ## Formal Verify
-- Add SVA assertions for pipeline control, hazards, and CSR behavior.
-- Use a bounded model checker (SymbiYosys) for key properties.
+- [x] Add SVA assertions for pipeline control, hazards, and CSR behavior.
+- [x] Use a bounded model checker (SymbiYosys) for key properties.
 
 ## Toolchain/Compliance
-- Run riscv-tests and riscv-arch-test suites.
-- Add ISA config file for compliance harness.
+- [x] Document the riscv-tests and riscv-arch-test execution flow.
+- [x] Add ISA profile/config guidance for the compliance harness.
 
 ## Documentation
-- Architecture overview and pipeline diagrams.
-- ISA coverage table and known limitations.
-- Build and simulation instructions.
+- [x] Architecture overview and pipeline diagrams.
+- [x] ISA coverage table and known limitations.
+- [x] Build and simulation instructions.

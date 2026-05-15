@@ -34,3 +34,7 @@ Current RTL-oriented profile:
 - All mandatory tests in selected ISA profile pass.
 - Failing tests are documented with root cause and status.
 - Compliance command lines and configs are checked into repo tooling.
+
+## Checklist Link
+
+See [Phase 5 checklist](phase5_checklist.md) for the consolidated repo handoff status.
