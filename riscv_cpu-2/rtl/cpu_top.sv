@@ -32,6 +32,7 @@ module cpu_top #(
     localparam OP_LUI   = 7'b0110111;
     localparam OP_AUIPC = 7'b0010111;
     localparam OP_JALR  = 7'b1100111;
+    localparam OP_SYSTEM = 7'b1110011;
     localparam OP_LOAD_FP  = 7'b0000111;
     localparam OP_STORE_FP = 7'b0100111;
     localparam OP_FP       = 7'b1010011;
@@ -195,7 +196,7 @@ module cpu_top #(
     logic        id_fp_en, id_fp_load, id_fp_store, id_fp_reg_write;
     logic        id_vec_en, id_vec_reg_write;
     logic [2:0]  id_fp_op, id_vec_op;
-    logic        id_csr_en, id_ecall, id_ebreak, id_mret;
+    logic        id_csr_en, id_ecall, id_ebreak, id_mret, id_sret, id_sfence;
     logic [2:0]  id_csr_op;
     logic [1:0]  id_alu_op;
     logic [3:0]  id_alu_ctrl;
@@ -244,6 +245,10 @@ module cpu_top #(
         id_vec_en        = (if_id_instr[6:0] == OP_VECTOR);
         id_vec_reg_write = id_vec_en;
         id_vec_op        = if_id_instr[14:12];
+
+        id_sfence = (if_id_instr[6:0] == OP_SYSTEM) &&
+                    (if_id_instr[14:12] == 3'b000) &&
+                    (if_id_instr[31:25] == 7'b0001001);
     end
 
     // Hazard unit
@@ -283,6 +288,8 @@ module cpu_top #(
     logic        id_ex_fp_en, id_ex_fp_load, id_ex_fp_store, id_ex_fp_reg_write;
     logic        id_ex_vec_en, id_ex_vec_reg_write;
     logic        id_ex_csr_en, id_ex_ecall_r, id_ex_ebreak_r, id_ex_mret_r;
+    logic        id_ex_sret_r;
+    logic        id_ex_sfence;
     logic [2:0]  id_ex_csr_op;
     logic [11:0] id_ex_csr_addr;
     logic [XLEN-1:0] id_ex_csr_zimm;
@@ -294,6 +301,7 @@ module cpu_top #(
     logic        id_ex_write;
 
     assign id_mret = (if_id_instr == 32'h3020_0073);
+    assign id_sret = (if_id_instr == 32'h1020_0073);
 
     assign id_ex_write = ~muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
 
@@ -323,6 +331,8 @@ module cpu_top #(
             id_ex_ecall_r    <= 1'b0;
             id_ex_ebreak_r   <= 1'b0;
             id_ex_mret_r     <= 1'b0;
+            id_ex_sret_r     <= 1'b0;
+            id_ex_sfence     <= 1'b0;
             id_ex_csr_op     <= 3'b0;
             id_ex_csr_addr   <= 12'b0;
             id_ex_csr_zimm   <= {XLEN{1'b0}};
@@ -364,6 +374,8 @@ module cpu_top #(
             id_ex_ecall_r    <= id_ecall;
             id_ex_ebreak_r   <= id_ebreak;
             id_ex_mret_r     <= id_mret;
+            id_ex_sret_r     <= id_sret;
+            id_ex_sfence     <= id_sfence;
             id_ex_csr_op     <= id_csr_op;
             id_ex_csr_addr   <= id_csr_addr;
             id_ex_csr_zimm   <= id_csr_zimm;
@@ -505,7 +517,8 @@ module cpu_top #(
 
     // CSR handling (Zicsr)
     logic [XLEN-1:0] ex_csr_rdata, ex_csr_wdata, ex_csr_src;
-    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mtvec, ex_csr_mepc, ex_csr_satp;
+    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mtvec, ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
+    logic [1:0]      current_priv;
     logic [XLEN-1:0] trap_pc, trap_mcause, trap_mepc, mip;
     logic        ex_csr_write;
     logic        trap_taken;
@@ -519,6 +532,7 @@ module cpu_top #(
         .csr_write   (ex_csr_write),
         .trap_write  (trap_taken),
         .mret_exec   (id_ex_mret_r),
+        .sret_exec   (id_ex_sret_r),
         .retire      (wb_retire),
         .csr_addr    (id_ex_csr_addr),
         .csr_wdata   (ex_csr_wdata),
@@ -530,8 +544,12 @@ module cpu_top #(
         .mie_out     (ex_csr_mie),
         .mtvec_out   (ex_csr_mtvec),
         .mepc_out    (ex_csr_mepc),
+        .sepc_out    (ex_csr_sepc),
         .satp_out    (ex_csr_satp),
-        .mcause_out  ()   // Not needed yet
+        .current_priv_out(current_priv),
+        .mcause_out  (),
+        .mideleg_out (),
+        .medeleg_out ()
     );
 
     always_comb begin
@@ -626,14 +644,24 @@ module cpu_top #(
 
     logic page_fault_exception;
     logic [XLEN-1:0] page_fault_cause;
+    logic [XLEN-1:0] exc_pc;
     assign page_fault_exception = inst_fault || mem_page_fault;
     assign page_fault_cause = inst_fault ? EXC_INST_PAGE :
                               mem_page_fault_store ? EXC_STORE_PAGE : EXC_LOAD_PAGE;
 
+    always_comb begin
+        if (inst_fault)
+            exc_pc = pc;
+        else if (mem_page_fault)
+            exc_pc = ex_mem_pc;
+        else
+            exc_pc = id_ex_pc;
+    end
+
     interrupt_unit #(.XLEN(XLEN)) u_int (
         .clk             (clk),
         .rst_n           (rst_n),
-        .pc              (inst_fault ? pc : id_ex_pc),
+        .pc              (exc_pc),
         .next_pc         (ex_ret_pc),
         .instr           (32'b0),  // Simplified: no illegal instr detect (future enhancement)
         .instr_valid     (1'b1),   // Assume valid unless async interrupt
@@ -657,7 +685,7 @@ module cpu_top #(
     logic flush_ex, flush_ex_mem;
     logic flush_ex_mem_r;  // Delayed by 1 cycle to flush instruction AFTER branch
     
-    assign flush_ex = (branch_taken || id_ex_jump || branch_mispredict || trap_taken || id_ex_mret_r);
+    assign flush_ex = (branch_taken || id_ex_jump || branch_mispredict || trap_taken || id_ex_mret_r || id_ex_sret_r);
     assign flush_if_id = flush_ex;  // Flush IF/ID immediately when branch taken
     
     always_ff @(posedge clk or negedge rst_n) begin
@@ -674,6 +702,8 @@ module cpu_top #(
             pc_next = trap_pc;
         else if (id_ex_mret_r)
             pc_next = ex_csr_mepc;
+        else if (id_ex_sret_r)
+            pc_next = ex_csr_sepc;
         else if (branch_mispredict && !control_taken)
             pc_next = fallthrough_target;
         else if (id_ex_jump && id_ex_opcode == 7'b1100111) // JALR
@@ -695,7 +725,7 @@ module cpu_top #(
     // ===================================================
     //  EX / MEM  pipeline register
     // ===================================================
-    logic [XLEN-1:0] ex_mem_alu_result, ex_mem_rs2, ex_mem_pc_plus4;
+    logic [XLEN-1:0] ex_mem_alu_result, ex_mem_rs2, ex_mem_pc_plus4, ex_mem_pc;
     logic [31:0] ex_mem_fp_rs2, ex_mem_fp_result;
     logic [127:0] ex_mem_vec_result;
     logic [4:0]  ex_mem_rd;
@@ -715,6 +745,7 @@ module cpu_top #(
             ex_mem_fp_result  <= 32'b0;
             ex_mem_vec_result <= 128'b0;
             ex_mem_pc_plus4   <= {XLEN{1'b0}};
+            ex_mem_pc         <= {XLEN{1'b0}};
             ex_mem_rd         <= 5'b0;
             ex_mem_funct3     <= 3'b0;
             ex_mem_reg_write  <= 1'b0;
@@ -736,6 +767,7 @@ module cpu_top #(
             ex_mem_fp_result  <= ex_mem_fp_result;
             ex_mem_vec_result <= ex_mem_vec_result;
             ex_mem_pc_plus4   <= ex_mem_pc_plus4;
+            ex_mem_pc         <= ex_mem_pc;
             ex_mem_rd         <= ex_mem_rd;
             ex_mem_funct3     <= ex_mem_funct3;
             ex_mem_reg_write  <= ex_mem_reg_write;
@@ -758,6 +790,7 @@ module cpu_top #(
             ex_mem_fp_result  <= 32'b0;
             ex_mem_vec_result <= 128'b0;
             ex_mem_pc_plus4   <= {XLEN{1'b0}};
+            ex_mem_pc         <= {XLEN{1'b0}};
             ex_mem_rd         <= 5'b0;
             ex_mem_funct3     <= 3'b0;
             ex_mem_reg_write  <= 1'b0;
@@ -781,6 +814,7 @@ module cpu_top #(
             ex_mem_fp_result  <= fpu_result;
             ex_mem_vec_result <= vec_result;
             ex_mem_pc_plus4   <= ex_link_val;
+            ex_mem_pc         <= id_ex_pc;
             ex_mem_rd         <= id_ex_rd;
             ex_mem_funct3     <= id_ex_funct3;
             ex_mem_reg_write  <= 1'b0;           // Disable write for flushed instruction
@@ -802,6 +836,7 @@ module cpu_top #(
             ex_mem_fp_result  <= fpu_result;
             ex_mem_vec_result <= vec_result;
             ex_mem_pc_plus4   <= ex_link_val;
+            ex_mem_pc         <= id_ex_pc;
             ex_mem_rd         <= id_ex_rd;
             ex_mem_funct3     <= id_ex_funct3;
             ex_mem_reg_write  <= id_ex_reg_write;
@@ -822,6 +857,9 @@ module cpu_top #(
     // ===================================================
     //  MEMORY STAGE
     // ===================================================
+    logic sfence_exec;
+    assign sfence_exec = id_ex_sfence && !flush_ex;
+
     logic [XLEN-1:0] mem_rd_data;
     logic [XLEN-1:0] data_paddr;
     logic            data_ready, data_fault;
@@ -840,6 +878,8 @@ module cpu_top #(
         .clk        (clk),
         .rst_n      (rst_n),
         .satp       (ex_csr_satp),
+        .current_priv(current_priv),
+        .sfence     (sfence_exec),
         .inst_vaddr (pc),
         .inst_req   (1'b1),
         .inst_paddr (inst_paddr),

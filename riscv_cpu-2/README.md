@@ -4,7 +4,7 @@ SystemVerilog implementation of a 5-stage RISC-V CPU.
 
 ## Current Status
 
-The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 has started with Sv32 MMU wiring and page-fault tests.
+The project is now past the original baseline pipeline and has Phase 3 integrated into the top-level CPU. Phase 4 is complete with Sv32 MMU wiring, ASID-aware TLBs, M/S/U privilege-state tracking, S-mode and U-mode CSR support, delegation CSRs, and page-fault tests.
 
 ## Architecture
 
@@ -34,7 +34,8 @@ branch predictor -> cpu_top pipeline -> MMU -> D-cache -> L2 -> DRAM model
 - Machine CSR subset including `mstatus`, `mie`, `mtvec`, `mepc`, `mcause`, `mip`, `satp`
 - Performance counters: `mcycle` and `minstret`
 - Machine external interrupt, ECALL/EBREAK, MRET
-- Initial Sv32 MMU integration with ITLB/DTLB, PTW, and page-fault causes
+- Sv32 MMU integration with ITLB/DTLB, PTW, ASID tagging, page-fault causes, `sfence.vma` flush, and M/S/U privilege-state tracking
+- S-mode and U-mode CSR subsets plus delegation CSRs for privilege transitions
 - Floating-point register file plus CPU-integrated behavioral FADD/FSUB/FMUL/FDIV path
 - Vector register file plus CPU-integrated 4-lane integer VADD/VSUB/VAND/VOR path
 - FP/vector CSR addresses for `fflags`, `frm`, `fcsr`, `vstart`, `vxsat`, `vxrm`, `vl`, `vtype`
