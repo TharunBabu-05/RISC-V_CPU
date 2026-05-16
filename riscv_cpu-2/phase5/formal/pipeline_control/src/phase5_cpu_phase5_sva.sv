@@ -63,16 +63,8 @@ module phase5_cpu_phase5_sva #(
 
     logic past_valid;
 
-    function automatic logic load_use_hazard(
-        input logic        mem_read,
-        input logic [4:0]  rd,
-        input logic [4:0]  rs1,
-        input logic [4:0]  rs2
-    );
-        begin
-            load_use_hazard = mem_read && (rd != 5'b0) && ((rd == rs1) || (rd == rs2));
-        end
-    endfunction
+    logic expected_stall;
+    assign expected_stall = id_ex_mem_read && (id_ex_rd != 5'b0) && ((id_ex_rd == hazard_rs1) || (id_ex_rd == hazard_rs2));
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -84,12 +76,12 @@ module phase5_cpu_phase5_sva #(
 
     always_ff @(posedge clk) begin
         if (past_valid) begin
-            assert(pc_write == (hazard_pc_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
-            assert(if_id_write == (hazard_if_id_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
-            assert(control_mux == hazard_control_mux);
-            assert(hazard_pc_write == !load_use_hazard(id_ex_mem_read, id_ex_rd, hazard_rs1, hazard_rs2));
-            assert(hazard_if_id_write == !load_use_hazard(id_ex_mem_read, id_ex_rd, hazard_rs1, hazard_rs2));
-            assert(hazard_control_mux == load_use_hazard(id_ex_mem_read, id_ex_rd, hazard_rs1, hazard_rs2));
+            assert(pc_write === (hazard_pc_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
+            assert(if_id_write === (hazard_if_id_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
+            assert(control_mux === hazard_control_mux);
+            assert(hazard_pc_write === !expected_stall);
+            assert(hazard_if_id_write === !expected_stall);
+            assert(hazard_control_mux === expected_stall);
 
             if ($past(rst_n) && !$past(if_id_write) && !$past(flush_ex)) begin
                 assert(if_id_pc == $past(if_id_pc));

@@ -1,5 +1,5 @@
 # running in pipeline_control/src/
-read -sv *.sv
+read -sv alu.sv branch_predictor.sv control_unit.sv cpu_top.sv csr_file.sv dcache.sv dram_ctrl.sv fp_regfile.sv fpu_unit.sv hazard.sv icache.sv imm_gen.sv interrupt_unit.sv l2_cache.sv memory.sv mmu.sv muldiv.sv regfile.sv vector_regfile.sv vector_unit.sv
 read -sv phase5_cpu_phase5_sva.sv phase5_cpu_formal_top.sv
 prep -top phase5_cpu_formal_top
 

@@ -253,7 +253,7 @@ module cpu_top #(
 
     // Hazard unit
     logic pc_write, if_id_write, control_mux;
-    logic hazard_pc_write, hazard_if_id_write, hazard_control_mux;
+    (* keep *) logic hazard_pc_write, hazard_if_id_write, hazard_control_mux;
     logic muldiv_stall, fpu_stall, vec_stall, mem_stall, mmu_stall;
     logic flush_if_id;  // from branch taken (driven below)
 
@@ -306,7 +306,50 @@ module cpu_top #(
     assign id_ex_write = ~muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
 
     always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n || control_mux || flush_ex) begin
+        if (!rst_n) begin
+            id_ex_pc         <= {XLEN{1'b0}};
+            id_ex_pred_target<= {XLEN{1'b0}};
+            id_ex_rs1        <= {XLEN{1'b0}};
+            id_ex_rs2        <= {XLEN{1'b0}};
+            id_ex_fp_rs1     <= 32'b0;
+            id_ex_fp_rs2     <= 32'b0;
+            id_ex_vec_rs1    <= 128'b0;
+            id_ex_vec_rs2    <= 128'b0;
+            id_ex_imm        <= {XLEN{1'b0}};
+            id_ex_rs1_addr   <= 5'b0;
+            id_ex_rs2_addr   <= 5'b0;
+            id_ex_rd         <= 5'b0;
+            id_ex_funct3     <= 3'b0;
+            id_ex_reg_write  <= 1'b0;
+            id_ex_alu_src    <= 1'b0;
+            id_ex_mem_read   <= 1'b0;
+            id_ex_mem_write  <= 1'b0;
+            id_ex_mem_to_reg <= 1'b0;
+            id_ex_branch     <= 1'b0;
+            id_ex_jump       <= 1'b0;
+            id_ex_csr_en     <= 1'b0;
+            id_ex_ecall_r    <= 1'b0;
+            id_ex_ebreak_r   <= 1'b0;
+            id_ex_mret_r     <= 1'b0;
+            id_ex_sret_r     <= 1'b0;
+            id_ex_sfence     <= 1'b0;
+            id_ex_csr_op     <= 3'b0;
+            id_ex_csr_addr   <= 12'b0;
+            id_ex_csr_zimm   <= {XLEN{1'b0}};
+            id_ex_alu_ctrl   <= 4'b0;
+            id_ex_opcode     <= 7'b0;
+            id_ex_muldiv_en  <= 1'b0;
+            id_ex_pred_taken <= 1'b0;
+            id_ex_fp_en      <= 1'b0;
+            id_ex_fp_load    <= 1'b0;
+            id_ex_fp_store   <= 1'b0;
+            id_ex_fp_reg_write <= 1'b0;
+            id_ex_fp_op      <= 3'b0;
+            id_ex_vec_en     <= 1'b0;
+            id_ex_vec_reg_write <= 1'b0;
+            id_ex_vec_op     <= 3'b0;
+            id_ex_muldiv_op  <= 3'b0;
+        end else if (control_mux || flush_ex) begin
             id_ex_pc         <= {XLEN{1'b0}};
             id_ex_pred_target<= {XLEN{1'b0}};
             id_ex_rs1        <= {XLEN{1'b0}};

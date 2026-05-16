@@ -1,33 +1,84 @@
-SBY 12:30:37 [pipeline_control] Removing directory 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\alu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\alu.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\branch_predictor.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\branch_predictor.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\control_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\control_unit.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\cpu_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\cpu_top.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\csr_file.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\csr_file.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dcache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dcache.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dram_ctrl.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dram_ctrl.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fp_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fp_regfile.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fpu_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fpu_unit.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\hazard.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\hazard.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\icache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\icache.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\imm_gen.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\imm_gen.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\interrupt_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\interrupt_unit.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\l2_cache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\l2_cache.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\memory.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\memory.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\mmu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\mmu.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\muldiv.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\muldiv.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\regfile.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_regfile.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_unit.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_phase5_sva.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_phase5_sva.sv'.
-SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_formal_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_formal_top.sv'.
-SBY 12:30:37 [pipeline_control] engine_0: smtbmc
-SBY 12:30:37 [pipeline_control] base: starting process "cd pipeline_control/src& yosys -ql ../model/design.log ../model/design.ys"
-SBY 12:30:37 [pipeline_control] base: ERROR: File `*.sv' not found or is a directory
-SBY 12:30:37 [pipeline_control] base: finished (returncode=1)
-SBY 12:30:37 [pipeline_control] base: task failed. ERROR.
-SBY 12:30:37 [pipeline_control] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
-SBY 12:30:37 [pipeline_control] summary: Elapsed process time unvailable on Windows
-SBY 12:30:37 [pipeline_control] summary: engine_0 (smtbmc) did not return a status
-SBY 12:30:37 [pipeline_control] summary: engine_0 did not produce any traces
-SBY 12:30:37 [pipeline_control] DONE (ERROR, rc=16)
+SBY 13:27:49 [pipeline_control] Removing directory 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\alu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\alu.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\branch_predictor.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\branch_predictor.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\control_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\control_unit.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\cpu_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\cpu_top.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\csr_file.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\csr_file.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dcache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dcache.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dram_ctrl.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dram_ctrl.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fp_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fp_regfile.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fpu_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fpu_unit.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\hazard.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\hazard.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\icache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\icache.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\imm_gen.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\imm_gen.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\interrupt_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\interrupt_unit.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\l2_cache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\l2_cache.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\memory.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\memory.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\mmu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\mmu.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\muldiv.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\muldiv.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\regfile.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_regfile.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_unit.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_phase5_sva.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_phase5_sva.sv'.
+SBY 13:27:49 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_formal_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_formal_top.sv'.
+SBY 13:27:49 [pipeline_control] engine_0: smtbmc boolector
+SBY 13:27:49 [pipeline_control] base: starting process "cd pipeline_control/src& yosys -ql ../model/design.log ../model/design.ys"
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_d with list of registers. See mmu.sv:239
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_a with list of registers. See mmu.sv:239
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_x with list of registers. See mmu.sv:238
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_w with list of registers. See mmu.sv:238
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_r with list of registers. See mmu.sv:238
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_d with list of registers. See mmu.sv:237
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_a with list of registers. See mmu.sv:237
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_x with list of registers. See mmu.sv:236
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_w with list of registers. See mmu.sv:236
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_r with list of registers. See mmu.sv:236
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_asid with list of registers. See mmu.sv:235
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_asid with list of registers. See mmu.sv:234
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_ppn with list of registers. See mmu.sv:233
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_ppn with list of registers. See mmu.sv:232
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_vpn with list of registers. See mmu.sv:231
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_vpn with list of registers. See mmu.sv:230
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \dtlb_valid with list of registers. See mmu.sv:229
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \itlb_valid with list of registers. See mmu.sv:228
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \regs with list of registers. See vector_regfile.sv:26
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \regs with list of registers. See fp_regfile.sv:26
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \regs with list of registers. See regfile.sv:30
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \bht with list of registers. See branch_predictor.sv:58
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \target with list of registers. See branch_predictor.sv:57
+SBY 13:27:49 [pipeline_control] base: Warning: Replacing memory \tags with list of registers. See branch_predictor.sv:56
+SBY 13:27:52 [pipeline_control] base: finished (returncode=0)
+SBY 13:27:52 [pipeline_control] prep: starting process "cd pipeline_control/model& yosys -ql design_prep.log design_prep.ys"
+SBY 13:27:53 [pipeline_control] prep: finished (returncode=0)
+SBY 13:27:53 [pipeline_control] smt2: starting process "cd pipeline_control/model& yosys -ql design_smt2.log design_smt2.ys"
+SBY 13:27:53 [pipeline_control] smt2: finished (returncode=0)
+SBY 13:27:53 [pipeline_control] engine_0: starting process "cd pipeline_control& yosys-smtbmc -s boolector --presat --unroll --noprogress -t 10  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2"
+SBY 13:27:53 [pipeline_control] engine_0: ##   0:00:00  Solver: boolector
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assumptions in step 3..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:00  Checking assertions in step 3..
+SBY 13:27:54 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 4..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 4..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 5..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 5..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 6..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 6..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 7..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 7..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 8..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 8..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assumptions in step 9..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Checking assertions in step 9..
+SBY 13:27:55 [pipeline_control] engine_0: ##   0:00:01  Status: passed
+SBY 13:27:55 [pipeline_control] engine_0: finished (returncode=0)
+SBY 13:27:55 [pipeline_control] engine_0: Status returned by engine: pass
+SBY 13:27:55 [pipeline_control] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:06 (6)
+SBY 13:27:55 [pipeline_control] summary: Elapsed process time unvailable on Windows
+SBY 13:27:55 [pipeline_control] summary: engine_0 (smtbmc boolector) returned pass
+SBY 13:27:55 [pipeline_control] summary: engine_0 did not produce any traces
+SBY 13:27:55 [pipeline_control] DONE (PASS, rc=0)

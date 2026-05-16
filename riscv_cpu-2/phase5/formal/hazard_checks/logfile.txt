@@ -1,2 +1,84 @@
-SBY 12:21:52 [hazard_checks] Removing directory 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks'.
-SBY 12:21:52 [hazard_checks] Copy 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\rtl\alu.sv' to 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\alu.sv'.
+SBY 13:28:10 [hazard_checks] Removing directory 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\alu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\alu.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\branch_predictor.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\branch_predictor.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\control_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\control_unit.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\cpu_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\cpu_top.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\csr_file.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\csr_file.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dcache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\dcache.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dram_ctrl.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\dram_ctrl.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fp_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\fp_regfile.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fpu_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\fpu_unit.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\hazard.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\hazard.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\icache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\icache.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\imm_gen.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\imm_gen.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\interrupt_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\interrupt_unit.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\l2_cache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\l2_cache.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\memory.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\memory.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\mmu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\mmu.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\muldiv.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\muldiv.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\regfile.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\vector_regfile.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\vector_unit.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_phase5_sva.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\phase5_cpu_phase5_sva.sv'.
+SBY 13:28:10 [hazard_checks] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_formal_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\hazard_checks\src\phase5_cpu_formal_top.sv'.
+SBY 13:28:10 [hazard_checks] engine_0: smtbmc boolector
+SBY 13:28:10 [hazard_checks] base: starting process "cd hazard_checks/src& yosys -ql ../model/design.log ../model/design.ys"
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_d with list of registers. See mmu.sv:239
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_a with list of registers. See mmu.sv:239
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_x with list of registers. See mmu.sv:238
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_w with list of registers. See mmu.sv:238
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_r with list of registers. See mmu.sv:238
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_d with list of registers. See mmu.sv:237
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_a with list of registers. See mmu.sv:237
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_x with list of registers. See mmu.sv:236
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_w with list of registers. See mmu.sv:236
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_r with list of registers. See mmu.sv:236
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_asid with list of registers. See mmu.sv:235
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_asid with list of registers. See mmu.sv:234
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_ppn with list of registers. See mmu.sv:233
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_ppn with list of registers. See mmu.sv:232
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_vpn with list of registers. See mmu.sv:231
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_vpn with list of registers. See mmu.sv:230
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \dtlb_valid with list of registers. See mmu.sv:229
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \itlb_valid with list of registers. See mmu.sv:228
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \regs with list of registers. See vector_regfile.sv:26
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \regs with list of registers. See fp_regfile.sv:26
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \regs with list of registers. See regfile.sv:30
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \bht with list of registers. See branch_predictor.sv:58
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \target with list of registers. See branch_predictor.sv:57
+SBY 13:28:10 [hazard_checks] base: Warning: Replacing memory \tags with list of registers. See branch_predictor.sv:56
+SBY 13:28:14 [hazard_checks] base: finished (returncode=0)
+SBY 13:28:14 [hazard_checks] prep: starting process "cd hazard_checks/model& yosys -ql design_prep.log design_prep.ys"
+SBY 13:28:15 [hazard_checks] prep: finished (returncode=0)
+SBY 13:28:15 [hazard_checks] smt2: starting process "cd hazard_checks/model& yosys -ql design_smt2.log design_smt2.ys"
+SBY 13:28:15 [hazard_checks] smt2: finished (returncode=0)
+SBY 13:28:15 [hazard_checks] engine_0: starting process "cd hazard_checks& yosys-smtbmc -s boolector --presat --unroll --noprogress -t 10  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2"
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Solver: boolector
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY 13:28:16 [hazard_checks] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 3..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 3..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 4..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 4..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 5..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 5..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 6..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 6..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 7..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 7..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assumptions in step 8..
+SBY 13:28:17 [hazard_checks] engine_0: ##   0:00:01  Checking assertions in step 8..
+SBY 13:28:18 [hazard_checks] engine_0: ##   0:00:02  Checking assumptions in step 9..
+SBY 13:28:18 [hazard_checks] engine_0: ##   0:00:02  Checking assertions in step 9..
+SBY 13:28:18 [hazard_checks] engine_0: ##   0:00:02  Status: passed
+SBY 13:28:18 [hazard_checks] engine_0: finished (returncode=0)
+SBY 13:28:18 [hazard_checks] engine_0: Status returned by engine: pass
+SBY 13:28:18 [hazard_checks] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:08 (8)
+SBY 13:28:18 [hazard_checks] summary: Elapsed process time unvailable on Windows
+SBY 13:28:18 [hazard_checks] summary: engine_0 (smtbmc boolector) returned pass
+SBY 13:28:18 [hazard_checks] summary: engine_0 did not produce any traces
+SBY 13:28:18 [hazard_checks] DONE (PASS, rc=0)
