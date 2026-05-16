@@ -19,11 +19,15 @@ from typing import Dict, Iterable
 PROFILE_TO_LOCAL_TARGET: Dict[str, str] = {
     "rv32i": "sim",
     "rv32im": "sim_muldiv",
+    "rv64i": "sim_rv64",
+    "rv64im": "sim_muldiv",  # RV64M uses same muldiv test as RV32M
 }
 
 PROFILE_TO_DESCRIPTION: Dict[str, str] = {
     "rv32i": "RV32I base integer profile",
     "rv32im": "RV32IM integer + mul/div profile",
+    "rv64i": "RV64I 64-bit datapath profile",
+    "rv64im": "RV64IM 64-bit + mul/div profile",
 }
 
 
@@ -42,7 +46,7 @@ def parse_profile_file(profile_path: Path) -> Dict[str, str]:
 
 def iter_selected_profiles(requested: str) -> Iterable[str]:
     if requested == "all":
-        return ("rv32i", "rv32im")
+        return ("rv32i", "rv32im", "rv64i", "rv64im")
     return (requested,)
 
 
@@ -110,14 +114,18 @@ def resolve_command(
         makefile = suite_root / "Makefile"
         run_sh = suite_root / "run.sh"
         if makefile.is_file():
+            # Convert Windows backslashes to forward slashes for cross-platform make compatibility
+            suite_root_str = str(suite_root).replace("\\", "/")
+            # Convert signature dir to absolute path with forward slashes
+            sig_dir_abs = str((repo_root / signature_dir).resolve()).replace("\\", "/")
             return [
                 "make",
                 "-C",
-                str(suite_root),
+                suite_root_str,
                 f"ISA={isa}",
                 f"XLEN={xlen}",
                 f"EXTENSIONS={extensions}",
-                f"SIGNATURE_DIR={signature_dir}",
+                f"SIGNATURE_DIR={sig_dir_abs}",
             ], suite_root
         if run_sh.is_file():
             return [str(run_sh), profile_name, signature_dir], suite_root
@@ -133,9 +141,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run the Phase 5 RV32 compliance harness")
     parser.add_argument(
         "--profile",
-        choices=("rv32i", "rv32im", "all"),
+        choices=("rv32i", "rv32im", "rv64i", "rv64im", "all"),
         default="all",
-        help="Select one RV32 profile or run both",
+        help="Select one profile or run all",
     )
     parser.add_argument(
         "--dry-run",

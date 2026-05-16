@@ -1,0 +1,48 @@
+#!/usr/bin/env yosys
+
+# yosys_synth.ys - Open-source Synthesis with Yosys for RV32 CPU
+# Usage: yosys -m ghdl -s yosys_synth.ys
+
+# Read SystemVerilog source files
+read_verilog -sv ../rtl/alu.sv
+read_verilog -sv ../rtl/branch_predictor.sv
+read_verilog -sv ../rtl/control_unit.sv
+read_verilog -sv ../rtl/cpu_top.sv
+read_verilog -sv ../rtl/csr_file.sv
+read_verilog -sv ../rtl/dcache.sv
+read_verilog -sv ../rtl/dram_ctrl.sv
+read_verilog -sv ../rtl/fp_regfile.sv
+read_verilog -sv ../rtl/fpu_unit.sv
+read_verilog -sv ../rtl/hazard.sv
+read_verilog -sv ../rtl/icache.sv
+read_verilog -sv ../rtl/imm_gen.sv
+read_verilog -sv ../rtl/interrupt_unit.sv
+read_verilog -sv ../rtl/l2_cache.sv
+read_verilog -sv ../rtl/memory.sv
+read_verilog -sv ../rtl/mmu.sv
+read_verilog -sv ../rtl/muldiv.sv
+read_verilog -sv ../rtl/regfile.sv
+read_verilog -sv ../rtl/vector_regfile.sv
+read_verilog -sv ../rtl/vector_unit.sv
+
+# Hierarchy and preparation
+hierarchy -top cpu_top
+
+# Convert to internal representation
+proc
+opt
+
+# High-level synthesis
+synth -json netlist.json -verbose
+
+# Report statistics
+stat
+
+# Write output netlists
+write_verilog -noattr -norename -blackbox -force cpu_synth.v
+write_json cpu_synth.json
+
+puts "Synthesis complete!"
+puts "Output files: cpu_synth.v, cpu_synth.json, netlist.json"
+
+exit
