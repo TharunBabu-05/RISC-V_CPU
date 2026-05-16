@@ -158,7 +158,7 @@
   <polygon points="784,234 792,242 781,241" fill="#00FFFF" filter="url(#glow-cyan)"/>
 
   <!-- Writeback -> Decode (Forwarding/Write) -->
-  <path d="M 850 200 L 850 50 L 310 50 L 310 250" class="path-fwd" />
+  <path d="M 850 200 L 850 85 L 310 85 L 310 250" class="path-fwd" />
   <polygon points="305,245 310,255 315,245" fill="#FF00FF" filter="url(#glow-magenta)"/>
 
   <!-- EX -> Decode (Forwarding) -->
