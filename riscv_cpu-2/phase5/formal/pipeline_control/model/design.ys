@@ -1,0 +1,9 @@
+# running in pipeline_control/src/
+read -sv *.sv
+read -sv phase5_cpu_phase5_sva.sv phase5_cpu_formal_top.sv
+prep -top phase5_cpu_formal_top
+
+hierarchy -smtcheck
+rename -witness
+write_jny -no-connections ../model/design.json
+write_rtlil ../model/design.il

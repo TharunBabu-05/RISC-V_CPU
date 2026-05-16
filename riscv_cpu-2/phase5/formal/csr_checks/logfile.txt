@@ -1,0 +1,2 @@
+SBY 12:21:52 [csr_checks] Removing directory 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\csr_checks'.
+SBY 12:21:52 [csr_checks] Copy 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\rtl\alu.sv' to 'C:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\csr_checks\src\alu.sv'.

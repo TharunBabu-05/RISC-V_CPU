@@ -1,0 +1,26 @@
+# Ignore operating system-specific files
+.DS_Store
+Thumbs.db
+oss-cad-suite-windows-x64-20260516.exe
+oss-cad-suite/
+oss-cad-suite-installer.exe
+
+# Ignore environment variables and secrets
+.env
+*.pem
+*.key
+
+# Ignore common dependency directories
+
+
+# Ignore log files and temporary files
+*.log
+tmp/
+temp/
+
+# Ignore build artifacts
+dist/
+build/
+out/
+bin/
+obj/

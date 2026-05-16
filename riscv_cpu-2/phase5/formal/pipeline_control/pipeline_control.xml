@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+<testsuite timestamp="2026-05-16T12:30:37" hostname="tharun" package="pipeline_control" id="0" name="default" tests="1" errors="1" failures="0" time="0" skipped="0">
+<properties>
+<property name="os" value="Windows"/>
+<property name="expect" value="PASS"/>
+<property name="status" value="ERROR"/>
+</properties>
+<testcase classname="default" name="default" time="0">
+<error type="ERROR"/>
+</testcase>
+<system-out>SBY 12:30:37 [pipeline_control] Removing directory 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\alu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\alu.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\branch_predictor.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\branch_predictor.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\control_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\control_unit.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\cpu_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\cpu_top.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\csr_file.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\csr_file.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dcache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dcache.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\dram_ctrl.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\dram_ctrl.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fp_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fp_regfile.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\fpu_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\fpu_unit.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\hazard.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\hazard.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\icache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\icache.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\imm_gen.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\imm_gen.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\interrupt_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\interrupt_unit.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\l2_cache.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\l2_cache.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\memory.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\memory.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\mmu.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\mmu.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\muldiv.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\muldiv.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\regfile.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_regfile.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_regfile.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\..\..\rtl\vector_unit.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\vector_unit.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_phase5_sva.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_phase5_sva.sv'.
+SBY 12:30:37 [pipeline_control] Copy 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\phase5_cpu_formal_top.sv' to 'c:\Users\tharu\RISC-V_CPU\riscv_cpu-2\phase5\formal\pipeline_control\src\phase5_cpu_formal_top.sv'.
+SBY 12:30:37 [pipeline_control] engine_0: smtbmc
+SBY 12:30:37 [pipeline_control] base: starting process &quot;cd pipeline_control/src&amp; yosys -ql ../model/design.log ../model/design.ys&quot;
+SBY 12:30:37 [pipeline_control] base: ERROR: File `*.sv' not found or is a directory
+SBY 12:30:37 [pipeline_control] base: finished (returncode=1)
+SBY 12:30:37 [pipeline_control] base: task failed. ERROR.
+SBY 12:30:37 [pipeline_control] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 12:30:37 [pipeline_control] summary: Elapsed process time unvailable on Windows
+SBY 12:30:37 [pipeline_control] summary: engine_0 (smtbmc) did not return a status
+SBY 12:30:37 [pipeline_control] summary: engine_0 did not produce any traces
+SBY 12:30:37 [pipeline_control] DONE (ERROR, rc=16)
+</system-out>
+<system-err>
+</system-err>
+</testsuite>
+</testsuites>

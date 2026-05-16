@@ -6,30 +6,30 @@ depth 20
 smtbmc
 
 [script]
-read -sv ../rtl/*.sv
+read -sv *.sv
 read -sv phase5_cpu_phase5_sva.sv phase5_cpu_formal_top.sv
 prep -top phase5_cpu_formal_top
 
 [files]
-../rtl/alu.sv
-../rtl/branch_predictor.sv
-../rtl/control_unit.sv
-../rtl/cpu_top.sv
-../rtl/csr_file.sv
-../rtl/dcache.sv
-../rtl/dram_ctrl.sv
-../rtl/fp_regfile.sv
-../rtl/fpu_unit.sv
-../rtl/hazard.sv
-../rtl/icache.sv
-../rtl/imm_gen.sv
-../rtl/interrupt_unit.sv
-../rtl/l2_cache.sv
-../rtl/memory.sv
-../rtl/mmu.sv
-../rtl/muldiv.sv
-../rtl/regfile.sv
-../rtl/vector_regfile.sv
-../rtl/vector_unit.sv
+../../rtl/alu.sv
+../../rtl/branch_predictor.sv
+../../rtl/control_unit.sv
+../../rtl/cpu_top.sv
+../../rtl/csr_file.sv
+../../rtl/dcache.sv
+../../rtl/dram_ctrl.sv
+../../rtl/fp_regfile.sv
+../../rtl/fpu_unit.sv
+../../rtl/hazard.sv
+../../rtl/icache.sv
+../../rtl/imm_gen.sv
+../../rtl/interrupt_unit.sv
+../../rtl/l2_cache.sv
+../../rtl/memory.sv
+../../rtl/mmu.sv
+../../rtl/muldiv.sv
+../../rtl/regfile.sv
+../../rtl/vector_regfile.sv
+../../rtl/vector_unit.sv
 phase5_cpu_phase5_sva.sv
 phase5_cpu_formal_top.sv
