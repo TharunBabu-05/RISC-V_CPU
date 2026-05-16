@@ -13,7 +13,7 @@
 <br>
 
 <div align="center">
-  <img src="./architecture_animated.svg" alt="Animated SoC Architecture" width="100%">
+  <img src="architecture_animated.svg" alt="Animated SoC Architecture" width="100%">
   <br>
   <i>(Animated High-Level Pipeline & SoC Bus Architecture)</i>
 </div>
