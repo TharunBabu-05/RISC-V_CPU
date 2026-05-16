@@ -20,7 +20,7 @@ temp/
 
 # Ignore build artifacts
 dist/
-build/
+
 out/
-bin/
+
 obj/
