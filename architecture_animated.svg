@@ -86,7 +86,7 @@
   <text x="130" y="195" class="comp-text">PC / BPU</text>
   <rect x="70" y="250" width="120" height="120" class="comp-box" fill="#222233" />
   <text x="130" y="305" class="comp-text">Instr.</text>
-  <text x="130" y="325" class="comp-text">Memory</text>
+  <text x="130" y="325" class="comp-text">Fetch</text>
 
   <!-- ID -->
   <rect x="230" y="100" width="160" height="300" class="stage-bg" fill="#7000FF" />
@@ -166,12 +166,22 @@
   <polygon points="305,375 310,365 315,375" fill="#FF00FF" filter="url(#glow-magenta)"/>
 
   <!-- IF <-> SoC BRAM -->
-  <path d="M 130 370 L 130 490 L 200 490" class="path-data"/>
-  <polygon points="195,485 205,490 195,495" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <path d="M 130 370 L 130 460" class="path-data"/>
+  <polygon points="125,455 130,465 135,455" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <polygon points="125,375 130,365 135,375" fill="#00FFFF" filter="url(#glow-cyan)"/>
 
   <!-- LSU <-> SoC BUS -->
   <path d="M 670 240 L 670 440" class="path-data"/>
   <polygon points="665,435 670,445 675,435" fill="#00FFFF" filter="url(#glow-cyan)"/>
   <polygon points="665,245 670,235 675,245" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <!-- SoC BUS <-> Peripherals -->
+  <path d="M 275 480 L 275 490" class="path-data"/>
+  <polygon points="270,485 275,495 280,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <polygon points="270,485 275,475 280,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <path d="M 500 480 L 500 490" class="path-data"/>
+  <polygon points="495,485 500,495 505,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <polygon points="495,485 500,475 505,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
 
 </svg>
