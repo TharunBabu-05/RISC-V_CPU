@@ -1,0 +1,177 @@
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Glowing Filters -->
+  <defs>
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-magenta" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050510" />
+      <stop offset="100%" stop-color="#101020" />
+    </linearGradient>
+    
+    <linearGradient id="grad-if" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF007F" /><stop offset="100%" stop-color="#99004C" />
+    </linearGradient>
+    <linearGradient id="grad-id" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7000FF" /><stop offset="100%" stop-color="#440099" />
+    </linearGradient>
+    <linearGradient id="grad-ex" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00AAFF" /><stop offset="100%" stop-color="#006699" />
+    </linearGradient>
+    <linearGradient id="grad-mem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00FF55" /><stop offset="100%" stop-color="#009933" />
+    </linearGradient>
+    <linearGradient id="grad-wb" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFAA00" /><stop offset="100%" stop-color="#996600" />
+    </linearGradient>
+  </defs>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Fira+Code:wght@500&amp;display=swap');
+    
+    .title { font-family: 'Orbitron', sans-serif; font-size: 32px; fill: #FFFFFF; text-anchor: middle; letter-spacing: 3px; filter: drop-shadow(0 0 10px rgba(0,255,255,0.8)); }
+    .stage-title { font-family: 'Orbitron', sans-serif; font-size: 22px; fill: #FFFFFF; text-anchor: middle; font-weight: 700; }
+    .comp-text { font-family: 'Fira Code', monospace; font-size: 14px; fill: #FFFFFF; text-anchor: middle; }
+    
+    .path-data {
+      stroke: #00FFFF;
+      stroke-width: 4;
+      fill: none;
+      stroke-dasharray: 10 10;
+      animation: flow-forward 1s linear infinite;
+      filter: url(#glow-cyan);
+    }
+    .path-fwd {
+      stroke: #FF00FF;
+      stroke-width: 4;
+      fill: none;
+      stroke-dasharray: 12 12;
+      animation: flow-reverse 1s linear infinite;
+      filter: url(#glow-magenta);
+    }
+    
+    .stage-bg { stroke: rgba(255,255,255,0.3); stroke-width: 2; rx: 15; opacity: 0.15; }
+    .comp-box { stroke: rgba(255,255,255,0.8); stroke-width: 2; rx: 8; transition: all 0.3s; }
+    
+    /* Animations */
+    @keyframes flow-forward { to { stroke-dashoffset: -20; } }
+    @keyframes flow-reverse { to { stroke-dashoffset: 24; } }
+    
+    /* Pulsing core */
+    .pulse-core { animation: pulse 2s infinite alternate; }
+    @keyframes pulse {
+      0% { filter: drop-shadow(0 0 5px #00AAFF); transform: scale(1); }
+      100% { filter: drop-shadow(0 0 20px #00AAFF); transform: scale(1.02); }
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bg)" rx="20" />
+  <rect width="100%" height="100%" fill="none" stroke="#333344" stroke-width="6" rx="20" />
+
+  <!-- Title -->
+  <text x="500" y="60" class="title">RISC-V 32-BIT PIPELINED PROCESSOR SoC</text>
+  
+  <!-- Stages Container -->
+  <!-- IF -->
+  <rect x="50" y="100" width="160" height="300" class="stage-bg" fill="#FF007F" />
+  <text x="130" y="130" class="stage-title" fill="#FF007F">FETCH</text>
+  <rect x="70" y="160" width="120" height="60" class="comp-box" fill="url(#grad-if)" />
+  <text x="130" y="195" class="comp-text">PC / BPU</text>
+  <rect x="70" y="250" width="120" height="120" class="comp-box" fill="#222233" />
+  <text x="130" y="305" class="comp-text">Instr.</text>
+  <text x="130" y="325" class="comp-text">Memory</text>
+
+  <!-- ID -->
+  <rect x="230" y="100" width="160" height="300" class="stage-bg" fill="#7000FF" />
+  <text x="310" y="130" class="stage-title" fill="#7000FF">DECODE</text>
+  <rect x="250" y="160" width="120" height="60" class="comp-box" fill="url(#grad-id)" />
+  <text x="310" y="195" class="comp-text">Decoder</text>
+  <rect x="250" y="250" width="120" height="120" class="comp-box" fill="url(#grad-id)" />
+  <text x="310" y="305" class="comp-text">Registers</text>
+  <text x="310" y="325" class="comp-text">(32 x 32)</text>
+
+  <!-- EX -->
+  <rect x="410" y="100" width="160" height="300" class="stage-bg" fill="#00AAFF" />
+  <text x="490" y="130" class="stage-title" fill="#00AAFF">EXECUTE</text>
+  <g class="pulse-core">
+    <rect x="430" y="160" width="120" height="80" class="comp-box" fill="url(#grad-ex)" />
+    <text x="490" y="205" class="comp-text" style="font-size: 18px; font-weight: bold;">ALU</text>
+  </g>
+  <rect x="430" y="260" width="120" height="50" class="comp-box" fill="url(#grad-ex)" />
+  <text x="490" y="290" class="comp-text">Mul / Div</text>
+  <rect x="430" y="330" width="120" height="40" class="comp-box" fill="url(#grad-ex)" />
+  <text x="490" y="355" class="comp-text">Forwarding</text>
+
+  <!-- MEM -->
+  <rect x="590" y="100" width="160" height="300" class="stage-bg" fill="#00FF55" />
+  <text x="670" y="130" class="stage-title" fill="#00FF55">MEMORY</text>
+  <rect x="610" y="180" width="120" height="60" class="comp-box" fill="url(#grad-mem)" />
+  <text x="670" y="215" class="comp-text">LSU</text>
+  <rect x="610" y="260" width="120" height="60" class="comp-box" fill="url(#grad-mem)" />
+  <text x="670" y="295" class="comp-text">CSRs</text>
+
+  <!-- WB -->
+  <rect x="770" y="100" width="160" height="300" class="stage-bg" fill="#FFAA00" />
+  <text x="850" y="130" class="stage-title" fill="#FFAA00">WRITEBACK</text>
+  <rect x="790" y="200" width="120" height="80" class="comp-box" fill="url(#grad-wb)" />
+  <text x="850" y="240" class="comp-text">Writeback</text>
+  <text x="850" y="260" class="comp-text">Mux</text>
+
+  <!-- SoC Section -->
+  <rect x="50" y="440" width="880" height="120" class="comp-box" fill="#151525" stroke="#444455" />
+  <text x="490" y="475" class="stage-title" fill="#AAAAAA">SoC SYSTEM BUS (AXI/Wishbone Style)</text>
+  
+  <rect x="200" y="490" width="150" height="50" class="comp-box" fill="#222233" />
+  <text x="275" y="520" class="comp-text" fill="#00FF55">64KB BRAM</text>
+  
+  <rect x="425" y="490" width="150" height="50" class="comp-box" fill="#222233" />
+  <text x="500" y="520" class="comp-text" fill="#00AAFF">UART TX/RX</text>
+  
+  <rect x="650" y="490" width="150" height="50" class="comp-box" fill="#222233" />
+  <text x="725" y="520" class="comp-text" fill="#FF007F">PLL Clocking</text>
+
+  <!-- Data Paths -->
+  <!-- Fetch -> Decode -->
+  <line x1="190" y1="310" x2="250" y2="310" class="path-data"/>
+  <polygon points="245,305 255,310 245,315" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  
+  <!-- Decode -> Execute -->
+  <line x1="370" y1="310" x2="430" y2="200" class="path-data"/>
+  <polygon points="423,199 433,195 428,206" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  
+  <line x1="370" y1="330" x2="430" y2="280" class="path-data"/>
+  <polygon points="423,280 433,277 428,287" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <!-- Execute -> Memory -->
+  <line x1="550" y1="200" x2="610" y2="200" class="path-data"/>
+  <polygon points="605,195 615,200 605,205" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <!-- Memory -> WB -->
+  <line x1="730" y1="210" x2="790" y2="240" class="path-data"/>
+  <polygon points="784,234 792,242 781,241" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <!-- Writeback -> Decode (Forwarding/Write) -->
+  <path d="M 850 200 L 850 50 L 310 50 L 310 250" class="path-fwd" />
+  <polygon points="305,245 310,255 315,245" fill="#FF00FF" filter="url(#glow-magenta)"/>
+
+  <!-- EX -> Decode (Forwarding) -->
+  <path d="M 490 370 L 490 410 L 310 410 L 310 370" class="path-fwd" />
+  <polygon points="305,375 310,365 315,375" fill="#FF00FF" filter="url(#glow-magenta)"/>
+
+  <!-- IF <-> SoC BRAM -->
+  <path d="M 130 370 L 130 490 L 200 490" class="path-data"/>
+  <polygon points="195,485 205,490 195,495" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+  <!-- LSU <-> SoC BUS -->
+  <path d="M 670 240 L 670 440" class="path-data"/>
+  <polygon points="665,435 670,445 675,435" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <polygon points="665,245 670,235 675,245" fill="#00FFFF" filter="url(#glow-cyan)"/>
+
+</svg>
