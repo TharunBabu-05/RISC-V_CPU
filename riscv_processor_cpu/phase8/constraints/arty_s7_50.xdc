@@ -14,7 +14,7 @@ create_clock -add -name sys_clk_pin -period 83.333 -waveform {0 41.667} [get_por
 ## but our RTL uses active-low rst_n. 
 ## NOTE: If the button is physically active-high, you may need 
 ## to invert it in soc_top.sv or change this to LVCMOS33.
-set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { rst_btn_n }]
+set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { rst_btn }]
 
 ## ---- UART ----
 ## USB-UART Interface
@@ -30,7 +30,7 @@ set_property -dict { PACKAGE_PIN E13   IOSTANDARD LVCMOS33 } [get_ports { led[2]
 set_property -dict { PACKAGE_PIN H15   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]
 
 ## ---- Timing Constraints ----
-set_false_path -from [get_ports rst_btn_n]
+set_false_path -from [get_ports rst_btn]
 set_input_delay  -clock [get_clocks sys_clk_pin] -max 0 [get_ports uart_rxd_out]
 set_input_delay  -clock [get_clocks sys_clk_pin] -min 0 [get_ports uart_rxd_out]
 set_output_delay -clock [get_clocks sys_clk_pin] -max 0 [get_ports uart_txd_in]

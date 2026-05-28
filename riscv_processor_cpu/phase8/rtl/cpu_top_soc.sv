@@ -695,6 +695,12 @@ module cpu_top_soc #(
             ex_ret_pc = id_ex_pc + {{(XLEN-32){1'b0}}, 32'd4};
     end
 
+    // MMU page-fault signals — tied to 0 in this SoC variant (no MMU)
+    logic mem_page_fault;
+    logic mem_page_fault_store;
+    assign mem_page_fault       = 1'b0;   // MMU disabled in SoC
+    assign mem_page_fault_store = 1'b0;   // MMU disabled in SoC
+
     logic page_fault_exception;
     logic [XLEN-1:0] page_fault_cause;
     logic [XLEN-1:0] exc_pc;

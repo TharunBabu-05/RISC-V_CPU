@@ -1,0 +1,27 @@
+# compile verilog/system verilog design source files
+sv xil_defaultlib  --include "../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0" \
+"../../../../../../../rtl/alu.sv" \
+"../../../../../../rtl/bram.sv" \
+"../../../../../../../rtl/branch_predictor.sv" \
+"../../../../../../../rtl/control_unit.sv" \
+"../../../../../../rtl/cpu_top_soc.sv" \
+"../../../../../../../rtl/csr_file.sv" \
+"../../../../../../../rtl/fp_regfile.sv" \
+"../../../../../../../rtl/fpu_unit.sv" \
+"../../../../../../../rtl/hazard.sv" \
+"../../../../../../../rtl/imm_gen.sv" \
+"../../../../../../../rtl/interrupt_unit.sv" \
+"../../../../../../../rtl/muldiv.sv" \
+"../../../../../../../rtl/regfile.sv" \
+"../../../../../../rtl/uart.sv" \
+"../../../../../../rtl/uart_rx.sv" \
+"../../../../../../rtl/uart_tx.sv" \
+"../../../../../../../rtl/vector_regfile.sv" \
+"../../../../../../../rtl/vector_unit.sv" \
+"../../../../../../rtl/soc_top.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

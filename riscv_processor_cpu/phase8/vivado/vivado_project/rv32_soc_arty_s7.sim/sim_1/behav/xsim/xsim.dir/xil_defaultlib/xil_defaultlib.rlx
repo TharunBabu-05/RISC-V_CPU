@@ -1,0 +1,24 @@
+0.7
+2020.2
+Nov 18 2020
+09:47:47
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv,1778929442,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv,,bram,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv,1779983458,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv,,cpu_top_soc,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv,1778931357,systemVerilog,,,,soc_top,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv,1778929419,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv,,uart,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv,1778929393,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_tx.sv,,uart_rx,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_tx.sv,1778929370,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_regfile.sv,,uart_tx,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.sim/sim_1/behav/xsim/glbl.v,1605673889,verilog,,,,glbl,,uvm,,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/alu.sv,1778685655,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv,,alu,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv,1778727779,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv,,branch_predictor,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv,1778737309,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv,,control_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv,1778820646,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fp_regfile.sv,,csr_file,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fp_regfile.sv,1778729591,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fpu_unit.sv,,fp_regfile,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fpu_unit.sv,1778730356,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv,,fpu_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv,1778643340,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv,,forwarding_unit;hazard_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv,1778729591,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv,,imm_gen,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv,1778813869,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv,,interrupt_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv,1778685654,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv,,muldiv_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv,1778691571,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv,,regfile,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_regfile.sv,1778737453,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_unit.sv,,vector_regfile,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
+C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_unit.sv,1778737491,systemVerilog,,C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv,,vector_unit,,uvm,../../../../rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0,,,,,
