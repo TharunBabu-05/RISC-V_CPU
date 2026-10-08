@@ -1,3 +1,0 @@
-soc_top: soc_top__GC0, cpu_top_soc, 
-cpu_top_soc: cpu_top_soc__GB2, cpu_top_soc__GB1, muldiv_unit, 
-muldiv_unit: muldiv_unit, 

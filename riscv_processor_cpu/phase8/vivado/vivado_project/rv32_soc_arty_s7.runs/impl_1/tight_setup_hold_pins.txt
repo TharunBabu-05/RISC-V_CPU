@@ -1,0 +1,14 @@
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+
+|       Launch Clock       |      Capture Clock       |                                                 Pin                                                      |
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                              u_cpu/u_fpu/res_reg_reg[2]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                              u_cpu/u_fpu/res_reg_reg[3]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                              u_cpu/u_fpu/res_reg_reg[8]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                              u_cpu/u_fpu/res_reg_reg[9]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[13]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[14]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[15]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[16]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[17]/D|
+|       clk_out1_clk_wiz_0 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[18]/D|
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+

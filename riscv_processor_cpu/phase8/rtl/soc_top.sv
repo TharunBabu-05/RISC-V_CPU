@@ -10,8 +10,11 @@
 //  ===================================================
 //  Memory Map (Physical Address Space)
 //  ===================================================
-//    0x0000_0000 – 0x0000_FFFF  : Instruction BRAM (64KB)
-//    0x2000_0000 – 0x2000_FFFF  : Data BRAM (64KB)
+//    0x0000_0000 – 0x0000_FFFF  : Unified BRAM (64KB, code + data + stack)
+//       Both instruction fetch (Port A) and data load/store (Port B)
+//       share the same 64KB BRAM at 0x0000_0000.
+//       Firmware linker script (link.ld) places everything here:
+//         .text at 0x0000_0000, .data/.bss at 0x0000_C000, stack top 0x0000_FFFC
 //    0x1000_0000 – 0x1000_000B  : UART Registers
 //       +0x0: TX Write (write byte → sends over UART)
 //       +0x4: RX Read  (read byte ← received from PC)
@@ -123,8 +126,12 @@ module soc_top (
     //  Address Decoder (Bus Fabric)
     //  Routes data bus to correct peripheral
     // -------------------------------------------------------
-    localparam logic [31:0] BRAM_BASE  = 32'h2000_0000;
-    localparam logic [31:0] BRAM_MASK  = 32'h0000_FFFF;  // 64KB
+    // BRAM_BASE = 0x0000_0000 must match the firmware linker script (link.ld).
+    // The CPU resets to PC=0, fetches instructions from BRAM Port A (0x0000_xxxx),
+    // and the stack/data also live at 0x0000_xxxx, so Port B must decode the
+    // same range. Do NOT use 0x2000_0000 here — that would drop all stack accesses.
+    localparam logic [31:0] BRAM_BASE  = 32'h0000_0000;
+    localparam logic [31:0] BRAM_MASK  = 32'h0000_FFFF;  // 64KB window
     localparam logic [31:0] UART_BASE  = 32'h1000_0000;
     localparam logic [31:0] UART_MASK  = 32'h0000_000F;  // 16 bytes
 
@@ -193,7 +200,7 @@ module soc_top (
     //  UART Peripheral
     // -------------------------------------------------------
     uart #(
-        .CLK_FREQ (100_000_000),
+        .CLK_FREQ (25_000_000),
         .BAUD_RATE(115_200)
     ) u_uart (
         .clk        (clk_100mhz),

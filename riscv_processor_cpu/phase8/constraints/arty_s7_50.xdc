@@ -14,7 +14,7 @@ create_clock -add -name sys_clk_pin -period 83.333 -waveform {0 41.667} [get_por
 ## but our RTL uses active-low rst_n. 
 ## NOTE: If the button is physically active-high, you may need 
 ## to invert it in soc_top.sv or change this to LVCMOS33.
-set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { rst_btn }]
+set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33  PULLDOWN TRUE } [get_ports { rst_btn }]
 
 ## ---- UART ----
 ## USB-UART Interface
@@ -23,18 +23,22 @@ set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { rst_bt
 set_property -dict { PACKAGE_PIN R12   IOSTANDARD LVCMOS33 } [get_ports { uart_rxd_out }]
 set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { uart_txd_in }]
 
-## ---- LEDs (4x) ----
+## ---- LEDs (4x: LD2..LD5 on Arty S7 board) ----
+## led[0] = LD2 (rst_n: CPU running)
+## led[1] = LD3 (pll_locked: 25 MHz MMCM locked)
+## led[2] = LD4 (off)
+## led[3] = LD5 (off)
 set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS33 } [get_ports { led[0] }]
 set_property -dict { PACKAGE_PIN F13   IOSTANDARD LVCMOS33 } [get_ports { led[1] }]
 set_property -dict { PACKAGE_PIN E13   IOSTANDARD LVCMOS33 } [get_ports { led[2] }]
-set_property -dict { PACKAGE_PIN H15   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]
+set_property -dict { PACKAGE_PIN H16   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]
 
 ## ---- Timing Constraints ----
+## Asynchronous I/O: buttons, LEDs, and UART (115200 baud is asynchronous to core clock)
 set_false_path -from [get_ports rst_btn]
-set_input_delay  -clock [get_clocks sys_clk_pin] -max 0 [get_ports uart_rxd_out]
-set_input_delay  -clock [get_clocks sys_clk_pin] -min 0 [get_ports uart_rxd_out]
-set_output_delay -clock [get_clocks sys_clk_pin] -max 0 [get_ports uart_txd_in]
-set_output_delay -clock [get_clocks sys_clk_pin] -min 0 [get_ports uart_txd_in]
+set_false_path -from [get_ports uart_rxd_out]
+set_false_path -to   [get_ports uart_txd_in]
+set_false_path -to   [get_ports {led[*]}]
 
 ## ---- Configuration options ----
 set_property BITSTREAM.CONFIG.CONFIGRATE 50 [current_design]

@@ -1,4 +1,0 @@
-muldiv_unit
-cpu_top_soc__GB1
-cpu_top_soc__GB2
-soc_top__GC0
