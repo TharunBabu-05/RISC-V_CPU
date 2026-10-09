@@ -1,120 +1,163 @@
 /* ============================================================
- *  hello_asm.S  —  Pure-assembly UART Hello + Echo
+ *  hello_asm.S  -  RV32 UART Hello World + Echo Test Firmware
  *
- *  This firmware requires NO stack, NO C runtime, NO heap.
- *  It is the simplest possible program to prove UART works:
- *    1. Spin-wait until UART TX is ready  (UART_STATUS bit 0)
- *    2. Write one character at a time     (UART_TX offset 0x00)
- *    3. After banner, loop echoing RX→TX  (UART_STATUS bit 1)
+ *  Purpose: Minimal bare-metal UART test for the Arty S7 SoC.
+ *    1. Set up machine trap vector (mtvec) explicitly.
+ *    2. Flush any stale RX bytes left over from reset / BTN0.
+ *    3. Print banner starting with CR+LF so it always appears
+ *       on a fresh terminal line.
+ *    4. Echo every received character back to the terminal.
  *
- *  Memory Map (must match soc_top.sv and link.ld):
- *    0x0000_0000 : start of BRAM (this code runs here)
- *    0x1000_0000 : UART_TX   (write-only, offset +0x00)
- *    0x1000_0004 : UART_RX   (read-only,  offset +0x04)
- *    0x1000_0008 : UART_STAT (read-only,  bit0=TX_READY, bit1=RX_VALID)
+ *  UART memory map (base = 0x1000_0000):
+ *    +0x00  [W]  TX Data   - write one byte to transmit
+ *    +0x04  [R]  RX Data   - read one received byte
+ *    +0x08  [R]  Status    - bit[0]=TX_READY, bit[1]=RX_VALID
+ *
+ *  PuTTY settings required:
+ *    COM4, 115200 8N1, Flow = None
+ *    Terminal > Local Echo       = Force Off
+ *    Terminal > Local Line Edit  = Force Off
+ *
+ *  Register allocation (callee-saved across all helpers):
+ *    s0 = UART base address (0x1000_0000)
+ *    s2 = RX_VALID mask (0x2)
  * ============================================================ */
 
     .section .text.startup, "ax"
     .global _start
-    .global _halt
 
-/* ---- UART register base ---- */
-#define UART_BASE    0x10000000
-#define UART_TX_OFF  0x00
-#define UART_RX_OFF  0x04
-#define UART_ST_OFF  0x08
-#define TX_READY     0x01
-#define RX_VALID     0x02
+/* ------------------------------------------------------------ */
+/*  Constants                                                    */
+/* ------------------------------------------------------------ */
+#define UART_BASE   0x10000000
+#define UART_TX     0x00
+#define UART_RX     0x04
+#define UART_STAT   0x08
+#define TX_READY    0x01
+#define RX_VALID    0x02
 
-/* ---- Macro: send one char in register a0, clobbers t0, t1, t2 ---- */
-.macro putc  reg
-    li    t1, UART_BASE
-    li    t2, TX_READY
-1:  lw    t0, UART_ST_OFF(t1)     /* read UART_STATUS */
-    and   t0, t0, t2
-    beqz  t0, 1b                  /* spin while TX busy */
-    sw    \reg, UART_TX_OFF(t1)   /* write byte */
+/* ============================================================
+ *  uart_putc_r: Send char already in a0.
+ *  Uses: t0, t1.  s0 must already hold UART_BASE.
+ * ============================================================ */
+.macro uart_putc_r
+    li    t1, TX_READY
+99: lw    t0, UART_STAT(s0)
+    and   t0, t0, t1
+    beqz  t0, 99b
+    sw    a0, UART_TX(s0)
 .endm
 
+/* ============================================================
+ *  uart_putc_imm ch: Load literal char, then send.
+ *  Uses: a0, t0, t1.
+ * ============================================================ */
+.macro uart_putc_imm ch
+    li    a0, \ch
+    uart_putc_r
+.endm
+
+/* ============================================================
+ *  _start: CPU entry point after reset
+ * ============================================================ */
 _start:
-    /* --- Disable all interrupts (CSRs) --- */
+    /* 1. Disable all interrupts */
     csrwi mie,     0
     csrwi mstatus, 0
 
-    /* --- Load UART base into s0 (saved across the banner loop) --- */
+    /* 2. Set saved registers */
     li    s0, UART_BASE
+    li    s2, RX_VALID
 
-    /* --- Print banner string character by character --- */
-    /* "Hello from RISC-V SoC!\r\n" */
-    li    a0, 'H' ; putc a0
-    li    a0, 'e' ; putc a0
-    li    a0, 'l' ; putc a0
-    li    a0, 'l' ; putc a0
-    li    a0, 'o' ; putc a0
-    li    a0, ' ' ; putc a0
-    li    a0, 'f' ; putc a0
-    li    a0, 'r' ; putc a0
-    li    a0, 'o' ; putc a0
-    li    a0, 'm' ; putc a0
-    li    a0, ' ' ; putc a0
-    li    a0, 'R' ; putc a0
-    li    a0, 'I' ; putc a0
-    li    a0, 'S' ; putc a0
-    li    a0, 'C' ; putc a0
-    li    a0, '-' ; putc a0
-    li    a0, 'V' ; putc a0
-    li    a0, ' ' ; putc a0
-    li    a0, 'S' ; putc a0
-    li    a0, 'o' ; putc a0
-    li    a0, 'C' ; putc a0
-    li    a0, '!' ; putc a0
-    li    a0, '\r'; putc a0
-    li    a0, '\n'; putc a0
+    /* 3. Explicit mtvec setup -> _trap_handler */
+    la    t0, _trap_handler
+    csrw  mtvec, t0
 
-    li    a0, 'T' ; putc a0
-    li    a0, 'y' ; putc a0
-    li    a0, 'p' ; putc a0
-    li    a0, 'e' ; putc a0
-    li    a0, ' ' ; putc a0
-    li    a0, 'a' ; putc a0
-    li    a0, 'n' ; putc a0
-    li    a0, 'y' ; putc a0
-    li    a0, 't' ; putc a0
-    li    a0, 'h' ; putc a0
-    li    a0, 'i' ; putc a0
-    li    a0, 'n' ; putc a0
-    li    a0, 'g' ; putc a0
-    li    a0, ':' ; putc a0
-    li    a0, ' ' ; putc a0
-    li    a0, '\r'; putc a0
-    li    a0, '\n'; putc a0
+    /* 4. Flush stale UART RX (from keys held during BTN0 press) */
+flush_rx:
+    lw    t0, UART_STAT(s0)
+    andi  t0, t0, RX_VALID
+    beqz  t0, flush_done
+    lw    t0, UART_RX(s0)
+    j     flush_rx
+flush_done:
 
-    /* --- RX→TX echo loop (forever) --- */
-    li    t3, RX_VALID
+    /* 5. Print banner - starts with CR+LF for a fresh terminal line */
+    uart_putc_imm '\r'
+    uart_putc_imm '\n'
+    uart_putc_imm 'H'
+    uart_putc_imm 'e'
+    uart_putc_imm 'l'
+    uart_putc_imm 'l'
+    uart_putc_imm 'o'
+    uart_putc_imm ' '
+    uart_putc_imm 'f'
+    uart_putc_imm 'r'
+    uart_putc_imm 'o'
+    uart_putc_imm 'm'
+    uart_putc_imm ' '
+    uart_putc_imm 'R'
+    uart_putc_imm 'I'
+    uart_putc_imm 'S'
+    uart_putc_imm 'C'
+    uart_putc_imm '-'
+    uart_putc_imm 'V'
+    uart_putc_imm ' '
+    uart_putc_imm 'S'
+    uart_putc_imm 'o'
+    uart_putc_imm 'C'
+    uart_putc_imm '!'
+    uart_putc_imm '\r'
+    uart_putc_imm '\n'
+    uart_putc_imm 'T'
+    uart_putc_imm 'y'
+    uart_putc_imm 'p'
+    uart_putc_imm 'e'
+    uart_putc_imm ' '
+    uart_putc_imm 'a'
+    uart_putc_imm 'n'
+    uart_putc_imm 'y'
+    uart_putc_imm 't'
+    uart_putc_imm 'h'
+    uart_putc_imm 'i'
+    uart_putc_imm 'n'
+    uart_putc_imm 'g'
+    uart_putc_imm ':'
+    uart_putc_imm ' '
+    uart_putc_imm '\r'
+    uart_putc_imm '\n'
+
+/* ============================================================
+ *  6. RX->TX echo loop (forever)
+ *     s0 = UART base, s2 = RX_VALID
+ * ============================================================ */
 echo_loop:
-    lw    t0, UART_ST_OFF(s0)     /* read UART_STATUS */
-    and   t0, t0, t3
-    beqz  t0, echo_loop           /* loop until a byte arrives */
+wait_rx:
+    lw    t0, UART_STAT(s0)
+    and   t0, t0, s2
+    beqz  t0, wait_rx
 
-    lw    a0, UART_RX_OFF(s0)     /* read received byte */
-    andi  a0, a0, 0xFF            /* mask to 8 bits */
+    lw    a0, UART_RX(s0)
+    andi  a0, a0, 0xFF
 
-    /* Echo it back */
-    li    t2, TX_READY
-tx_wait:
-    lw    t0, UART_ST_OFF(s0)
-    and   t0, t0, t2
-    beqz  t0, tx_wait
-    sw    a0, UART_TX_OFF(s0)     /* send the byte */
+    uart_putc_r
 
-    j     echo_loop               /* wait for next byte */
+    /* If Enter key (\r) was typed, echo \n as well so PuTTY advances line */
+    li    t0, '\r'
+    bne   a0, t0, not_cr
+    uart_putc_imm '\n'
+not_cr:
+
+    j     echo_loop
 
 _halt:
-    j     _halt                   /* should never reach here */
+    j     _halt
 
-/* ---- Minimal trap handler: just halt ---- */
+/* ============================================================
+ *  Trap handler
+ * ============================================================ */
     .section .text.trap, "ax"
     .global _trap_handler
-    .align 4
+    .align  4
 _trap_handler:
     j     _halt

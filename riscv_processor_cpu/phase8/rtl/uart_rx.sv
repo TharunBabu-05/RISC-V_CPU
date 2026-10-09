@@ -3,8 +3,16 @@
 //  Standard 8N1 format: 1 start bit, 8 data bits, 1 stop bit
 //
 //  Parameters:
-//    CLK_FREQ  : System clock frequency in Hz (default 100 MHz)
+//    CLK_FREQ  : System clock frequency in Hz (default 25 MHz)
 //    BAUD_RATE : Baud rate (default 115200)
+//
+//  Sampling strategy:
+//    - Detect START falling edge → wait HALF_BIT to align to
+//      mid-start bit → sample each DATA bit at mid-bit by
+//      counting a FULL CLKS_PER_BIT from the previous sample.
+//    - This matches the standard "oversample-16 with mid-bit
+//      sample" approach, simplified to 1× oversampling aligned
+//      by the half-baud start window.
 //
 //  Interface:
 //    o_data    : Received byte (valid when o_valid pulses high)
@@ -14,7 +22,7 @@
 `timescale 1ns/1ps
 
 module uart_rx #(
-    parameter int CLK_FREQ  = 100_000_000,
+    parameter int CLK_FREQ  = 25_000_000,
     parameter int BAUD_RATE = 115_200
 ) (
     input  logic       clk,
@@ -28,8 +36,8 @@ module uart_rx #(
     output logic       o_valid    // 1-cycle pulse: new byte ready
 );
 
-    localparam int CLKS_PER_BIT  = CLK_FREQ / BAUD_RATE;        // 868
-    localparam int HALF_BIT      = CLKS_PER_BIT / 2;            // 434 — sample at mid-bit
+    localparam int CLKS_PER_BIT  = CLK_FREQ / BAUD_RATE;        // e.g. 217 @ 25 MHz/115200
+    localparam int HALF_BIT      = CLKS_PER_BIT / 2;            // e.g. 108 — align to mid-bit
 
     // -------------------------------------------------------
     //  Input synchronizer (2-FF to prevent metastability)
@@ -85,13 +93,15 @@ module uart_rx #(
                 end
 
                 // ----------------------------------------
-                //  Wait half a baud period then confirm start bit
-                // -------------------------------------------------------
+                //  Wait HALF_BIT cycles to reach the
+                //  middle of the start bit, then verify it
+                //  is still LOW (not noise).
+                // ----------------------------------------
                 S_START: begin
                     if (baud_cnt == HALF_BIT - 1) begin
                         baud_cnt <= '0;
                         if (rx_sync == 1'b0)
-                            state <= S_DATA;    // Valid start bit
+                            state <= S_DATA;    // Valid start bit — now aligned to mid-bit
                         else
                             state <= S_IDLE;    // Noise, abort
                     end else begin
@@ -100,10 +110,16 @@ module uart_rx #(
                 end
 
                 // ----------------------------------------
+                //  Sample each data bit at its mid-point.
+                //  Because S_START left us in the middle of
+                //  the START bit, counting a full CLKS_PER_BIT
+                //  from that point lands us in the centre of
+                //  each subsequent bit (bit 0 … bit 7).
+                // ----------------------------------------
                 S_DATA: begin
                     if (baud_cnt == CLKS_PER_BIT - 1) begin
-                        baud_cnt            <= '0;
-                        shift_reg[bit_idx]  <= rx_sync;  // Sample at full baud
+                        baud_cnt           <= '0;
+                        shift_reg[bit_idx] <= rx_sync;  // Sample at mid-bit
                         if (bit_idx == 3'd7) begin
                             bit_idx <= '0;
                             state   <= S_STOP;
@@ -116,6 +132,10 @@ module uart_rx #(
                 end
 
                 // ----------------------------------------
+                //  Wait for STOP bit period, then capture.
+                //  We do NOT check the STOP bit level here
+                //  to be tolerant of slight baud mismatches.
+                // ----------------------------------------
                 S_STOP: begin
                     if (baud_cnt == CLKS_PER_BIT - 1) begin
                         baud_cnt <= '0;
@@ -125,6 +145,10 @@ module uart_rx #(
                     end
                 end
 
+                // ----------------------------------------
+                //  Output the received byte for exactly 1 cycle.
+                //  Return to IDLE immediately so back-to-back
+                //  bytes are handled correctly.
                 // ----------------------------------------
                 S_DONE: begin
                     o_data  <= shift_reg;

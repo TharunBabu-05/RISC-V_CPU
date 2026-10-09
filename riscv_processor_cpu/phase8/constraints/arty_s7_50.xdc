@@ -16,12 +16,14 @@ create_clock -add -name sys_clk_pin -period 83.333 -waveform {0 41.667} [get_por
 ## to invert it in soc_top.sv or change this to LVCMOS33.
 set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33  PULLDOWN TRUE } [get_ports { rst_btn }]
 
-## ---- UART ----
-## USB-UART Interface
-## uart_rxd_out = PC → FPGA (RX)
-## uart_txd_in  = FPGA → PC (TX)
-set_property -dict { PACKAGE_PIN R12   IOSTANDARD LVCMOS33 } [get_ports { uart_rxd_out }]
-set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { uart_txd_in }]
+## ---- UART (USB-UART Bridge via onboard FTDI FT2232) ----
+## Pin R12 connects to FTDI RXD input  ==> FPGA UART TX (output to PC)
+## Pin V12 connects to FTDI TXD output ==> FPGA UART RX (input from PC)
+set_property -dict { PACKAGE_PIN R12   IOSTANDARD LVCMOS33 } [get_ports { uart_tx }]
+set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33  PULLUP TRUE } [get_ports { uart_rx }]
+## PULLUP TRUE is critical: UART idle state is HIGH (mark = logic 1).
+## Without it, the RX pin floats LOW when FTDI is not actively driving it,
+## causing the RX state machine to see infinite start bits → continuous garbage.
 
 ## ---- LEDs (4x: LD2..LD5 on Arty S7 board) ----
 ## led[0] = LD2 (rst_n: CPU running)
@@ -31,13 +33,13 @@ set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { uart_t
 set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS33 } [get_ports { led[0] }]
 set_property -dict { PACKAGE_PIN F13   IOSTANDARD LVCMOS33 } [get_ports { led[1] }]
 set_property -dict { PACKAGE_PIN E13   IOSTANDARD LVCMOS33 } [get_ports { led[2] }]
-set_property -dict { PACKAGE_PIN H16   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]
+set_property -dict { PACKAGE_PIN H15   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]
 
 ## ---- Timing Constraints ----
 ## Asynchronous I/O: buttons, LEDs, and UART (115200 baud is asynchronous to core clock)
 set_false_path -from [get_ports rst_btn]
-set_false_path -from [get_ports uart_rxd_out]
-set_false_path -to   [get_ports uart_txd_in]
+set_false_path -from [get_ports uart_rx]
+set_false_path -to   [get_ports uart_tx]
 set_false_path -to   [get_ports {led[*]}]
 
 ## ---- Configuration options ----

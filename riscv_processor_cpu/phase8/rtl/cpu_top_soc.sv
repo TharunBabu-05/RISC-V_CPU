@@ -85,7 +85,7 @@ module cpu_top_soc #(
     // address from the COMBINATORIAL next PC. This way, the BRAM latches
     // the address at the same time the PC register updates, and the 
     // instruction is valid during the IF stage.
-    assign imem_addr = pc_next[31:0];
+    assign imem_addr = pc_write ? pc_next[31:0] : pc[31:0];
     assign if_instr  = imem_rdata;
 
     branch_predictor #(.XLEN(XLEN)) u_bpred (

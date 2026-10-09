@@ -19,8 +19,7 @@
 # ============================================================
 
 # ---- Toolchain ----
-# Try riscv32-unknown-elf first; fall back to riscv64-unknown-elf
-CROSS   ?= riscv32-unknown-elf
+CROSS   ?= C:/xpack-riscv-none-elf-gcc-15.2.0-1/bin/riscv-none-elf
 CC       = $(CROSS)-gcc
 OBJCOPY  = $(CROSS)-objcopy
 OBJDUMP  = $(CROSS)-objdump
@@ -56,7 +55,7 @@ OBJS    = $(addprefix $(BUILD)/, $(addsuffix .o, $(basename $(SRCS))))
 # ============================================================
 #  Default Target: Build firmware
 # ============================================================
-.PHONY: all clean program disasm size
+.PHONY: all clean program disasm size hello hello_program
 
 all: $(BUILD)/$(HEX) $(BUILD)/$(DUMP)
 	@echo ""
@@ -112,3 +111,37 @@ size: $(BUILD)/$(ELF)
 # ---- Clean build artifacts ----
 clean:
 	rm -rf $(BUILD)
+
+# ============================================================
+#  Hello-World UART Test Firmware (hello_asm.S standalone build)
+#  Usage:
+#    make hello           — compile hello_asm.S → build/hello.vmem
+#    make hello_program   — also copy to ../rtl/firmware.vmem
+# ============================================================
+
+HELLO_SRC = hello_asm.S
+HELLO_ELF = $(BUILD)/hello.elf
+HELLO_VMM = $(BUILD)/hello.vmem
+HELLO_DMP = $(BUILD)/hello.dump
+
+hello: $(HELLO_VMM) $(HELLO_DMP)
+	@echo ""
+	@echo "=========================================="
+	@echo "  Hello-World firmware built: $(HELLO_VMM)"
+	@echo "  Run  'make hello_program'  to install."
+	@echo "=========================================="
+
+$(HELLO_ELF): $(HELLO_SRC) link.ld | $(BUILD)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(HELLO_SRC)
+	$(SIZE) $@
+
+$(HELLO_VMM): $(HELLO_ELF)
+	$(OBJCOPY) -O verilog --verilog-data-width=4 $< $@
+
+$(HELLO_DMP): $(HELLO_ELF)
+	$(OBJDUMP) -d -M numeric,no-aliases $< > $@
+
+hello_program: $(HELLO_VMM)
+	cp $(HELLO_VMM) ../rtl/firmware.vmem
+	@echo "Copied $(HELLO_VMM) -> ../rtl/firmware.vmem"
+	@echo "Re-run Vivado synthesis to update BRAM init image."

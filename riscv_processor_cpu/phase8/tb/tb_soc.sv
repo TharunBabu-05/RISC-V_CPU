@@ -39,8 +39,8 @@ module tb_soc;
     soc_top dut (
         .clk_12mhz   (clk_12mhz),
         .rst_btn     (rst_btn),
-        .uart_txd_in (uart_txd_in),
-        .uart_rxd_out(uart_rxd_out),
+        .uart_tx     (uart_txd_in),
+        .uart_rx     (uart_rxd_out),
         .led         (led)
     );
 
@@ -60,29 +60,54 @@ module tb_soc;
         rst_btn = 1'b0;          // Release reset
         $display("[%0t ns] Reset released — CPU should start booting.", $time);
 
-        // Run for 2 ms to observe execution
-        #2_000_000;
+        // Wait until banner finishes printing (~8.2 ms)
+        #8_200_000;
+        $display("\n>>> TESTBENCH: Sending 'k' (0x6B) to SoC...");
+        send_uart_byte(8'h6B);
 
-        $display("[%0t ns] Sim complete. PC=%h  LED=%b",
+        // Wait 1 ms to observe echo
+        #1_000_000;
+
+        $display("\n[%0t ns] Sim complete. PC=%h  LED=%b",
                   $time, dut.dbg_pc, led);
         $finish;
     end
 
-    // =========================================================
-    //  PC change monitor  (print every instruction fetch)
-    // =========================================================
-    logic [31:0] prev_pc = 32'hFFFF_FFFF;
-    always @(posedge dut.clk_100mhz) begin
-        if (dut.rst_n && (dut.dbg_pc !== prev_pc)) begin
-            $display("[%10t ns] PC=%08h  INSTR=%08h  ALU=%08h  LED=%b",
-                     $time,
-                     dut.dbg_pc,
-                     dut.dbg_instr,
-                     dut.dbg_alu_result,
-                     led);
-            prev_pc <= dut.dbg_pc;
+    task send_uart_byte(input [7:0] data);
+        integer b;
+        time bit_time;
+        begin
+            bit_time = 18083.5 * 1000 * 1ps;
+            // Start bit
+            uart_rxd_out = 1'b0;
+            #bit_time;
+            // 8 data bits
+            for (b = 0; b < 8; b = b + 1) begin
+                uart_rxd_out = data[b];
+                #bit_time;
+            end
+            // Stop bit
+            uart_rxd_out = 1'b1;
+            #bit_time;
+        end
+    endtask
+
+    // UART character decoder
+    initial begin
+        logic [7:0] rx_byte;
+        forever begin
+            @(negedge uart_txd_in);
+            #(18083.5 * 1.5 * 1000); // 1.5 bit periods to mid bit 0
+            for (int b = 0; b < 8; b++) begin
+                rx_byte[b] = uart_txd_in;
+                #(18083.5 * 1000);
+            end
+            $write("%c", rx_byte);
+            $fflush();
         end
     end
+
+
 
     // =========================================================
     //  LED monitor
@@ -93,18 +118,11 @@ module tb_soc;
     end
 
     // =========================================================
-    //  UART TX monitor  (prints when UART start bit detected)
-    // =========================================================
-    always @(negedge uart_txd_in) begin
-        $display("[%0t ns] *** UART TX: start bit detected (CPU sending data)", $time);
-    end
-
-    // =========================================================
-    //  Timeout watchdog (5 ms)
+    //  Timeout watchdog (15 ms)
     // =========================================================
     initial begin
-        #5_000_000;
-        $display("ERROR: Simulation timeout after 5ms!");
+        #15_000_000;
+        $display("\n[%0t ns] Simulation finished.", $time);
         $finish;
     end
 

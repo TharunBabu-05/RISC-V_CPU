@@ -37,30 +37,40 @@ module soc_top (
     input  logic        clk_12mhz,    // Arty S7 on-board 12 MHz oscillator
     input  logic        rst_btn,      // Active-high reset button (BTN0)
 
-    // ---- UART Pins (USB-UART via onboard FTDI) ----
-    output logic        uart_txd_in,  // FPGA TX → PC RX (V12 on Rev E)
-    input  logic        uart_rxd_out, // PC TX → FPGA RX (R12 on Rev E)
+    // ---- UART Pins (USB-UART via onboard FTDI FT2232) ----
+    // On the Arty S7 board:
+    //   Pin R12 connects to FTDI RXD input  ==> FPGA UART TX (output to PC)
+    //   Pin V12 connects to FTDI TXD output ==> FPGA UART RX (input from PC)
+    output logic        uart_tx,      // FPGA TX → PC RX (Pin R12)
+    input  logic        uart_rx,      // PC TX → FPGA RX (Pin V12)
 
     // ---- Status LEDs ----
     output logic [3:0]  led           // LED[0]=run, LED[1]=PLL locked
 );
 
     // -------------------------------------------------------
-    //  PLL / MMCM: Generate 100 MHz from 12 MHz board clock
-    //  This is instantiated as a Xilinx primitive.
-    //  In simulation, clk_100mhz is driven directly.
+    //  PLL / MMCM: Generate 25 MHz from 12 MHz board clock
+    //  MMCM config (verified from clk_wiz_0 IP):
+    //    CLKFBOUT_MULT_F = 62.5, DIVCLK_DIVIDE = 1, CLKOUT0_DIVIDE_F = 30
+    //    => 12 MHz × 62.5 / 30 = 25 MHz
+    //  NOTE: Wire is named 'clk_100mhz' for legacy; it actually carries 25 MHz.
     // -------------------------------------------------------
-    logic clk_100mhz;
+    logic clk_100mhz;   // WARNING: actually 25 MHz — see MMCM config above
     logic pll_locked;
 
-    // Xilinx MMCM (Clocking Wizard IP — generates both synthesis netlist
-    // and simulation behavioral model via generate_target all).
+`ifndef SIMULATION
+    // Xilinx MMCM (Clocking Wizard IP)
     clk_wiz_0 u_pll (
         .clk_in1 (clk_12mhz),
         .clk_out1(clk_100mhz),
         .locked  (pll_locked)
         // No reset port — IP was created with USE_RESET=false
     );
+`else
+    // Simulation bypass
+    assign clk_100mhz = clk_12mhz;
+    assign pll_locked = 1'b1;
+`endif
 
     // -------------------------------------------------------
     //  Reset synchronizer
@@ -145,10 +155,33 @@ module soc_top (
     logic [31:0] bram_rdata;
     logic [31:0] uart_rdata;
 
+    // Align UART read path and selects with BRAM's 1-cycle read latency:
+    // Cycle N   (EX stage):  dmem_addr/sel valid. BRAM latches addr; UART outputs rdata.
+    // Cycle N+1 (MEM stage): bram_rdata valid from BRAM; uart_rdata_latched valid.
+    //                        Mux selects based on registered sel_*_mem.
+    //                        mem_wb_mem_data latches dmem_rdata at posedge N+1.
+    logic [31:0] uart_rdata_latched;
+    logic        sel_bram_mem;
+    logic        sel_uart_mem;
+
+    always_ff @(posedge clk_100mhz or negedge rst_n) begin
+        if (!rst_n) begin
+            uart_rdata_latched <= 32'h0;
+            sel_bram_mem       <= 1'b0;
+            sel_uart_mem       <= 1'b0;
+        end else begin
+            uart_rdata_latched <= uart_rdata;
+            sel_bram_mem       <= sel_bram;
+            sel_uart_mem       <= sel_uart;
+        end
+    end
+
     always_comb begin
         dmem_rdata = 32'h0;
-        if (sel_bram) dmem_rdata = bram_rdata;
-        if (sel_uart) dmem_rdata = uart_rdata;
+        if (sel_uart_mem)
+            dmem_rdata = uart_rdata_latched;
+        else if (sel_bram_mem)
+            dmem_rdata = bram_rdata;
     end
 
     // -------------------------------------------------------
@@ -200,18 +233,18 @@ module soc_top (
     //  UART Peripheral
     // -------------------------------------------------------
     uart #(
-        .CLK_FREQ (25_000_000),
+        .CLK_FREQ (25_000_000),    // 25 MHz — MMCM output: 12MHz × 62.5 / 30 = 25 MHz (verified)
         .BAUD_RATE(115_200)
     ) u_uart (
-        .clk        (clk_100mhz),
+        .clk        (clk_100mhz),  // 25 MHz signal on the wire named clk_100mhz
         .rst_n      (rst_n),
         .addr       (dmem_addr[3:0]),
         .wr_data    (dmem_wdata),
         .wr_en      (sel_uart & dmem_wr_en),
         .rd_en      (sel_uart & dmem_rd_en),
         .rd_data    (uart_rdata),
-        .uart_tx_pin(uart_txd_in),
-        .uart_rx_pin(uart_rxd_out)
+        .uart_tx_pin(uart_tx),
+        .uart_rx_pin(uart_rx)
     );
 
     // -------------------------------------------------------
@@ -250,9 +283,21 @@ module soc_top (
     // -------------------------------------------------------
     //  Status LEDs
     // -------------------------------------------------------
-    assign led[0] = rst_n;          // Solid on = CPU running
-    assign led[1] = pll_locked;     // Solid on = PLL locked
-    assign led[2] = 1'b0;
-    assign led[3] = 1'b0;
+    //  LD0 (green) : Solid = CPU is out of reset and running
+    //  LD1 (green) : Solid = MMCM/PLL is locked (25 MHz clock stable)
+    //  LD2 (green) : ON while UART TX is busy  (FPGA is sending to PC)
+    //  LD3 (green) : ON while UART RX has data (byte waiting in buffer)
+    //
+    //  Diagnostic guide:
+    //    LD0+LD1 ON, LD2 blinking on keypress = firmware running OK
+    //    LD3 briefly ON when you type = UART RX received the byte
+    //    LD2 always ON = CPU stuck in banner or echo TX loop
+    //    LD3 always ON = UART RX stuck valid (glitch / wiring issue)
+    logic uart_tx_ready_sig, uart_rx_valid_sig;  // reserved for future use
+
+    assign led[0] = rst_n;              // CPU running (LD0)
+    assign led[1] = pll_locked;         // PLL locked (LD1)
+    assign led[2] = ~uart_tx;           // TX active: pulses ON when transmitting (LD2)
+    assign led[3] = ~uart_rx;           // RX active: pulses ON when receiving (LD3)
 
 endmodule
