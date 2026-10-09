@@ -376,8 +376,6 @@ Idea -> RTL -> Pipeline -> ISA -> Verification -> SoC -> FPGA -> Firmware -> Gam
 
 ## 🙌 Credits
 
-Built by **Tharun Babu** as a from-scratch RISC-V CPU architecture project.
-
 Special thanks to the AI tools and debugging assistants that helped along the journey, but the milestone belongs to the builder who kept pushing through every hardware bug until the board finally played the game.
 
 <div align="center">
