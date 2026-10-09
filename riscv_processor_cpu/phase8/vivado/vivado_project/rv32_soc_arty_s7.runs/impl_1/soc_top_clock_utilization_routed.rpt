@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date         : Fri Oct  9 15:07:52 2026
+| Date         : Fri Oct  9 21:58:48 2026
 | Host         : tharun running 64-bit major release  (build 9200)
 | Command      : report_clock_utilization -file soc_top_clock_utilization_routed.rpt
 | Design       : soc_top
@@ -48,7 +48,7 @@ Table of Contents
 +-----------+-----------+-----------------+------------+----------------+--------------+-------------------+-------------+-----------------+--------------+----------------------+--------------------------+-----------------------------------+
 | Global Id | Source Id | Driver Type/Pin | Constraint | Site           | Clock Region | Load Clock Region | Clock Loads | Non-Clock Loads | Clock Period | Clock                | Driver Pin               | Net                               |
 +-----------+-----------+-----------------+------------+----------------+--------------+-------------------+-------------+-----------------+--------------+----------------------+--------------------------+-----------------------------------+
-| g0        | src0      | BUFG/O          | None       | BUFGCTRL_X0Y16 | n/a          |                 4 |        4881 |               0 |       40.000 | clk_out1_clk_wiz_0   | u_pll/inst/clkout1_buf/O | u_pll/inst/clk_out1               |
+| g0        | src0      | BUFG/O          | None       | BUFGCTRL_X0Y16 | n/a          |                 4 |        4881 |               0 |       40.000 | clk_out1_clk_wiz_0_1 | u_pll/inst/clkout1_buf/O | u_pll/inst/clk_out1               |
 | g1        | src1      | BUFG/O          | None       | BUFGCTRL_X0Y17 | n/a          |                 1 |           1 |               0 |       83.333 | clkfbout_clk_wiz_0_1 | u_pll/inst/clkf_buf/O    | u_pll/inst/clkfbout_buf_clk_wiz_0 |
 +-----------+-----------+-----------------+------------+----------------+--------------+-------------------+-------------+-----------------+--------------+----------------------+--------------------------+-----------------------------------+
 * Clock Loads column represents the clock pin loads (pin count)

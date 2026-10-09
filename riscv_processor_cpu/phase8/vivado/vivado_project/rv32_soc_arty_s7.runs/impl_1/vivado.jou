@@ -2,8 +2,8 @@
 # Vivado v2020.2 (64-bit)
 # SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
 # IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
-# Start of session at: Fri Oct  9 15:03:14 2026
-# Process ID: 15896
+# Start of session at: Fri Oct  9 21:47:42 2026
+# Process ID: 10056
 # Current directory: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/impl_1
 # Command line: vivado.exe -log soc_top.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source soc_top.tcl -notrace
 # Log file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/impl_1/soc_top.vdi

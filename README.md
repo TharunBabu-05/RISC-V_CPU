@@ -95,26 +95,50 @@ The processor comes integrated into a custom System-on-Chip (SoC) environment co
 
 ## 🚀 How to Run (Arty S7-50 Deployment)
 
-Follow these steps to deploy the SoC to your FPGA and play the game:
+We provide two pre-built firmwares:
+1. **Diagnostic Firmware:** `Hello World + Key Echo` ([`hello_asm.S`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/software/hello_asm.S))
+2. **Game Firmware:** `Snake Game` ([`snake.c`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/software/snake.c))
 
-### 1️⃣ Compile the Firmware
-You need the RISC-V GCC toolchain (`riscv-none-elf-gcc`).
-```bash
-cd phase8/software
-make CROSS=riscv-none-elf program
+For the complete in-depth guide, hardware bug fix explanations, and debugging cheatsheet, refer to:  
+👉 **[Phase 8 Complete Deployment Guide](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/README.md)**
+
+---
+
+### 1️⃣ Compile & Install Firmware
+Open PowerShell and navigate to the software folder:
+```powershell
+cd riscv_processor_cpu/phase8/software
 ```
-<i>This compiles `snake.c`, links it via `link.ld`, and generates `firmware.vmem` which is automatically injected into the BRAM during synthesis.</i>
 
-### 2️⃣ Synthesize the Bitstream
-Open **Vivado 2020.2** and generate the project using the automated script:
-1. Go to `Tools` -> `Run Tcl Script...`
-2. Select `phase8/vivado/create_project.tcl`
-3. Wait for Synthesis and Implementation to complete (~5-10 mins).
+* **To deploy Hello World + Echo:**
+  ```powershell
+  make hello_program
+  ```
 
-### 3️⃣ Program & Play!
-1. Open **Hardware Manager** in Vivado and program the device with `soc_top.bit`.
-2. Open **PuTTY** or **Tera Term** on the board's COM port (Baud: `115200`, Data: `8`, Parity: `None`, Stop: `1`).
-3. **Press any key** to start RISC-V Snake! (Use `W, A, S, D` to move).
+* **To deploy Snake Game:**
+  ```powershell
+  make program
+  ```
+
+*(This compiles the target, links via `link.ld`, and copies the `.vmem` image to `phase8/rtl/firmware.vmem`)*.
+
+---
+
+### 2️⃣ Synthesize the Bitstream (CRITICAL: Reset Runs)
+Because Vivado embeds `$readmemh("firmware.vmem")` during **Synthesis**, you must reset synthesis whenever switching firmwares:
+1. Open the project in **Vivado**: `riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.xpr`
+2. In the **Design Runs** tab at the bottom: Right-click **`synth_1`** $\to$ **Reset Runs**.
+3. In the Flow Navigator: Click **Generate Bitstream** (Synthesis $\to$ Implementation $\to$ Bitstream).
+
+---
+
+### 3️⃣ Program the Board & Serial Terminal Setup
+1. In Vivado: Expand **Program and Debug** $\to$ **Open Hardware Manager** $\to$ **Program Device**.
+2. Open **PuTTY**:
+   - Connection: `Serial`, Port: `COM4`, Speed: `115200` (8N1, Flow: None).
+   - Under **Terminal**: Set **Local echo** = `Force off` and **Local line editing** = `Force off`.
+   - Window size: Maximize or set to at least 80 columns × 25 rows.
+3. Press **BTN0** (Reset button on the Arty S7) to boot the processor!
 
 ---
 

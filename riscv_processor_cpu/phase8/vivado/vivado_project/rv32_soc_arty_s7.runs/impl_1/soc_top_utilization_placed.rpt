@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date         : Fri Oct  9 15:05:18 2026
+| Date         : Fri Oct  9 21:53:30 2026
 | Host         : tharun running 64-bit major release  (build 9200)
 | Command      : report_utilization -file soc_top_utilization_placed.rpt -pb soc_top_utilization_placed.pb
 | Design       : soc_top
