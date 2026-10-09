@@ -1,187 +1,359 @@
-<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
-  <!-- Glowing Filters -->
+<svg width="1200" height="760" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RISC-V RV32IM FPGA SoC Architecture</title>
+  <desc id="desc">Architecture presentation for a five-stage pipelined RV32IM CPU with BRAM, UART, firmware, forwarding, CSR, and FPGA deployment blocks.</desc>
+
   <defs>
-    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="5" result="blur" />
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050718"/>
+      <stop offset="48%" stop-color="#08142d"/>
+      <stop offset="100%" stop-color="#12091f"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="28%" r="62%">
+      <stop offset="0%" stop-color="#1ee7ff" stop-opacity="0.24"/>
+      <stop offset="50%" stop-color="#7b3cff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stage-if" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff3b8d"/>
+      <stop offset="100%" stop-color="#7c1558"/>
+    </linearGradient>
+    <linearGradient id="stage-id" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8e5cff"/>
+      <stop offset="100%" stop-color="#321d8f"/>
+    </linearGradient>
+    <linearGradient id="stage-ex" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12d9ff"/>
+      <stop offset="100%" stop-color="#085fbc"/>
+    </linearGradient>
+    <linearGradient id="stage-mem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34f27a"/>
+      <stop offset="100%" stop-color="#0b7f55"/>
+    </linearGradient>
+    <linearGradient id="stage-wb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffc24a"/>
+      <stop offset="100%" stop-color="#c36b00"/>
+    </linearGradient>
+    <linearGradient id="soc-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10233f"/>
+      <stop offset="50%" stop-color="#152b52"/>
+      <stop offset="100%" stop-color="#26183e"/>
+    </linearGradient>
+
+    <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <filter id="glow-magenta" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="panel-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
     </filter>
-    
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#050510" />
-      <stop offset="100%" stop-color="#101020" />
-    </linearGradient>
-    
-    <linearGradient id="grad-if" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FF007F" /><stop offset="100%" stop-color="#99004C" />
-    </linearGradient>
-    <linearGradient id="grad-id" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#7000FF" /><stop offset="100%" stop-color="#440099" />
-    </linearGradient>
-    <linearGradient id="grad-ex" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#00AAFF" /><stop offset="100%" stop-color="#006699" />
-    </linearGradient>
-    <linearGradient id="grad-mem" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#00FF55" /><stop offset="100%" stop-color="#009933" />
-    </linearGradient>
-    <linearGradient id="grad-wb" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFAA00" /><stop offset="100%" stop-color="#996600" />
-    </linearGradient>
+
+    <marker id="arrow-cyan" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#4ef7ff"/>
+    </marker>
+    <marker id="arrow-pink" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#ff4df3"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#61ff93"/>
+    </marker>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.045"/>
+    </pattern>
   </defs>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;family=Fira+Code:wght@500&amp;display=swap');
-    
-    .title { font-family: 'Orbitron', sans-serif; font-size: 32px; fill: #FFFFFF; text-anchor: middle; letter-spacing: 3px; filter: drop-shadow(0 0 10px rgba(0,255,255,0.8)); }
-    .stage-title { font-family: 'Orbitron', sans-serif; font-size: 22px; fill: #FFFFFF; text-anchor: middle; font-weight: 700; }
-    .comp-text { font-family: 'Fira Code', monospace; font-size: 14px; fill: #FFFFFF; text-anchor: middle; }
-    
-    .path-data {
-      stroke: #00FFFF;
-      stroke-width: 4;
-      fill: none;
-      stroke-dasharray: 10 10;
-      animation: flow-forward 1s linear infinite;
-      filter: url(#glow-cyan);
+    .title {
+      font-family: Orbitron, Rajdhani, Segoe UI, Arial, sans-serif;
+      font-size: 35px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      fill: #f7fbff;
+      text-anchor: middle;
     }
-    .path-fwd {
-      stroke: #FF00FF;
-      stroke-width: 4;
-      fill: none;
-      stroke-dasharray: 12 12;
-      animation: flow-reverse 1s linear infinite;
-      filter: url(#glow-magenta);
+    .subtitle {
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 15px;
+      fill: #b8d8ff;
+      text-anchor: middle;
+      letter-spacing: 0.8px;
     }
-    
-    .stage-bg { stroke: rgba(255,255,255,0.3); stroke-width: 2; rx: 15; opacity: 0.15; }
-    .comp-box { stroke: rgba(255,255,255,0.8); stroke-width: 2; rx: 8; transition: all 0.3s; }
-    
-    /* Animations */
-    @keyframes flow-forward { to { stroke-dashoffset: -20; } }
-    @keyframes flow-reverse { to { stroke-dashoffset: 24; } }
-    
-    /* Pulsing core */
-    .pulse-core { animation: pulse 2s infinite alternate; }
+    .chip-text {
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      fill: #eaf7ff;
+      text-anchor: middle;
+    }
+    .stage-name {
+      font-family: Orbitron, Rajdhani, Segoe UI, Arial, sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      fill: #ffffff;
+      text-anchor: middle;
+      letter-spacing: 1px;
+    }
+    .stage-code {
+      font-family: Fira Code, Consolas, monospace;
+      font-size: 13px;
+      fill: #d7efff;
+      text-anchor: middle;
+    }
+    .module-label {
+      font-family: Fira Code, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 700;
+      fill: #ffffff;
+      text-anchor: middle;
+    }
+    .module-note {
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 11px;
+      fill: #d3e8ff;
+      text-anchor: middle;
+    }
+    .section-title {
+      font-family: Orbitron, Rajdhani, Segoe UI, Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      fill: #ffffff;
+      text-anchor: middle;
+      letter-spacing: 1px;
+    }
+    .small {
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 12px;
+      fill: #bcd4ef;
+      text-anchor: middle;
+    }
+    .panel {
+      stroke: rgba(255,255,255,0.24);
+      stroke-width: 1.5;
+      filter: url(#panel-shadow);
+    }
+    .stage-card {
+      stroke: rgba(255,255,255,0.32);
+      stroke-width: 1.6;
+      filter: url(#panel-shadow);
+    }
+    .module-box {
+      fill: rgba(5, 12, 31, 0.58);
+      stroke: rgba(255,255,255,0.32);
+      stroke-width: 1.1;
+    }
+    .flow {
+      fill: none;
+      stroke: #4ef7ff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      marker-end: url(#arrow-cyan);
+      filter: url(#soft-glow);
+      stroke-dasharray: 12 10;
+      animation: dashForward 1.35s linear infinite;
+    }
+    .control-flow {
+      fill: none;
+      stroke: #ff4df3;
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      marker-end: url(#arrow-pink);
+      filter: url(#soft-glow);
+      stroke-dasharray: 10 9;
+      animation: dashReverse 1.5s linear infinite;
+    }
+    .soc-flow {
+      fill: none;
+      stroke: #61ff93;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      marker-end: url(#arrow-green);
+      filter: url(#soft-glow);
+      stroke-dasharray: 10 8;
+      animation: dashForward 1.25s linear infinite;
+    }
+    .static-wire {
+      fill: none;
+      stroke: rgba(180, 215, 255, 0.42);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+    }
+    .spark {
+      animation: pulse 1.8s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+    @keyframes dashForward { to { stroke-dashoffset: -22; } }
+    @keyframes dashReverse { to { stroke-dashoffset: 19; } }
     @keyframes pulse {
-      0% { filter: drop-shadow(0 0 5px #00AAFF); transform: scale(1); }
-      100% { filter: drop-shadow(0 0 20px #00AAFF); transform: scale(1.02); }
+      from { opacity: 0.55; }
+      to { opacity: 1; }
     }
   </style>
 
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="url(#bg)" rx="20" />
-  <rect width="100%" height="100%" fill="none" stroke="#333344" stroke-width="6" rx="20" />
+  <rect width="1200" height="760" rx="28" fill="url(#bg)"/>
+  <rect width="1200" height="760" rx="28" fill="url(#halo)"/>
+  <rect width="1200" height="760" rx="28" fill="url(#grid)"/>
+  <rect x="10" y="10" width="1180" height="740" rx="24" fill="none" stroke="#26395f" stroke-width="2"/>
+  <rect x="18" y="18" width="1164" height="724" rx="20" fill="none" stroke="#40e7ff" stroke-opacity="0.18" stroke-width="1.2"/>
 
-  <!-- Title -->
-  <text x="500" y="60" class="title">RISC-V 32-BIT PIPELINED PROCESSOR SoC</text>
-  
-  <!-- Stages Container -->
-  <!-- IF -->
-  <rect x="50" y="100" width="160" height="300" class="stage-bg" fill="#FF007F" />
-  <text x="130" y="130" class="stage-title" fill="#FF007F">FETCH</text>
-  <rect x="70" y="160" width="120" height="60" class="comp-box" fill="url(#grad-if)" />
-  <text x="130" y="195" class="comp-text">PC / BPU</text>
-  <rect x="70" y="250" width="120" height="120" class="comp-box" fill="#222233" />
-  <text x="130" y="305" class="comp-text">Instr.</text>
-  <text x="130" y="325" class="comp-text">Fetch</text>
+  <text x="600" y="54" class="title">RISC-V RV32IM 5-STAGE PIPELINED SoC</text>
+  <text x="600" y="82" class="subtitle">Custom 32-bit CPU on Arty S7-50 - 64KB BRAM - UART firmware - Snake game verified in PuTTY</text>
 
-  <!-- ID -->
-  <rect x="230" y="100" width="160" height="300" class="stage-bg" fill="#7000FF" />
-  <text x="310" y="130" class="stage-title" fill="#7000FF">DECODE</text>
-  <rect x="250" y="160" width="120" height="60" class="comp-box" fill="url(#grad-id)" />
-  <text x="310" y="195" class="comp-text">Decoder</text>
-  <rect x="250" y="250" width="120" height="120" class="comp-box" fill="url(#grad-id)" />
-  <text x="310" y="305" class="comp-text">Registers</text>
-  <text x="310" y="325" class="comp-text">(32 x 32)</text>
-
-  <!-- EX -->
-  <rect x="410" y="100" width="160" height="300" class="stage-bg" fill="#00AAFF" />
-  <text x="490" y="130" class="stage-title" fill="#00AAFF">EXECUTE</text>
-  <g class="pulse-core">
-    <rect x="430" y="160" width="120" height="80" class="comp-box" fill="url(#grad-ex)" />
-    <text x="490" y="205" class="comp-text" style="font-size: 18px; font-weight: bold;">ALU</text>
+  <g>
+    <rect x="250" y="104" width="128" height="28" rx="14" fill="#0f2748" stroke="#37e8ff" stroke-opacity="0.55"/>
+    <text x="314" y="123" class="chip-text">RV32IM ISA</text>
+    <rect x="394" y="104" width="136" height="28" rx="14" fill="#221346" stroke="#aa7cff" stroke-opacity="0.65"/>
+    <text x="462" y="123" class="chip-text">Hazard + FWD</text>
+    <rect x="546" y="104" width="122" height="28" rx="14" fill="#0e3a28" stroke="#55ff91" stroke-opacity="0.65"/>
+    <text x="607" y="123" class="chip-text">25 MHz FPGA</text>
+    <rect x="684" y="104" width="142" height="28" rx="14" fill="#3e2410" stroke="#ffbf4d" stroke-opacity="0.7"/>
+    <text x="755" y="123" class="chip-text">115200 UART</text>
   </g>
-  <rect x="430" y="260" width="120" height="50" class="comp-box" fill="url(#grad-ex)" />
-  <text x="490" y="290" class="comp-text">Mul / Div</text>
-  <rect x="430" y="330" width="120" height="40" class="comp-box" fill="url(#grad-ex)" />
-  <text x="490" y="355" class="comp-text">Forwarding</text>
 
-  <!-- MEM -->
-  <rect x="590" y="100" width="160" height="300" class="stage-bg" fill="#00FF55" />
-  <text x="670" y="130" class="stage-title" fill="#00FF55">MEMORY</text>
-  <rect x="610" y="180" width="120" height="60" class="comp-box" fill="url(#grad-mem)" />
-  <text x="670" y="215" class="comp-text">LSU</text>
-  <rect x="610" y="260" width="120" height="60" class="comp-box" fill="url(#grad-mem)" />
-  <text x="670" y="295" class="comp-text">CSRs</text>
+  <path d="M 998 151 H 278 V 181" class="control-flow"/>
+  <text x="638" y="144" class="small" fill="#ffcdfb">writeback / branch recovery lane</text>
 
-  <!-- WB -->
-  <rect x="770" y="100" width="160" height="300" class="stage-bg" fill="#FFAA00" />
-  <text x="850" y="130" class="stage-title" fill="#FFAA00">WRITEBACK</text>
-  <rect x="790" y="200" width="120" height="80" class="comp-box" fill="url(#grad-wb)" />
-  <text x="850" y="240" class="comp-text">Writeback</text>
-  <text x="850" y="260" class="comp-text">Mux</text>
+  <path d="M 590 398 V 436 H 276 V 390" class="control-flow"/>
+  <text x="433" y="454" class="small" fill="#ffd1fb">EX/MEM forwarding lane</text>
 
-  <!-- SoC Section -->
-  <rect x="50" y="440" width="880" height="120" class="comp-box" fill="#151525" stroke="#444455" />
-  <text x="490" y="475" class="stage-title" fill="#AAAAAA">SoC SYSTEM BUS (AXI/Wishbone Style)</text>
-  
-  <rect x="200" y="490" width="150" height="50" class="comp-box" fill="#222233" />
-  <text x="275" y="520" class="comp-text" fill="#00FF55">64KB BRAM</text>
-  
-  <rect x="425" y="490" width="150" height="50" class="comp-box" fill="#222233" />
-  <text x="500" y="520" class="comp-text" fill="#00AAFF">UART TX/RX</text>
-  
-  <rect x="650" y="490" width="150" height="50" class="comp-box" fill="#222233" />
-  <text x="725" y="520" class="comp-text" fill="#FF007F">PLL Clocking</text>
+  <g id="pipeline">
+    <g transform="translate(38 170)">
+      <rect width="196" height="230" rx="18" fill="url(#stage-if)" class="stage-card"/>
+      <rect x="8" y="8" width="180" height="214" rx="14" fill="rgba(0,0,0,0.18)" stroke="rgba(255,255,255,0.18)"/>
+      <circle cx="33" cy="33" r="18" fill="#ffffff" fill-opacity="0.14"/>
+      <path d="M 25 33 H 39 M 33 25 V 41" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="98" y="39" class="stage-name">FETCH</text>
+      <text x="98" y="63" class="stage-code">IF stage</text>
+      <rect x="24" y="82" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="108" class="module-label">PC + Next PC</text>
+      <rect x="24" y="137" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="163" class="module-label">Branch Predict</text>
+      <rect x="24" y="190" width="148" height="28" rx="9" fill="#071127" stroke="#ff8fbc" stroke-opacity="0.5"/>
+      <text x="98" y="209" class="module-note">BRAM Port A fetch</text>
+    </g>
 
-  <!-- Data Paths -->
-  <!-- Fetch -> Decode -->
-  <line x1="190" y1="310" x2="250" y2="310" class="path-data"/>
-  <polygon points="245,305 255,310 245,315" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  
-  <!-- Decode -> Execute -->
-  <line x1="370" y1="310" x2="430" y2="200" class="path-data"/>
-  <polygon points="423,199 433,195 428,206" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  
-  <line x1="370" y1="330" x2="430" y2="280" class="path-data"/>
-  <polygon points="423,280 433,277 428,287" fill="#00FFFF" filter="url(#glow-cyan)"/>
+    <g transform="translate(268 170)">
+      <rect width="196" height="230" rx="18" fill="url(#stage-id)" class="stage-card"/>
+      <rect x="8" y="8" width="180" height="214" rx="14" fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.18)"/>
+      <circle cx="33" cy="33" r="18" fill="#ffffff" fill-opacity="0.14"/>
+      <path d="M 24 29 H 42 M 24 36 H 42" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="98" y="39" class="stage-name">DECODE</text>
+      <text x="98" y="63" class="stage-code">ID stage</text>
+      <rect x="24" y="82" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="108" class="module-label">Control Unit</text>
+      <rect x="24" y="137" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="163" class="module-label">Regfile 32x32</text>
+      <rect x="24" y="190" width="148" height="28" rx="9" fill="#071127" stroke="#b495ff" stroke-opacity="0.55"/>
+      <text x="98" y="209" class="module-note">imm_gen + hazard</text>
+    </g>
 
-  <!-- Execute -> Memory -->
-  <line x1="550" y1="200" x2="610" y2="200" class="path-data"/>
-  <polygon points="605,195 615,200 605,205" fill="#00FFFF" filter="url(#glow-cyan)"/>
+    <g transform="translate(498 170)">
+      <rect width="196" height="230" rx="18" fill="url(#stage-ex)" class="stage-card"/>
+      <rect x="8" y="8" width="180" height="214" rx="14" fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.2)"/>
+      <circle cx="33" cy="33" r="18" fill="#ffffff" fill-opacity="0.14"/>
+      <path d="M 25 40 L 33 25 L 41 40 Z" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="98" y="39" class="stage-name">EXECUTE</text>
+      <text x="98" y="63" class="stage-code">EX stage</text>
+      <rect x="24" y="82" width="148" height="48" rx="10" class="module-box spark"/>
+      <text x="98" y="111" class="module-label">ALU + Branch</text>
+      <rect x="24" y="143" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="169" class="module-label">MUL / DIV</text>
+      <rect x="24" y="196" width="148" height="28" rx="9" fill="#071127" stroke="#5ceeff" stroke-opacity="0.58"/>
+      <text x="98" y="215" class="module-note">forward select</text>
+    </g>
 
-  <!-- Memory -> WB -->
-  <line x1="730" y1="210" x2="790" y2="240" class="path-data"/>
-  <polygon points="784,234 792,242 781,241" fill="#00FFFF" filter="url(#glow-cyan)"/>
+    <g transform="translate(728 170)">
+      <rect width="196" height="230" rx="18" fill="url(#stage-mem)" class="stage-card"/>
+      <rect x="8" y="8" width="180" height="214" rx="14" fill="rgba(0,0,0,0.18)" stroke="rgba(255,255,255,0.18)"/>
+      <circle cx="33" cy="33" r="18" fill="#ffffff" fill-opacity="0.14"/>
+      <path d="M 24 30 H 42 V 40 H 24 Z M 28 30 V 24 M 38 30 V 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round"/>
+      <text x="98" y="39" class="stage-name">MEMORY</text>
+      <text x="98" y="63" class="stage-code">MEM stage</text>
+      <rect x="24" y="82" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="108" class="module-label">Load / Store</text>
+      <rect x="24" y="137" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="163" class="module-label">Byte Align</text>
+      <rect x="24" y="190" width="148" height="28" rx="9" fill="#071127" stroke="#6fff9c" stroke-opacity="0.55"/>
+      <text x="98" y="209" class="module-note">BRAM/UART mux</text>
+    </g>
 
-  <!-- Writeback -> Decode (Forwarding/Write) -->
-  <path d="M 850 200 L 850 85 L 310 85 L 310 250" class="path-fwd" />
-  <polygon points="305,245 310,255 315,245" fill="#FF00FF" filter="url(#glow-magenta)"/>
+    <g transform="translate(958 170)">
+      <rect width="196" height="230" rx="18" fill="url(#stage-wb)" class="stage-card"/>
+      <rect x="8" y="8" width="180" height="214" rx="14" fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.2)"/>
+      <circle cx="33" cy="33" r="18" fill="#ffffff" fill-opacity="0.14"/>
+      <path d="M 25 25 H 41 V 41 H 25 Z M 29 33 H 37" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round"/>
+      <text x="98" y="39" class="stage-name">WRITEBACK</text>
+      <text x="98" y="63" class="stage-code">WB stage</text>
+      <rect x="24" y="90" width="148" height="46" rx="10" class="module-box"/>
+      <text x="98" y="119" class="module-label">WB Mux</text>
+      <rect x="24" y="151" width="148" height="42" rx="10" class="module-box"/>
+      <text x="98" y="177" class="module-label">rd Commit</text>
+      <rect x="24" y="204" width="148" height="20" rx="8" fill="#071127" stroke="#ffd06b" stroke-opacity="0.55"/>
+      <text x="98" y="219" class="module-note">retire</text>
+    </g>
+  </g>
 
-  <!-- EX -> Decode (Forwarding) -->
-  <path d="M 490 370 L 490 410 L 310 410 L 310 370" class="path-fwd" />
-  <polygon points="305,375 310,365 315,375" fill="#FF00FF" filter="url(#glow-magenta)"/>
+  <path d="M 234 285 H 268" class="flow"/>
+  <path d="M 464 285 H 498" class="flow"/>
+  <path d="M 694 285 H 728" class="flow"/>
+  <path d="M 924 285 H 958" class="flow"/>
+  <text x="251" y="271" class="small">IF/ID</text>
+  <text x="481" y="271" class="small">ID/EX</text>
+  <text x="711" y="271" class="small">EX/MEM</text>
+  <text x="941" y="271" class="small">MEM/WB</text>
 
-  <!-- IF <-> SoC BRAM -->
-  <path d="M 130 370 L 130 460" class="path-data"/>
-  <polygon points="125,455 130,465 135,455" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  <polygon points="125,375 130,365 135,375" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <g transform="translate(48 500)">
+    <rect width="1104" height="196" rx="22" fill="url(#soc-grad)" class="panel"/>
+    <rect x="18" y="18" width="1068" height="160" rx="16" fill="rgba(0,0,0,0.18)" stroke="rgba(255,255,255,0.16)"/>
+    <text x="552" y="43" class="section-title">FPGA SYSTEM FABRIC</text>
+    <text x="552" y="66" class="small">Arty S7-50 deployment - unified memory - memory-mapped UART - firmware boot image</text>
+    <path d="M 108 104 H 996" class="soc-flow"/>
+    <text x="552" y="94" class="small" fill="#c8ffdc">32-bit SoC data bus / address decode</text>
 
-  <!-- LSU <-> SoC BUS -->
-  <path d="M 670 240 L 670 440" class="path-data"/>
-  <polygon points="665,435 670,445 675,435" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  <polygon points="665,245 670,235 675,245" fill="#00FFFF" filter="url(#glow-cyan)"/>
+    <g transform="translate(54 118)">
+      <rect width="190" height="54" rx="13" fill="#08142d" stroke="#5ffbff" stroke-opacity="0.6"/>
+      <path d="M 22 15 H 44 V 39 H 22 Z M 18 20 H 10 M 18 28 H 10 M 18 36 H 10 M 48 20 H 56 M 48 28 H 56 M 48 36 H 56" fill="none" stroke="#5ffbff" stroke-width="2" stroke-linecap="round"/>
+      <text x="118" y="24" class="module-label">64KB BRAM</text>
+      <text x="118" y="42" class="module-note">firmware + data</text>
+    </g>
+    <g transform="translate(318 118)">
+      <rect width="190" height="54" rx="13" fill="#08142d" stroke="#ffcc64" stroke-opacity="0.65"/>
+      <path d="M 20 17 H 53 V 37 H 20 Z M 53 26 H 62 M 26 41 H 47" fill="none" stroke="#ffcc64" stroke-width="2" stroke-linecap="round"/>
+      <text x="122" y="24" class="module-label">UART TX/RX</text>
+      <text x="122" y="42" class="module-note">0x1000_0000</text>
+    </g>
+    <g transform="translate(582 118)">
+      <rect width="190" height="54" rx="13" fill="#08142d" stroke="#c99cff" stroke-opacity="0.65"/>
+      <circle cx="36" cy="27" r="14" fill="none" stroke="#c99cff" stroke-width="2"/>
+      <path d="M 36 13 V 27 L 48 34" fill="none" stroke="#c99cff" stroke-width="2" stroke-linecap="round"/>
+      <text x="122" y="24" class="module-label">MMCM Clock</text>
+      <text x="122" y="42" class="module-note">12 MHz to 25 MHz</text>
+    </g>
+    <g transform="translate(846 118)">
+      <rect width="190" height="54" rx="13" fill="#08142d" stroke="#61ff93" stroke-opacity="0.65"/>
+      <path d="M 22 37 C 28 20 45 15 60 23 M 22 37 C 36 30 48 32 60 23" fill="none" stroke="#61ff93" stroke-width="2" stroke-linecap="round"/>
+      <text x="122" y="24" class="module-label">Snake FW</text>
+      <text x="122" y="42" class="module-note">bare-metal C</text>
+    </g>
+  </g>
 
-  <!-- SoC BUS <-> Peripherals -->
-  <path d="M 275 480 L 275 490" class="path-data"/>
-  <polygon points="270,485 275,495 280,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  <polygon points="270,485 275,475 280,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
+  <path d="M 136 400 V 482 H 152 V 604" class="soc-flow"/>
+  <text x="110" y="445" class="small">fetch</text>
+  <path d="M 826 400 V 482 H 430 V 604" class="soc-flow"/>
+  <text x="878" y="445" class="small">load/store</text>
+  <path d="M 826 400 V 468 H 434" class="static-wire"/>
+  <text x="637" y="461" class="small">UART status / RX / TX</text>
 
-  <path d="M 500 480 L 500 490" class="path-data"/>
-  <polygon points="495,485 500,495 505,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
-  <polygon points="495,485 500,475 505,485" fill="#00FFFF" filter="url(#glow-cyan)"/>
-
+  <g transform="translate(74 706)">
+    <rect width="1052" height="32" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+    <text x="128" y="21" class="chip-text">Byte loads/stores fixed</text>
+    <text x="348" y="21" class="chip-text">CSR + interrupt architecture</text>
+    <text x="590" y="21" class="chip-text">M-extension datapath</text>
+    <text x="802" y="21" class="chip-text">FPGA UART verified</text>
+    <text x="980" y="21" class="chip-text">Snake running</text>
+  </g>
 </svg>
