@@ -130,6 +130,17 @@ flush_done:
 /* ============================================================
  *  6. RX->TX echo loop (forever)
  *     s0 = UART base, s2 = RX_VALID
+ *
+ *  For printable chars : echo the byte as-is on the same line.
+ *  For CR (0x0D) or LF (0x0A): send CRLF (\r\n).
+ *
+ *  WHY NOT echo raw \r:
+ *    PuTTY receives \r as "move cursor to column 1" — so if we
+ *    echoed \r first, the cursor would jump back to the start of
+ *    the current line and overwrite the characters typed there.
+ *    The subsequent \n would then move DOWN from that wrong
+ *    position. By sending \r\n as a unit (not re-echoing the
+ *    raw \r) the cursor cleanly moves to the start of a NEW line.
  * ============================================================ */
 echo_loop:
 wait_rx:
@@ -140,21 +151,29 @@ wait_rx:
     lw    a0, UART_RX(s0)
     andi  a0, a0, 0xFF
 
+    /* CR (\r = 0x0D)? */
+    li    t0, 0x0D
+    beq   a0, t0, send_newline
+
+    /* LF (\n = 0x0A)? — some terminals send LF instead of CR for Enter */
+    li    t0, 0x0A
+    beq   a0, t0, send_newline
+
+    /* Printable character — echo it back as-is */
     uart_putc_r
+    j     echo_loop
 
-    /* If Enter key (\r) was typed, echo \n as well so PuTTY advances line */
-    li    t0, '\r'
-    bne   a0, t0, not_cr
+send_newline:
+    /* Send CRLF: cursor moves to START of a NEW line */
+    uart_putc_imm '\r'
     uart_putc_imm '\n'
-not_cr:
-
     j     echo_loop
 
 _halt:
     j     _halt
 
 /* ============================================================
- *  Trap handler
+ *  Trap handler — just halt on any trap
  * ============================================================ */
     .section .text.trap, "ax"
     .global _trap_handler

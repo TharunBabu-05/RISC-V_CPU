@@ -1,6 +1,6 @@
 // ============================================================
-//  soc_top.sv  —  RV32 SoC Top-Level for Arty S7-50
-//
+//  soc_top.sv  —  RV32 SoC Top-Level for Arty S7-50 (Snake build)
+// ============================================================
 //  This module integrates:
 //    1. cpu_top   — Our RV32I 5-stage pipelined processor
 //    2. bram      — 64KB unified BRAM (instruction + data)

@@ -28,9 +28,10 @@
 #define INIT_LEN     4      /* Starting snake length           */
 
 /* Delay between game ticks (busy-loop cycles) */
-/* Tune this value to set the game speed:
- *   Larger = slower snake.  ~100MHz CPU, so 2_000_000 ≈ ~20ms per tick */
-#define TICK_DELAY  3000000
+/* CPU runs at 25 MHz (MMCM: 12MHz x 62.5 / 30 = 25 MHz).
+ *   750_000 cycles @ 25 MHz ≈ 30 ms per tick → comfortable game speed.
+ *   Increase for slower snake, decrease for faster. */
+#define TICK_DELAY  750000
 
 /* ============================================================
  *  Data Types
