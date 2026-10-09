@@ -51,14 +51,26 @@ static int    score;
 static int    game_over;
 
 /* ============================================================
- *  Pseudo-Random Number Generator (LCG)
- *  Simple but good enough for food placement.
+ *  Pseudo-Random Number Generator
+ *  Uses xorshift so the firmware does not need MUL/DIV/REM.
  * ============================================================ */
 static uint32_t rng_state = 0xDEADBEEF;
 
 static uint32_t rand_next(void) {
-    rng_state = rng_state * 1664525U + 1013904223U;
+    uint32_t x = rng_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    rng_state = x;
     return rng_state;
+}
+
+static int rand_bounded(int limit) {
+    uint32_t v = rand_next() & 0xFFU;
+    while (v >= (uint32_t)limit) {
+        v -= (uint32_t)limit;
+    }
+    return (int)v;
 }
 
 /* ============================================================
@@ -123,8 +135,8 @@ static void draw_food(void) {
 static void place_food(void) {
     int i, ok;
     do {
-        food.x = (int)(rand_next() % (uint32_t)FIELD_W);
-        food.y = (int)(rand_next() % (uint32_t)FIELD_H);
+        food.x = rand_bounded(FIELD_W);
+        food.y = rand_bounded(FIELD_H);
         ok = 1;
         for (i = 0; i < snake_len; i++) {
             if (snake[i].x == food.x && snake[i].y == food.y) {

@@ -26,14 +26,15 @@ OBJDUMP  = $(CROSS)-objdump
 SIZE     = $(CROSS)-size
 
 # ---- Compiler Flags ----
-# -march=rv32im_zicsr : Target RV32I base ISA + Multiply/Divide (M) + CSR instructions
+# -march=rv32i_zicsr : Target RV32I base ISA + CSR instructions.
+#                      Snake avoids M-extension ops for the FPGA boot test.
 # -mabi=ilp32     : 32-bit integer, LP32 ABI (no floating-point ABI)
 # -Os             : Optimize for code size (fits in 64KB BRAM)
 # -ffreestanding  : No standard library (we write our own)
 # -nostdlib       : No standard lib startup files
 # -fno-builtin    : Don't use built-in functions (printf, memcpy etc.)
 # -Wall           : Enable all warnings
-CFLAGS  = -march=rv32im_zicsr -mabi=ilp32 -Os -ffreestanding -nostdlib \
+CFLAGS  = -march=rv32i_zicsr -mabi=ilp32 -Os -ffreestanding -nostdlib \
            -fno-builtin -Wall -I.
 
 LDFLAGS = -T link.ld -nostdlib

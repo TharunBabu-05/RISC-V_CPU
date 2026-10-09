@@ -38,22 +38,46 @@ void uart_newline(void) {
 
 /* ---- Print a signed integer in decimal ---- */
 void uart_print_int(int n) {
-    char buf[12];
-    int  i = 0;
-    int  neg = 0;
+    uint32_t u;
+    int started = 0;
 
-    if (n == 0) { uart_putc('0'); return; }
-
-    if (n < 0) { neg = 1; n = -n; }
-
-    while (n > 0) {
-        buf[i++] = '0' + (n % 10);
-        n /= 10;
+    if (n == 0) {
+        uart_putc('0');
+        return;
     }
-    if (neg) buf[i++] = '-';
 
-    /* Reverse and print */
-    while (i-- > 0) uart_putc(buf[i]);
+    if (n < 0) {
+        uart_putc('-');
+        u = 0U - (uint32_t)n;
+    } else {
+        u = (uint32_t)n;
+    }
+
+#define UART_PRINT_PLACE(place)                       \
+    do {                                              \
+        char digit = '0';                             \
+        while (u >= (uint32_t)(place)) {              \
+            u -= (uint32_t)(place);                   \
+            digit++;                                  \
+        }                                             \
+        if (started || digit != '0') {                \
+            uart_putc(digit);                         \
+            started = 1;                              \
+        }                                             \
+    } while (0)
+
+    UART_PRINT_PLACE(1000000000U);
+    UART_PRINT_PLACE(100000000U);
+    UART_PRINT_PLACE(10000000U);
+    UART_PRINT_PLACE(1000000U);
+    UART_PRINT_PLACE(100000U);
+    UART_PRINT_PLACE(10000U);
+    UART_PRINT_PLACE(1000U);
+    UART_PRINT_PLACE(100U);
+    UART_PRINT_PLACE(10U);
+    uart_putc((char)('0' + u));
+
+#undef UART_PRINT_PLACE
 }
 
 /* ---- ANSI escape: clear screen and move cursor to (1,1) ---- */

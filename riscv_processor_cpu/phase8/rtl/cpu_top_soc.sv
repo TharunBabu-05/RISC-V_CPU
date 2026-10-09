@@ -939,9 +939,33 @@ module cpu_top_soc #(
     assign dmem_funct3 = id_ex_funct3;
 
     // ---- Receive load data from external bus ----
-    // Data is valid during the MEM stage. The MEM/WB register in 
+    // Extract/sign-extend byte and halfword loads for C firmware.
+    logic [31:0] load_data32;
+    logic [7:0]  load_byte;
+    logic [15:0] load_half;
+
+    always_comb begin
+        case (ex_mem_alu_result[1:0])
+            2'b00: load_byte = dmem_rdata[7:0];
+            2'b01: load_byte = dmem_rdata[15:8];
+            2'b10: load_byte = dmem_rdata[23:16];
+            default: load_byte = dmem_rdata[31:24];
+        endcase
+
+        load_half = ex_mem_alu_result[1] ? dmem_rdata[31:16] : dmem_rdata[15:0];
+
+        case (ex_mem_funct3)
+            3'b000:  load_data32 = {{24{load_byte[7]}}, load_byte};    // LB
+            3'b001:  load_data32 = {{16{load_half[15]}}, load_half};   // LH
+            3'b100:  load_data32 = {24'b0, load_byte};                 // LBU
+            3'b101:  load_data32 = {16'b0, load_half};                 // LHU
+            default: load_data32 = dmem_rdata;                         // LW
+        endcase
+    end
+
+    // Data is valid during the MEM stage. The MEM/WB register in
     // cpu_top will latch this value at the end of the MEM stage.
-    assign mem_rd_data = {{(XLEN-32){1'b0}}, dmem_rdata};
+    assign mem_rd_data = {{(XLEN-32){1'b0}}, load_data32};
 
     // ===================================================
     //  MEM / WB  pipeline register

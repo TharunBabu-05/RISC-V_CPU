@@ -153,6 +153,7 @@ module soc_top (
     //  Read data mux back to CPU
     // -------------------------------------------------------
     logic [31:0] bram_rdata;
+    logic [31:0] bram_wdata;
     logic [31:0] uart_rdata;
 
     // Align UART read path and selects with BRAM's 1-cycle read latency:
@@ -206,6 +207,16 @@ module soc_top (
         if (!dmem_wr_en) dmem_we = 4'b0000;
     end
 
+    // Store data for SB/SH arrives in the low byte/halfword from the CPU.
+    // Replicate it so the selected BRAM byte lanes receive the right value.
+    always_comb begin
+        case (dmem_funct3)
+            3'b000:  bram_wdata = {4{dmem_wdata[7:0]}};    // SB
+            3'b001:  bram_wdata = {2{dmem_wdata[15:0]}};   // SH
+            default: bram_wdata = dmem_wdata;               // SW
+        endcase
+    end
+
     // -------------------------------------------------------
     //  Unified 64KB BRAM
     //  Port A: CPU instruction fetch
@@ -223,7 +234,7 @@ module soc_top (
         .a_rdata(imem_rdata),
         // Port B — data access
         .b_addr (dmem_addr),
-        .b_wdata(dmem_wdata),
+        .b_wdata(bram_wdata),
         .b_we   (sel_bram ? dmem_we : 4'b0),
         .b_re   (sel_bram & dmem_rd_en),
         .b_rdata(bram_rdata)

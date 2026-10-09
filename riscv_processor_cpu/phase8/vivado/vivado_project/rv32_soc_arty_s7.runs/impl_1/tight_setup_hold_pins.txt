@@ -14,8 +14,6 @@
 |     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[12]/D|
 |     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[13]/D|
 |     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[14]/D|
-|     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[15]/D|
 |     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[16]/D|
 |     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[17]/D|
-|     clk_out1_clk_wiz_0_1 |       clk_out1_clk_wiz_0 |                                                                             u_cpu/u_fpu/res_reg_reg[18]/D|
 +--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+

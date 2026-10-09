@@ -10,7 +10,7 @@ Disassembly of section .text:
    8:	10000437          	lui	x8,0x10000
    c:	00200913          	addi	x18,x0,2
   10:	00000297          	auipc	x5,0x0
-  14:	46028293          	addi	x5,x5,1120 # 470 <_trap_handler>
+  14:	4a028293          	addi	x5,x5,1184 # 4b0 <_trap_handler>
   18:	30529073          	csrrw	x0,mtvec,x5
 
 0000001c <flush_rx>:
@@ -286,16 +286,36 @@ Disassembly of section .text:
  440:	fe028ce3          	beq	x5,x0,438 <echo_loop>
  444:	00442503          	lw	x10,4(x8)
  448:	0ff57513          	andi	x10,x10,255
- 44c:	00100313          	addi	x6,x0,1
- 450:	00842283          	lw	x5,8(x8)
- 454:	0062f2b3          	and	x5,x5,x6
- 458:	fe028ce3          	beq	x5,x0,450 <echo_loop+0x18>
- 45c:	00a42023          	sw	x10,0(x8)
- 460:	fd9ff06f          	jal	x0,438 <echo_loop>
+ 44c:	00d00293          	addi	x5,x0,13
+ 450:	02550263          	beq	x10,x5,474 <send_newline>
+ 454:	00a00293          	addi	x5,x0,10
+ 458:	00550e63          	beq	x10,x5,474 <send_newline>
+ 45c:	00100313          	addi	x6,x0,1
+ 460:	00842283          	lw	x5,8(x8)
+ 464:	0062f2b3          	and	x5,x5,x6
+ 468:	fe028ce3          	beq	x5,x0,460 <echo_loop+0x28>
+ 46c:	00a42023          	sw	x10,0(x8)
+ 470:	fc9ff06f          	jal	x0,438 <echo_loop>
 
-00000464 <_halt>:
- 464:	0000006f          	jal	x0,464 <_halt>
+00000474 <send_newline>:
+ 474:	00d00513          	addi	x10,x0,13
+ 478:	00100313          	addi	x6,x0,1
+ 47c:	00842283          	lw	x5,8(x8)
+ 480:	0062f2b3          	and	x5,x5,x6
+ 484:	fe028ce3          	beq	x5,x0,47c <send_newline+0x8>
+ 488:	00a42023          	sw	x10,0(x8)
+ 48c:	00a00513          	addi	x10,x0,10
+ 490:	00100313          	addi	x6,x0,1
+ 494:	00842283          	lw	x5,8(x8)
+ 498:	0062f2b3          	and	x5,x5,x6
+ 49c:	fe028ce3          	beq	x5,x0,494 <send_newline+0x20>
+ 4a0:	00a42023          	sw	x10,0(x8)
+ 4a4:	f95ff06f          	jal	x0,438 <echo_loop>
+
+000004a8 <_halt>:
+ 4a8:	0000006f          	jal	x0,4a8 <_halt>
+ 4ac:	0000                	.insn	2, 0x0000
 	...
 
-00000470 <_trap_handler>:
- 470:	ff5ff06f          	jal	x0,464 <_halt>
+000004b0 <_trap_handler>:
+ 4b0:	ff9ff06f          	jal	x0,4a8 <_halt>
