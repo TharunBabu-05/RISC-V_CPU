@@ -6,7 +6,7 @@
 |---|---|---|
 | RV32I base integer | Implemented | Primary directed test target |
 | RV64I mode | Implemented option | Enabled via `XLEN=64` path |
-| M extension (mul/div) | Implemented | 3-cycle single-issue mul/div unit |
+| M extension (mul/div) | Implemented | Multi-cycle unit: MUL* in 3 cycles, DIV/REM* via iterative radix-2 divider (XLEN+2 cycles) |
 | Machine + S/U-mode CSRs/traps | Implemented subset | `mstatus`, `mie`, `mtvec`, `mepc`, `mcause`, `mip`, `satp`, `sstatus`, `sie`, `stvec`, `sepc`, `scause`, `sip`, `medeleg`, `mideleg`, `ustatus`, counters; M/S/U tracking |
 | Branch predictor | Integrated | 2-bit predictor + BTB behavior |
 | Sv32 MMU path | Integrated | ITLB/DTLB/PTW + page-fault causes; `sfence.vma` flush; ASID-aware TLB tags |

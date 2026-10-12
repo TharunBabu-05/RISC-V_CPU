@@ -94,6 +94,7 @@ module tb_muldiv;
     //  Stimulus and checking
     // -------------------------------------------------------
     integer cycle;
+    integer errors = 0;
     initial begin
         $dumpfile("cpu_muldiv_wave.vcd");
         $dumpvars(0, tb_muldiv);
@@ -104,7 +105,8 @@ module tb_muldiv;
         rst_n = 1;
 
         // Run long enough for mul/div stalls to finish
-        repeat (120) @(posedge clk);
+        // (each DIV/REM takes XLEN+2 cycles in the iterative divider)
+        repeat (300) @(posedge clk);
         cycle = cycle + 1;
 
         $display("=== RV32M Register Dump ===");
@@ -119,18 +121,21 @@ module tb_muldiv;
         $display("x9  = %0d  (expected 0)", dut.u_regfile.regs[9]);
         $display("x10 = %0d  (expected 7)", dut.u_regfile.regs[10]);
 
-        if (dut.u_regfile.regs[1]  !== 32'd7)  $error("FAIL x1");
-        if (dut.u_regfile.regs[2]  !== 32'd3)  $error("FAIL x2");
-        if (dut.u_regfile.regs[3]  !== 32'd21) $error("FAIL x3 (MUL)");
-        if (dut.u_regfile.regs[4]  !== 32'd2)  $error("FAIL x4 (DIV)");
-        if (dut.u_regfile.regs[5]  !== 32'd1)  $error("FAIL x5 (REM)");
-        if (dut.u_regfile.regs[6]  !== 32'hFFFF_FFFD) $error("FAIL x6 (ADDI -3)");
-        if (dut.u_regfile.regs[7]  !== 32'hFFFF_FFFF) $error("FAIL x7 (MULH)");
-        if (dut.u_regfile.regs[8]  !== 32'h0000_0006) $error("FAIL x8 (MULHU)");
-        if (dut.u_regfile.regs[9]  !== 32'd0) $error("FAIL x9 (DIVU)");
-        if (dut.u_regfile.regs[10] !== 32'd7) $error("FAIL x10 (REMU)");
+        if (dut.u_regfile.regs[1]  !== 32'd7)  begin errors++; $error("FAIL x1"); end
+        if (dut.u_regfile.regs[2]  !== 32'd3)  begin errors++; $error("FAIL x2"); end
+        if (dut.u_regfile.regs[3]  !== 32'd21) begin errors++; $error("FAIL x3 (MUL)"); end
+        if (dut.u_regfile.regs[4]  !== 32'd2)  begin errors++; $error("FAIL x4 (DIV)"); end
+        if (dut.u_regfile.regs[5]  !== 32'd1)  begin errors++; $error("FAIL x5 (REM)"); end
+        if (dut.u_regfile.regs[6]  !== 32'hFFFF_FFFD) begin errors++; $error("FAIL x6 (ADDI -3)"); end
+        if (dut.u_regfile.regs[7]  !== 32'hFFFF_FFFF) begin errors++; $error("FAIL x7 (MULH)"); end
+        if (dut.u_regfile.regs[8]  !== 32'h0000_0006) begin errors++; $error("FAIL x8 (MULHU)"); end
+        if (dut.u_regfile.regs[9]  !== 32'd0) begin errors++; $error("FAIL x9 (DIVU)"); end
+        if (dut.u_regfile.regs[10] !== 32'd7) begin errors++; $error("FAIL x10 (REMU)"); end
 
-        $display("All checks passed – RV32M simulation complete.");
+        if (errors == 0)
+            $display("All checks passed – RV32M simulation complete.");
+        else
+            $display("RV32M simulation FAILED: %0d errors", errors);
         $finish;
     end
 

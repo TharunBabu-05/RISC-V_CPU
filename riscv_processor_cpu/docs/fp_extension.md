@@ -5,7 +5,7 @@ The floating-point foundation required by Phase 4 vector work is now integrated 
 ## Implemented
 
 - `fp_regfile.sv`: 32-entry FP register file.
-- `fpu_unit.sv`: behavioral 3-cycle execution unit.
+- `fpu_unit.sv`: behavioral execution unit (ADD/SUB/MUL in 3 cycles; DIV reuses the iterative divider in `muldiv.sv`).
 - OP-FP decode in `cpu_top.sv`.
 - CPU-integrated FADD/FSUB/FMUL/FDIV smoke path.
 - FP CSRs in `csr_file.sv`:

@@ -178,7 +178,7 @@ synth -json netlist.json
 | hazard.sv | ~200 | ✅ | Load-use and forwarding logic |
 | csr_file.sv | ~500 | ✅ | Machine, Supervisor, User CSRs |
 | mmu.sv | ~800 | ✅ | Sv32 virtual address translation |
-| muldiv.sv | ~400 | ✅ | 3-cycle multiply/divide unit |
+| muldiv.sv | ~400 | ✅ | Multi-cycle multiply (3 cycles) / iterative divide (XLEN+2 cycles) |
 | dcache.sv | ~300 | ✅ | L1 data cache with blocking loads |
 | icache.sv | ~250 | ✅ | L1 instruction cache facade |
 | l2_cache.sv | ~250 | ✅ | Unified L2 cache |
