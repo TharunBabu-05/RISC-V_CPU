@@ -62,13 +62,53 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | RV32I base integer ISA | ✅ | Arithmetic, branches, loads/stores, jumps, immediates |
 | 5-stage pipeline | ✅ | IF, ID, EX, MEM, WB |
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
-| M extension hardware | ✅ | `mul`, `div`, `rem` unit integrated in the core |
+| M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
+| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+17.154 ns**, 0 failing endpoints |
 | CSR / exception infrastructure | ✅ | CSR file and interrupt/trap blocks exist in the architecture tree |
 | FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, BRAM, UART, LEDs |
 | UART bring-up | ✅ | Hello + keyboard echo verified on real board |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, byte load/store fixes |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
 | Formal / phase docs | ✅ | Formal, compliance, architecture, and production notes under `docs/` and `phase5/` |
+
+---
+
+## ✅ Synthesis & Implementation Proof
+
+Screenshots from Vivado 2020.2 for the `rv32_soc_arty_s7` project (`xc7s50csga324-1`), taken after the timing fix and used to build the bitstream that runs Snake on the board.
+
+### Synthesis — `synth_1` complete
+
+<div align="center">
+  <img src="proof/vivado_synthesis_design_runs.png" alt="Vivado Design Runs: synth_1 complete with resource usage" width="96%">
+</div>
+
+| Resource | Used | Available | Utilization |
+| :--- | ---: | ---: | ---: |
+| Slice LUTs | 4,445 | 32,600 | 13.6 % |
+| Flip-flops | 5,228 | 65,200 | 8.0 % |
+| Block RAM tiles | 16 | 75 | 21.3 % |
+| DSP slices | 11 | 120 | 9.2 % |
+
+### Implementation — all timing constraints met
+
+<div align="center">
+  <img src="proof/vivado_implementation_timing_met.png" alt="Vivado Design Timing Summary: all user specified timing constraints are met" width="96%">
+</div>
+
+| Check | Worst slack | Total negative slack | Failing endpoints |
+| :--- | ---: | ---: | ---: |
+| Setup | **+17.154 ns** | 0.000 ns | 0 / 16,038 |
+| Hold | +0.023 ns | 0.000 ns | 0 / 16,038 |
+| Pulse width | +16.667 ns | 0.000 ns | 0 / 5,271 |
+
+### Before vs after the timing fix
+
+| | Before | After |
+| :--- | :---: | :---: |
+| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+17.154 ns** (0 failing) |
+| Slice LUTs | 9,683 | 4,445 |
+| Timing status | Constraints **not** met | All constraints met |
 
 ---
 
@@ -167,6 +207,17 @@ Assembly hello firmware worked with word operations, but C strings require byte 
 
 This was essential for `snake.c`, `uart_puts()`, strings, cursor movement, and game drawing.
 
+### 4. Timing Closure — Single-Cycle Dividers
+
+The first implementation missed timing by **61 ns** at 25 MHz (40 ns clock period). Two dividers computed a full 32-bit quotient in one clock cycle — `muldiv.sv` for `div`/`rem` and the FPU stub for `fdiv` — producing a ~100 ns path through 335 logic levels.
+
+The fix:
+
+- `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
+- `fpu_unit.sv` reuses the same iterative divider.
+
+Result: setup slack went from **−61.3 ns to +17.2 ns**, and LUT usage dropped by more than half. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+
 ---
 
 ## 📁 Repository Map
@@ -174,6 +225,7 @@ This was essential for `snake.c`, `uart_puts()`, strings, cursor movement, and g
 ```text
 RISC-V_CPU/
 ├── README.md                         # Main showcase and quickstart
+├── proof/                            # Vivado synthesis + implementation screenshots
 └── riscv_processor_cpu/
     ├── rtl/                          # Main advanced CPU architecture modules
     │   ├── cpu_top.sv
