@@ -58,7 +58,7 @@ SRCS_VEC := \
 	$(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) \
 	$(TB_DIR)/tb_vector.sv
 
-.PHONY: all sim sim_muldiv sim_muldiv_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
+.PHONY: all sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
          phase5 phase5-checklist phase5-compliance phase5-formal phase5-synthesis \
          phase5-all phase5-compliance-run phase5-report phase5-clean
 
@@ -78,6 +78,10 @@ sim_muldiv: build-sim
 sim_muldiv_unit: build-sim
 	iverilog -g2012 -o $(SIM_DIR)/muldiv_unit $(RTL_DIR)/muldiv.sv $(TB_DIR)/tb_muldiv_unit.sv
 	cd $(SIM_DIR) && vvp muldiv_unit
+
+sim_csr_forward: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -o $(SIM_DIR)/csr_forward $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_csr_forward.sv
+	cd $(SIM_DIR) && vvp csr_forward
 
 sim_branch_edge: build-sim
 	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_BRANCH) $(SRCS_BRANCH)
@@ -148,7 +152,7 @@ phase5-compliance-run:
 
 # Phase 5 Complete Workflow Targets
 
-phase5-all: sim sim_muldiv sim_muldiv_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector
+phase5-all: sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector
 	@echo "==============================================="
 	@echo "All Phase 5 directed simulations PASSED"
 	@echo "==============================================="

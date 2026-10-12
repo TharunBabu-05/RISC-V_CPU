@@ -458,16 +458,20 @@ module cpu_top #(
     logic [XLEN-1:0] ex_fwd_a, ex_fwd_b, ex_alu_b, ex_alu_result_raw, ex_result;
     logic        ex_zero;
 
+    // Value forwarded from EX/MEM: what that instruction will write back.
+    // CSR reads and JAL/JALR links are not in ex_mem_alu_result.
+    logic [XLEN-1:0] ex_mem_fwd_data;
+
     // Forwarding MUXes
     always_comb begin
         case (fwd_a)
-            2'b10:   ex_fwd_a = ex_mem_alu_result;   // EX/MEM forward
+            2'b10:   ex_fwd_a = ex_mem_fwd_data;     // EX/MEM forward
             2'b01:   ex_fwd_a = wb_wr_data;           // MEM/WB forward
             default: ex_fwd_a = id_ex_rs1;
         endcase
 
         case (fwd_b)
-            2'b10:   ex_fwd_b = ex_mem_alu_result;
+            2'b10:   ex_fwd_b = ex_mem_fwd_data;
             2'b01:   ex_fwd_b = wb_wr_data;
             default: ex_fwd_b = id_ex_rs2;
         endcase
@@ -779,6 +783,10 @@ module cpu_top #(
     logic        ex_mem_fp_reg_write, ex_mem_fp_load, ex_mem_fp_store;
     logic        ex_mem_vec_reg_write;
     logic [XLEN-1:0] ex_mem_csr_rdata;
+
+    assign ex_mem_fwd_data = ex_mem_csr_en ? ex_mem_csr_rdata :
+                             ex_mem_jump   ? ex_mem_pc_plus4  :
+                                             ex_mem_alu_result;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
