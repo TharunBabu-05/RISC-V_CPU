@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date         : Fri Oct  9 22:35:27 2026
+| Date         : Mon Oct 12 18:47:07 2026
 | Host         : tharun running 64-bit major release  (build 9200)
 | Command      : report_methodology -file soc_top_methodology_drc_routed.rpt -pb soc_top_methodology_drc_routed.pb -rpx soc_top_methodology_drc_routed.rpx
 | Design       : soc_top
@@ -23,15 +23,14 @@ Table of Contents
           Floorplan: design_1
       Design limits: <entire design considered>
              Max violations: <unlimited>
-             Violations found: 186
+             Violations found: 135
 +-----------+------------------+------------------------------------------------------------------+------------+
 | Rule      | Severity         | Description                                                      | Violations |
 +-----------+------------------+------------------------------------------------------------------+------------+
 | TIMING-6  | Critical Warning | No common primary clock between related clocks                   | 2          |
-| DPIR-1    | Warning          | Asynchronous driver check                                        | 104        |
-| SYNTH-10  | Warning          | Wide multiplier                                                  | 11         |
+| DPIR-1    | Warning          | Asynchronous driver check                                        | 111        |
+| SYNTH-10  | Warning          | Wide multiplier                                                  | 4          |
 | SYNTH-15  | Warning          | Byte wide write enable not inferred                              | 16         |
-| TIMING-16 | Warning          | Large setup violation                                            | 51         |
 | TIMING-56 | Warning          | Missing logically or physically excluded clock groups constraint | 2          |
 +-----------+------------------+------------------------------------------------------------------+------------+
 
@@ -49,577 +48,577 @@ Related violations: <none>
 
 DPIR-1#1 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#2 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#3 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#4 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#5 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#6 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#7 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#8 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#9 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#10 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#11 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#12 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#13 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#14 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#15 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#16 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#17 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#18 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#19 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#20 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#21 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#22 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#23 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#24 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#25 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#26 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[17] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#27 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#28 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#29 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#30 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#31 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#32 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full input pin u_cpu/u_muldiv/mul_full/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#33 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#34 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#35 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0 input pin u_cpu/u_fpu/r_s0/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#36 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#37 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#38 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#39 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#40 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#41 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#42 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#43 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#44 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#45 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#46 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#47 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#48 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#49 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#50 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#51 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#52 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#53 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#54 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#55 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#56 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#57 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#58 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#59 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#60 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#61 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#62 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__0 input pin u_cpu/u_muldiv/mul_full__0/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#63 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#64 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#65 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#66 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#67 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#68 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#69 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__0 input pin u_cpu/u_fpu/r_s0__0/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#70 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#71 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#72 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#73 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#74 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#75 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#76 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#77 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#78 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#79 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#80 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#81 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#82 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#83 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#84 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#85 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#86 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/A[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#87 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#88 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#89 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#90 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#91 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#92 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#93 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[15] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#94 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[16] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#95 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[17] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#96 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__1 input pin u_cpu/u_muldiv/mul_full__1/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#97 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[0] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#98 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[10] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#99 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[11] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#100 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[12] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#101 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[13] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#102 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[14] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#103 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[1] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 DPIR-1#104 Warning
 Asynchronous driver check  
-DSP u_cpu/u_fpu/r_s0__1 input pin u_cpu/u_fpu/r_s0__1/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[2] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#105 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[3] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#106 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[4] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#107 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[5] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#108 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[6] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#109 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[7] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#110 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[8] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+DPIR-1#111 Warning
+Asynchronous driver check  
+DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
 Related violations: <none>
 
 SYNTH-10#1 Warning
 Wide multiplier  
-Detected multiplier at u_cpu/u_fpu/r_s0 of size 15x18, it is decomposed from a wide multipler into 4 DSP blocks.
+Detected multiplier at u_cpu/u_muldiv/mul_full of size 16x18, it is decomposed from a wide multipler into 4 DSP blocks.
 Related violations: <none>
 
 SYNTH-10#2 Warning
 Wide multiplier  
-Detected multiplier at u_cpu/u_fpu/r_s0__0 of size 18x18, it is decomposed from a wide multipler into 4 DSP blocks.
+Detected multiplier at u_cpu/u_muldiv/mul_full__0 of size 16x16, it is decomposed from a wide multipler into 4 DSP blocks.
 Related violations: <none>
 
 SYNTH-10#3 Warning
 Wide multiplier  
-Detected multiplier at u_cpu/u_fpu/r_s0__1 of size 18x15, it is decomposed from a wide multipler into 4 DSP blocks.
+Detected multiplier at u_cpu/u_muldiv/mul_full__1 of size 18x18, it is decomposed from a wide multipler into 4 DSP blocks.
 Related violations: <none>
 
 SYNTH-10#4 Warning
 Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0 of size 15x18, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#5 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__0 of size 15x15, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#6 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__1 of size 18x18, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#7 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__2 of size 18x15, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#8 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__3 of size 16x18, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#9 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__4 of size 16x16, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#10 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__5 of size 18x18, it is decomposed from a wide multipler into 4 DSP blocks.
-Related violations: <none>
-
-SYNTH-10#11 Warning
-Wide multiplier  
-Detected multiplier at u_cpu/u_muldiv/res0__6 of size 18x16, it is decomposed from a wide multipler into 4 DSP blocks.
+Detected multiplier at u_cpu/u_muldiv/mul_full__2 of size 18x16, it is decomposed from a wide multipler into 4 DSP blocks.
 Related violations: <none>
 
 SYNTH-15#1 Warning
@@ -700,261 +699,6 @@ Related violations: <none>
 SYNTH-15#16 Warning
 Byte wide write enable not inferred  
 Byte wide write enable (BWWE) is not inferred for Block RAM u_bram/mem_reg_3_3 because address width (14) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired..
-Related violations: <none>
-
-TIMING-16#1 Warning
-Large setup violation  
-There is a large setup violation of -10.959 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[15]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#2 Warning
-Large setup violation  
-There is a large setup violation of -14.484 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[14]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#3 Warning
-Large setup violation  
-There is a large setup violation of -16.948 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[13]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#4 Warning
-Large setup violation  
-There is a large setup violation of -19.934 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[12]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#5 Warning
-Large setup violation  
-There is a large setup violation of -2.248 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[18]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#6 Warning
-Large setup violation  
-There is a large setup violation of -23.426 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[11]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#7 Warning
-Large setup violation  
-There is a large setup violation of -26.210 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[10]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#8 Warning
-Large setup violation  
-There is a large setup violation of -28.512 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[9]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#9 Warning
-Large setup violation  
-There is a large setup violation of -31.531 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[8]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#10 Warning
-Large setup violation  
-There is a large setup violation of -33.806 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[7]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#11 Warning
-Large setup violation  
-There is a large setup violation of -37.176 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[6]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#12 Warning
-Large setup violation  
-There is a large setup violation of -39.997 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[5]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#13 Warning
-Large setup violation  
-There is a large setup violation of -42.880 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[4]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#14 Warning
-Large setup violation  
-There is a large setup violation of -45.566 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[3]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#15 Warning
-Large setup violation  
-There is a large setup violation of -48.252 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[2]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#16 Warning
-Large setup violation  
-There is a large setup violation of -5.287 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[17]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#17 Warning
-Large setup violation  
-There is a large setup violation of -51.094 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[1]/D (clocked by clk_out1_clk_wiz_0_1). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#18 Warning
-Large setup violation  
-There is a large setup violation of -53.909 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[0]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#19 Warning
-Large setup violation  
-There is a large setup violation of -58.075 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[0]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#20 Warning
-Large setup violation  
-There is a large setup violation of -59.367 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[2]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#21 Warning
-Large setup violation  
-There is a large setup violation of -59.595 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[3]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#22 Warning
-Large setup violation  
-There is a large setup violation of -59.651 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[4]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#23 Warning
-Large setup violation  
-There is a large setup violation of -59.670 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[1]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#24 Warning
-Large setup violation  
-There is a large setup violation of -59.767 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[8]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#25 Warning
-Large setup violation  
-There is a large setup violation of -59.998 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[7]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#26 Warning
-Large setup violation  
-There is a large setup violation of -60.180 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[11]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#27 Warning
-Large setup violation  
-There is a large setup violation of -60.359 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[5]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#28 Warning
-Large setup violation  
-There is a large setup violation of -60.498 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[13]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#29 Warning
-Large setup violation  
-There is a large setup violation of -60.531 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[9]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#30 Warning
-Large setup violation  
-There is a large setup violation of -60.549 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[12]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#31 Warning
-Large setup violation  
-There is a large setup violation of -60.597 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[6]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#32 Warning
-Large setup violation  
-There is a large setup violation of -60.614 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[16]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#33 Warning
-Large setup violation  
-There is a large setup violation of -60.677 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[10]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#34 Warning
-Large setup violation  
-There is a large setup violation of -60.699 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[20]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#35 Warning
-Large setup violation  
-There is a large setup violation of -60.703 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[17]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#36 Warning
-Large setup violation  
-There is a large setup violation of -60.748 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[21]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#37 Warning
-Large setup violation  
-There is a large setup violation of -60.756 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[23]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#38 Warning
-Large setup violation  
-There is a large setup violation of -60.758 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[25]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#39 Warning
-Large setup violation  
-There is a large setup violation of -60.788 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[14]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#40 Warning
-Large setup violation  
-There is a large setup violation of -60.831 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[15]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#41 Warning
-Large setup violation  
-There is a large setup violation of -60.851 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[19]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#42 Warning
-Large setup violation  
-There is a large setup violation of -60.901 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[18]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#43 Warning
-Large setup violation  
-There is a large setup violation of -60.917 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[29]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#44 Warning
-Large setup violation  
-There is a large setup violation of -60.964 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[24]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#45 Warning
-Large setup violation  
-There is a large setup violation of -60.989 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[22]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#46 Warning
-Large setup violation  
-There is a large setup violation of -61.061 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[26]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#47 Warning
-Large setup violation  
-There is a large setup violation of -61.066 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[27]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#48 Warning
-Large setup violation  
-There is a large setup violation of -61.091 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[31]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#49 Warning
-Large setup violation  
-There is a large setup violation of -61.184 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[28]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#50 Warning
-Large setup violation  
-There is a large setup violation of -61.314 ns between u_cpu/ex_mem_rd_reg[3]/C (clocked by clk_out1_clk_wiz_0_1) and u_cpu/u_muldiv/pipe0_reg[30]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
-Related violations: <none>
-
-TIMING-16#51 Warning
-Large setup violation  
-There is a large setup violation of -7.957 ns between u_cpu/id_ex_fp_rs1_reg[31]/C (clocked by clk_out1_clk_wiz_0) and u_cpu/u_fpu/res_reg_reg[16]/D (clocked by clk_out1_clk_wiz_0). Large setup violations at the end of those stages might be difficult to fix during the post-placement implementation flow and could be the result of non-optimal XDC constraints or non-optimal design architecture
 Related violations: <none>
 
 TIMING-56#1 Warning

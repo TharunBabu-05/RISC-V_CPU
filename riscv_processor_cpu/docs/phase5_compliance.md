@@ -26,8 +26,12 @@ python phase5/compliance/run_compliance.py --test rv32mi-csr -v  # one test
 make compliance                                                  # same as the first line
 ```
 
-Needs `riscv-none-elf-gcc` on `PATH` (or `CROSS=<prefix>`), Icarus Verilog, and the `riscv-tests` checkout
-(with its `env` submodule) next to `riscv_processor_cpu/`.
+Needs `riscv-none-elf-gcc` on `PATH` (or `CROSS=<prefix>`), Icarus Verilog, and the `riscv-tests` submodule
+next to `riscv_processor_cpu/`, including its own `env` submodule:
+
+```powershell
+git submodule update --init --recursive riscv-tests
+```
 
 ## Results
 

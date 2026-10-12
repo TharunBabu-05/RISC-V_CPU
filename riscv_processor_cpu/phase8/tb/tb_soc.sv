@@ -7,8 +7,16 @@
 //    2. Reset button (active-high: press → release)
 //    3. UART RX idle-high (no data coming from PC)
 //
+//  Build (from phase8/rtl, so firmware.vmem is found):
+//    iverilog -g2012 -DSIMULATION -s tb_soc -o tb_soc.vvp \
+//      ../tb/tb_soc.sv *.sv ../../rtl/*.sv
+//    vvp tb_soc.vvp
+//
+//  With SIMULATION the MMCM is bypassed: clk_sys = clk_12mhz, while
+//  the UART still divides by 25 MHz / 115200 = 217, so one bit time
+//  is 217 x 83.333 ns = 18,083 ns.
+//
 //  What to observe in the waveform:
-//    - clk_100mhz: should toggle at 5ns (100 MHz)
 //    - rst_n: goes high after ~20 cycles (synchronizer)
 //    - led[0]: goes high when CPU is running
 //    - dbg_pc: should increment by 4 each cycle (executing NOPs/firmware)
@@ -32,6 +40,8 @@ module tb_soc;
     //  12 MHz clock generator  (83.333 ns period → 41.667 ns half)
     // =========================================================
     always #41.667 clk_12mhz = ~clk_12mhz;
+
+    localparam real BIT_NS = 217 * 83.334;   // UART bit time in simulation
 
     // =========================================================
     //  DUT: soc_top
@@ -75,20 +85,18 @@ module tb_soc;
 
     task send_uart_byte(input [7:0] data);
         integer b;
-        time bit_time;
         begin
-            bit_time = 18083.5 * 1000 * 1ps;
             // Start bit
             uart_rxd_out = 1'b0;
-            #bit_time;
+            #(BIT_NS);
             // 8 data bits
             for (b = 0; b < 8; b = b + 1) begin
                 uart_rxd_out = data[b];
-                #bit_time;
+                #(BIT_NS);
             end
             // Stop bit
             uart_rxd_out = 1'b1;
-            #bit_time;
+            #(BIT_NS);
         end
     endtask
 
@@ -97,10 +105,10 @@ module tb_soc;
         logic [7:0] rx_byte;
         forever begin
             @(negedge uart_txd_in);
-            #(18083.5 * 1.5 * 1000); // 1.5 bit periods to mid bit 0
+            #(BIT_NS * 1.5);         // 1.5 bit periods to mid bit 0
             for (int b = 0; b < 8; b++) begin
                 rx_byte[b] = uart_txd_in;
-                #(18083.5 * 1000);
+                #(BIT_NS);
             end
             $write("%c", rx_byte);
             $fflush();
@@ -112,7 +120,8 @@ module tb_soc;
     // =========================================================
     //  LED monitor
     // =========================================================
-    always @(led) begin
+    // LD2/LD3 follow the UART lines, so only LD0/LD1 are reported.
+    always @(led[1:0]) begin
         $display("[%0t ns] *** LED changed: %b  (run=%b, pll_locked=%b)",
                  $time, led, led[0], led[1]);
     end

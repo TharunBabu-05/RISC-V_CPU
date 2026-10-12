@@ -2,15 +2,15 @@
 # Vivado v2020.2 (64-bit)
 # SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
 # IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
-# Start of session at: Fri Oct  9 22:21:16 2026
-# Process ID: 13272
+# Start of session at: Mon Oct 12 18:38:43 2026
+# Process ID: 15172
 # Current directory: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1
 # Command line: vivado.exe -log soc_top.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source soc_top.tcl
 # Log file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/soc_top.vds
 # Journal file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1\vivado.jou
 #-----------------------------------------------------------
 source soc_top.tcl -notrace
-create_project: Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 1014.895 ; gain = 0.000
+create_project: Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 1024.926 ; gain = 0.000
 Command: synth_design -top soc_top -part xc7s50csga324-1
 Starting synth_design
 Attempting to get a license for feature 'Synthesis' and/or device 'xc7s50'
@@ -18,42 +18,78 @@ INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7s50'
 INFO: [Device 21-403] Loading part xc7s50csga324-1
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 13932
-WARNING: [Synth 8-992] muldiv_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:267]
-WARNING: [Synth 8-992] fpu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:267]
-WARNING: [Synth 8-992] vec_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:267]
-WARNING: [Synth 8-992] id_ex_pc is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:291]
-WARNING: [Synth 8-992] id_ex_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:294]
-WARNING: [Synth 8-992] id_ex_mem_read is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:296]
-WARNING: [Synth 8-992] id_ex_branch is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:297]
-WARNING: [Synth 8-992] id_ex_jump is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:297]
-WARNING: [Synth 8-992] id_ex_opcode is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:307]
-WARNING: [Synth 8-992] ex_branch_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:635]
-WARNING: [Synth 8-992] ex_jalr_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:639]
-WARNING: [Synth 8-992] branch_taken is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:645]
-WARNING: [Synth 8-992] flush_ex is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:744]
-WARNING: [Synth 8-992] ex_mem_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:790]
-WARNING: [Synth 8-992] ex_mem_reg_write is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:792]
-WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:78]
-WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:88]
-WARNING: [Synth 8-6901] identifier 'if_id_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:118]
-WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:119]
-WARNING: [Synth 8-6901] identifier 'id_csr_op' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:201]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:362]
-WARNING: [Synth 8-6901] identifier 'ex_mem_alu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:474]
-WARNING: [Synth 8-6901] identifier 'ex_mem_alu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:480]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:512]
-WARNING: [Synth 8-6901] identifier 'ex_mem_pc' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:715]
+INFO: [Synth 8-7075] Helper process launched with PID 19316
+WARNING: [Synth 8-992] muldiv_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:348]
+WARNING: [Synth 8-992] fpu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:348]
+WARNING: [Synth 8-992] vec_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:348]
+WARNING: [Synth 8-992] mem_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:348]
+WARNING: [Synth 8-992] mmu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:348]
+WARNING: [Synth 8-992] id_ex_pc is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:391]
+WARNING: [Synth 8-992] id_ex_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:394]
+WARNING: [Synth 8-992] id_ex_mem_read is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:396]
+WARNING: [Synth 8-992] id_ex_branch is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:397]
+WARNING: [Synth 8-992] id_ex_jump is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:397]
+WARNING: [Synth 8-992] id_ex_opcode is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:407]
+WARNING: [Synth 8-992] ex_branch_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:869]
+WARNING: [Synth 8-992] ex_jalr_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:873]
+WARNING: [Synth 8-992] branch_taken is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:879]
+WARNING: [Synth 8-992] flush_ex is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1033]
+WARNING: [Synth 8-992] ex_mem_alu_result is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1080]
+WARNING: [Synth 8-992] ex_mem_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1083]
+WARNING: [Synth 8-992] ex_mem_reg_write is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1085]
+WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:108]
+WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:121]
+WARNING: [Synth 8-6901] identifier 'if_id_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:153]
+WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:154]
+WARNING: [Synth 8-6901] identifier 'id_csr_op' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:258]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:370]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:370]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:370]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:371]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:371]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:371]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:372]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:373]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:373]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:374]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:374]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:374]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:375]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:375]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:375]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:384]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:385]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:471]
+WARNING: [Synth 8-6901] identifier 'ex_fwd_a' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:570]
+WARNING: [Synth 8-6901] identifier 'ex_fwd_b' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:571]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:640]
+WARNING: [Synth 8-6901] identifier 'ex_f_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:657]
+WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:657]
+WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:657]
+WARNING: [Synth 8-6901] identifier 'ex_v_cfg' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:658]
+WARNING: [Synth 8-6901] identifier 'ex_vcfg_vl' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:658]
+WARNING: [Synth 8-6901] identifier 'ex_v_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
+WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
+WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
+WARNING: [Synth 8-6901] identifier 'ex_csr_mstatus' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:679]
+WARNING: [Synth 8-6901] identifier 'ex_mem_pc' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:953]
+WARNING: [Synth 8-6901] identifier 'mmu_stall_raw' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:976]
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:09 ; elapsed = 00:00:10 . Memory (MB): peak = 1014.895 ; gain = 0.000
+Starting RTL Elaboration : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 1024.926 ; gain = 0.000
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-6157] synthesizing module 'soc_top' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:35]
 	Parameter BRAM_BASE bound to: 0 - type: integer 
 	Parameter BRAM_MASK bound to: 65535 - type: integer 
 	Parameter UART_BASE bound to: 268435456 - type: integer 
 	Parameter UART_MASK bound to: 15 - type: integer 
-INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-13272-tharun/realtime/clk_wiz_0_stub.v:5]
-INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (1#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-13272-tharun/realtime/clk_wiz_0_stub.v:5]
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-15172-tharun/realtime/clk_wiz_0_stub.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (1#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-15172-tharun/realtime/clk_wiz_0_stub.v:5]
 INFO: [Synth 8-226] default block is never used [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:194]
 INFO: [Synth 8-6157] synthesizing module 'bram' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:16]
 	Parameter SIZE_BYTES bound to: 65536 - type: integer 
@@ -77,10 +113,12 @@ INFO: [Synth 8-6157] synthesizing module 'uart_rx' [C:/Users/tharu/RISC-V_CPU/ri
 INFO: [Synth 8-6155] done synthesizing module 'uart_rx' (4#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv:24]
 INFO: [Synth 8-6155] done synthesizing module 'uart' (5#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv:33]
 INFO: [Synth 8-6157] synthesizing module 'cpu_top_soc' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:52]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:53]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:54]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:82]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:83]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:84]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
+	Parameter HAS_FPU bound to: 1'b0 
+	Parameter HAS_VEC bound to: 1'b0 
 	Parameter OP_LUI bound to: 7'b0110111 
 	Parameter OP_AUIPC bound to: 7'b0010111 
 	Parameter OP_JALR bound to: 7'b1100111 
@@ -98,7 +136,7 @@ WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/th
 	Parameter CSR_RWI bound to: 3'b101 
 	Parameter CSR_RSI bound to: 3'b110 
 	Parameter CSR_RCI bound to: 3'b111 
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:81]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:111]
 INFO: [Synth 8-6157] synthesizing module 'branch_predictor' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv:6]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter BTB_ENTRIES bound to: 32'sb00000000000000000000000000010000 
@@ -109,12 +147,6 @@ INFO: [Synth 8-6155] done synthesizing module 'branch_predictor' (6#1) [C:/Users
 INFO: [Synth 8-6157] synthesizing module 'regfile' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv:7]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 INFO: [Synth 8-6155] done synthesizing module 'regfile' (7#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv:7]
-INFO: [Synth 8-6157] synthesizing module 'fp_regfile' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fp_regfile.sv:6]
-	Parameter FLEN bound to: 32'sb00000000000000000000000000100000 
-INFO: [Synth 8-6155] done synthesizing module 'fp_regfile' (8#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fp_regfile.sv:6]
-INFO: [Synth 8-6157] synthesizing module 'vector_regfile' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_regfile.sv:6]
-	Parameter VLEN bound to: 32'sb00000000000000000000000010000000 
-INFO: [Synth 8-6155] done synthesizing module 'vector_regfile' (9#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_regfile.sv:6]
 INFO: [Synth 8-6157] synthesizing module 'imm_gen' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter OP_IMM bound to: 7'b0010011 
@@ -128,7 +160,7 @@ INFO: [Synth 8-6157] synthesizing module 'imm_gen' [C:/Users/tharu/RISC-V_CPU/ri
 	Parameter OP_AUIPC bound to: 7'b0010111 
 	Parameter OP_JAL bound to: 7'b1101111 
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:62]
-INFO: [Synth 8-6155] done synthesizing module 'imm_gen' (10#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'imm_gen' (8#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'control_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
 	Parameter OP_R bound to: 7'b0110011 
 	Parameter OP_IMM bound to: 7'b0010011 
@@ -158,7 +190,46 @@ INFO: [Synth 8-6157] synthesizing module 'control_unit' [C:/Users/tharu/RISC-V_C
 	Parameter ALU_SLT bound to: 4'b1000 
 	Parameter ALU_SLTU bound to: 4'b1001 
 INFO: [Synth 8-226] default block is never used [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:158]
-INFO: [Synth 8-6155] done synthesizing module 'control_unit' (11#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'control_unit' (9#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
+INFO: [Synth 8-6157] synthesizing module 'ext_decode' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:284]
+	Parameter HAS_FPU bound to: 1'b0 
+	Parameter HAS_VEC bound to: 1'b0 
+	Parameter OP_LOAD_FP bound to: 7'b0000111 
+	Parameter OP_STORE_FP bound to: 7'b0100111 
+	Parameter OP_FP bound to: 7'b1010011 
+	Parameter OP_FMADD bound to: 7'b1000011 
+	Parameter OP_FMSUB bound to: 7'b1000111 
+	Parameter OP_FNMSUB bound to: 7'b1001011 
+	Parameter OP_FNMADD bound to: 7'b1001111 
+	Parameter OP_V bound to: 7'b1010111 
+	Parameter FADD bound to: 5'b00000 
+	Parameter FSUB bound to: 5'b00001 
+	Parameter FMUL bound to: 5'b00010 
+	Parameter FDIV bound to: 5'b00011 
+	Parameter FSQRT bound to: 5'b00100 
+	Parameter FMIN bound to: 5'b00101 
+	Parameter FMAX bound to: 5'b00110 
+	Parameter FSGNJ bound to: 5'b00111 
+	Parameter FSGNJN bound to: 5'b01000 
+	Parameter FSGNJX bound to: 5'b01001 
+	Parameter FEQ bound to: 5'b01010 
+	Parameter FLT bound to: 5'b01011 
+	Parameter FLE bound to: 5'b01100 
+	Parameter FCLASS bound to: 5'b01101 
+	Parameter FCVT_W_S bound to: 5'b01110 
+	Parameter FCVT_WU_S bound to: 5'b01111 
+	Parameter FCVT_S_W bound to: 5'b10000 
+	Parameter FCVT_S_WU bound to: 5'b10001 
+	Parameter FMV_X_W bound to: 5'b10010 
+	Parameter FMV_W_X bound to: 5'b10011 
+	Parameter FMADD bound to: 5'b10100 
+	Parameter FMSUB bound to: 5'b10101 
+	Parameter FNMSUB bound to: 5'b10110 
+	Parameter FNMADD bound to: 5'b10111 
+INFO: [Synth 8-6155] done synthesizing module 'ext_decode' (10#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:284]
+INFO: [Synth 8-6157] synthesizing module 'illegal_detect' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:186]
+	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
+INFO: [Synth 8-6155] done synthesizing module 'illegal_detect' (11#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:186]
 INFO: [Synth 8-6157] synthesizing module 'hazard_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:7]
 INFO: [Synth 8-6155] done synthesizing module 'hazard_unit' (12#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'forwarding_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:43]
@@ -177,7 +248,7 @@ INFO: [Synth 8-6157] synthesizing module 'alu' [C:/Users/tharu/RISC-V_CPU/riscv_
 	Parameter ALU_SLTU bound to: 4'b1001 
 	Parameter SHAMT_BITS bound to: 32'sb00000000000000000000000000000101 
 INFO: [Synth 8-6155] done synthesizing module 'alu' (14#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/alu.sv:7]
-INFO: [Synth 8-6157] synthesizing module 'muldiv_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:7]
+INFO: [Synth 8-6157] synthesizing module 'muldiv_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:19]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter OP_MUL bound to: 3'b000 
 	Parameter OP_MULH bound to: 3'b001 
@@ -187,67 +258,78 @@ INFO: [Synth 8-6157] synthesizing module 'muldiv_unit' [C:/Users/tharu/RISC-V_CP
 	Parameter OP_DIVU bound to: 3'b101 
 	Parameter OP_REM bound to: 3'b110 
 	Parameter OP_REMU bound to: 3'b111 
-	Parameter WIDE bound to: 32'sb00000000000000000000000001000000 
-INFO: [Synth 8-226] default block is never used [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:66]
-INFO: [Synth 8-6155] done synthesizing module 'muldiv_unit' (15#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:7]
-INFO: [Synth 8-6157] synthesizing module 'fpu_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fpu_unit.sv:6]
-	Parameter FLEN bound to: 32'sb00000000000000000000000000100000 
-	Parameter FPU_ADD bound to: 3'b000 
-	Parameter FPU_SUB bound to: 3'b001 
-	Parameter FPU_MUL bound to: 3'b010 
-	Parameter FPU_DIV bound to: 3'b011 
-INFO: [Synth 8-6155] done synthesizing module 'fpu_unit' (16#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/fpu_unit.sv:6]
-INFO: [Synth 8-6157] synthesizing module 'vector_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_unit.sv:7]
-	Parameter VLEN bound to: 32'sb00000000000000000000000010000000 
-	Parameter VEC_ADD bound to: 3'b000 
-	Parameter VEC_SUB bound to: 3'b001 
-	Parameter VEC_AND bound to: 3'b010 
-	Parameter VEC_OR bound to: 3'b011 
-	Parameter VEC_XOR bound to: 3'b100 
-	Parameter LANES bound to: 32'sb00000000000000000000000000000100 
-INFO: [Synth 8-6155] done synthesizing module 'vector_unit' (17#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/vector_unit.sv:7]
-INFO: [Synth 8-6157] synthesizing module 'csr_file' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:7]
+	Parameter CNT_BITS bound to: 32'sb00000000000000000000000000000110 
+INFO: [Synth 8-6155] done synthesizing module 'muldiv_unit' (15#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:19]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:657]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
+INFO: [Synth 8-6157] synthesizing module 'csr_file' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:27]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:120]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
+	Parameter HAS_FPU bound to: 1'b0 
+	Parameter HAS_VEC bound to: 1'b0 
+	Parameter VLEN bound to: 32'sb00000000000000000000000010000000 
 	Parameter PRIV_U bound to: 2'b00 
 	Parameter PRIV_S bound to: 2'b01 
 	Parameter PRIV_M bound to: 2'b11 
-INFO: [Synth 8-6155] done synthesizing module 'csr_file' (18#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:7]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:669]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:695]
-INFO: [Synth 8-6157] synthesizing module 'interrupt_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:8]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:54]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:55]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:56]
+	Parameter MISA_EXT bound to: 26'b00000000000001000100000000 
+	Parameter MISA_VAL bound to: 32'b01000000000000000001000100000000 
+	Parameter SSTATUS_MASK bound to: 32'b10000000000011000110000100100010 
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:307]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:308]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:120]
+INFO: [Synth 8-6155] done synthesizing module 'csr_file' (16#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:27]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:903]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:933]
+INFO: [Synth 8-6157] synthesizing module 'interrupt_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:12]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:61]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:62]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:63]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:64]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:65]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:66]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:67]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:68]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
+	Parameter EXC_INST_MISALIGN bound to: 32'b00000000000000000000000000000000 
 	Parameter EXC_ILLEGAL bound to: 32'b00000000000000000000000000000010 
-	Parameter EXC_ECALL bound to: 32'b00000000000000000000000000001011 
 	Parameter EXC_EBREAK bound to: 32'b00000000000000000000000000000011 
+	Parameter EXC_LOAD_MISALIGN bound to: 32'b00000000000000000000000000000100 
+	Parameter EXC_STORE_MISALIGN bound to: 32'b00000000000000000000000000000110 
+	Parameter EXC_ECALL_U bound to: 32'b00000000000000000000000000001000 
+	Parameter EXC_ECALL_S bound to: 32'b00000000000000000000000000001001 
+	Parameter EXC_ECALL_M bound to: 32'b00000000000000000000000000001011 
 	Parameter INT_MEXT bound to: 32'b10000000000000000000000000001011 
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:54]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:55]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:56]
-INFO: [Synth 8-6155] done synthesizing module 'interrupt_unit' (19#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:8]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:782]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:935]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:968]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:52]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:53]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:54]
-INFO: [Synth 8-6155] done synthesizing module 'cpu_top_soc' (20#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
-INFO: [Synth 8-6155] done synthesizing module 'soc_top' (21#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:35]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:87]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:61]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:62]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:63]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:64]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:65]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:66]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:67]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:68]
+INFO: [Synth 8-6155] done synthesizing module 'interrupt_unit' (17#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:12]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1075]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1265]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1299]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:82]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:83]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:84]
+INFO: [Synth 8-6155] done synthesizing module 'cpu_top_soc' (18#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
+INFO: [Synth 8-6155] done synthesizing module 'soc_top' (19#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:35]
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:13 ; elapsed = 00:00:15 . Memory (MB): peak = 1060.594 ; gain = 45.699
+Finished RTL Elaboration : Time (s): cpu = 00:00:11 ; elapsed = 00:00:12 . Memory (MB): peak = 1059.234 ; gain = 34.309
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:15 ; elapsed = 00:00:17 . Memory (MB): peak = 1060.594 ; gain = 45.699
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:12 ; elapsed = 00:00:14 . Memory (MB): peak = 1062.098 ; gain = 37.172
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:15 ; elapsed = 00:00:17 . Memory (MB): peak = 1060.594 ; gain = 45.699
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:12 ; elapsed = 00:00:14 . Memory (MB): peak = 1062.098 ; gain = 37.172
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.348 . Memory (MB): peak = 1060.594 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.170 . Memory (MB): peak = 1062.098 ; gain = 0.000
 INFO: [Project 1-570] Preparing netlist for logic optimization
 
 Processing XDC Constraints
@@ -260,20 +342,20 @@ INFO: [Project 1-236] Implementation specific constraints were found while readi
 Resolution: To avoid this warning, move constraints listed in [.Xil/soc_top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.004 . Memory (MB): peak = 1206.832 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.005 . Memory (MB): peak = 1204.480 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.106 . Memory (MB): peak = 1206.832 ; gain = 0.000
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.095 . Memory (MB): peak = 1204.480 ; gain = 0.000
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:31 ; elapsed = 00:00:35 . Memory (MB): peak = 1206.832 ; gain = 191.938
+Finished Constraint Validation : Time (s): cpu = 00:00:27 ; elapsed = 00:00:31 . Memory (MB): peak = 1204.480 ; gain = 179.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7s50csga324-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:31 ; elapsed = 00:00:35 . Memory (MB): peak = 1206.832 ; gain = 191.938
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:27 ; elapsed = 00:00:31 . Memory (MB): peak = 1204.480 ; gain = 179.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
@@ -282,10 +364,11 @@ Applied set_property IO_BUFFER_TYPE = NONE for clk_12mhz. (constraint file  c:/U
 Applied set_property CLOCK_BUFFER_TYPE = NONE for clk_12mhz. (constraint file  c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc, line 4).
 Applied set_property KEEP_HIERARCHY = SOFT for u_pll. (constraint file  auto generated constraint).
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:31 ; elapsed = 00:00:35 . Memory (MB): peak = 1206.832 ; gain = 191.938
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:27 ; elapsed = 00:00:31 . Memory (MB): peak = 1204.480 ; gain = 179.555
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart_tx'
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart_rx'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'muldiv_unit'
 WARNING: [Synth 8-6841] Block RAM (mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
 (address width (14) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
 ---------------------------------------------------------------------------------------------------
@@ -307,82 +390,106 @@ INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 
                   S_DONE |                            10000 |                              100
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'uart_rx'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  S_IDLE |                              000 |                              000
+                   S_DIV |                              001 |                              011
+               S_DIV_FIX |                              010 |                              100
+                   S_MUL |                              011 |                              001
+               S_MUL_SEL |                              100 |                              010
+                  S_DONE |                              101 |                              101
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'muldiv_unit'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:37 ; elapsed = 00:00:42 . Memory (MB): peak = 1206.832 ; gain = 191.938
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:35 ; elapsed = 00:00:40 . Memory (MB): peak = 1204.480 ; gain = 179.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
 ---------------------------------------------------------------------------------
 Detailed RTL Component Info : 
 +---Adders : 
-	   2 Input   64 Bit       Adders := 1     
-	   3 Input   32 Bit       Adders := 6     
-	   2 Input   32 Bit       Adders := 12    
+	   2 Input   64 Bit       Adders := 2     
+	   3 Input   34 Bit       Adders := 1     
+	   3 Input   32 Bit       Adders := 1     
+	   2 Input   32 Bit       Adders := 9     
 	   2 Input   16 Bit       Adders := 2     
+	   2 Input    6 Bit       Adders := 1     
 	   2 Input    4 Bit       Adders := 1     
 	   2 Input    3 Bit       Adders := 2     
 +---XORs : 
-	   2 Input     32 Bit         XORs := 5     
+	   2 Input     32 Bit         XORs := 1     
+	   2 Input      1 Bit         XORs := 1     
 +---Registers : 
-	              128 Bit    Registers := 37    
-	               32 Bit    Registers := 135   
+	               64 Bit    Registers := 3     
+	               32 Bit    Registers := 99    
 	               26 Bit    Registers := 16    
 	               16 Bit    Registers := 3     
 	               12 Bit    Registers := 1     
 	                8 Bit    Registers := 5     
 	                7 Bit    Registers := 1     
-	                5 Bit    Registers := 5     
+	                6 Bit    Registers := 1     
+	                5 Bit    Registers := 6     
 	                4 Bit    Registers := 2     
 	                3 Bit    Registers := 9     
 	                2 Bit    Registers := 18    
-	                1 Bit    Registers := 45    
+	                1 Bit    Registers := 49    
 +---Multipliers : 
-	              32x32  Multipliers := 2     
+	              33x33  Multipliers := 1     
 +---RAMs : 
 	             512K Bit	(16384 X 32 bit)          RAMs := 1     
 +---Muxes : 
-	   2 Input  128 Bit        Muxes := 7     
-	   2 Input   32 Bit        Muxes := 84    
-	   6 Input   32 Bit        Muxes := 5     
+	   3 Input   64 Bit        Muxes := 4     
+	   5 Input   64 Bit        Muxes := 4     
+	   2 Input   32 Bit        Muxes := 81    
+	   3 Input   32 Bit        Muxes := 5     
+	   6 Input   32 Bit        Muxes := 4     
 	  11 Input   32 Bit        Muxes := 1     
-	   4 Input   32 Bit        Muxes := 2     
-	  32 Input   32 Bit        Muxes := 2     
-	   5 Input   32 Bit        Muxes := 2     
-	  29 Input   32 Bit        Muxes := 1     
-	   3 Input   32 Bit        Muxes := 4     
-	   2 Input   16 Bit        Muxes := 2     
+	   5 Input   32 Bit        Muxes := 1     
+	  36 Input   32 Bit        Muxes := 1     
 	   4 Input   16 Bit        Muxes := 1     
 	   5 Input   16 Bit        Muxes := 1     
+	   2 Input   16 Bit        Muxes := 2     
 	   2 Input   12 Bit        Muxes := 1     
-	   4 Input    8 Bit        Muxes := 1     
 	   2 Input    8 Bit        Muxes := 1     
 	   5 Input    8 Bit        Muxes := 1     
+	   4 Input    8 Bit        Muxes := 1     
 	   2 Input    7 Bit        Muxes := 1     
-	  29 Input    5 Bit        Muxes := 1     
-	   2 Input    5 Bit        Muxes := 8     
-	   5 Input    5 Bit        Muxes := 1     
-	   3 Input    4 Bit        Muxes := 1     
+	   6 Input    6 Bit        Muxes := 1     
+	  36 Input    6 Bit        Muxes := 1     
+	   2 Input    6 Bit        Muxes := 1     
+	   5 Input    5 Bit        Muxes := 5     
+	   2 Input    5 Bit        Muxes := 10    
+	   3 Input    5 Bit        Muxes := 4     
+	  11 Input    5 Bit        Muxes := 2     
+	   3 Input    4 Bit        Muxes := 4     
 	   8 Input    4 Bit        Muxes := 1     
-	   2 Input    4 Bit        Muxes := 4     
+	   4 Input    4 Bit        Muxes := 4     
+	   2 Input    4 Bit        Muxes := 5     
 	   7 Input    4 Bit        Muxes := 1     
-	   6 Input    3 Bit        Muxes := 1     
-	   3 Input    3 Bit        Muxes := 1     
-	  11 Input    3 Bit        Muxes := 2     
-	   2 Input    3 Bit        Muxes := 10    
+	   2 Input    3 Bit        Muxes := 13    
 	   4 Input    3 Bit        Muxes := 1     
 	   5 Input    3 Bit        Muxes := 1     
+	   6 Input    3 Bit        Muxes := 1     
+	   3 Input    3 Bit        Muxes := 3     
+	  11 Input    3 Bit        Muxes := 2     
+	   7 Input    3 Bit        Muxes := 1     
+	   9 Input    3 Bit        Muxes := 1     
+	   4 Input    2 Bit        Muxes := 3     
 	   6 Input    2 Bit        Muxes := 1     
-	   2 Input    2 Bit        Muxes := 6     
+	   2 Input    2 Bit        Muxes := 13    
 	  11 Input    2 Bit        Muxes := 1     
-	   3 Input    2 Bit        Muxes := 1     
-	   7 Input    2 Bit        Muxes := 1     
-	   4 Input    2 Bit        Muxes := 1     
-	   2 Input    1 Bit        Muxes := 136   
-	   3 Input    1 Bit        Muxes := 3     
-	  11 Input    1 Bit        Muxes := 10    
-	  28 Input    1 Bit        Muxes := 1     
+	   3 Input    2 Bit        Muxes := 3     
+	  32 Input    2 Bit        Muxes := 4     
+	   2 Input    1 Bit        Muxes := 79    
+	   4 Input    1 Bit        Muxes := 8     
 	   5 Input    1 Bit        Muxes := 4     
-	   4 Input    1 Bit        Muxes := 7     
+	   3 Input    1 Bit        Muxes := 9     
+	  11 Input    1 Bit        Muxes := 10    
+	  10 Input    1 Bit        Muxes := 1     
+	   8 Input    1 Bit        Muxes := 1     
+	   6 Input    1 Bit        Muxes := 7     
+	  32 Input    1 Bit        Muxes := 2     
 ---------------------------------------------------------------------------------
 Finished RTL Component Statistics 
 ---------------------------------------------------------------------------------
@@ -398,46 +505,22 @@ Finished Part Resource Summary
 ---------------------------------------------------------------------------------
 Start Cross Boundary and Area Optimization
 ---------------------------------------------------------------------------------
-DSP Report: Generating DSP r_s0, operation Mode is: A*B.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: Generating DSP r_s0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: Generating DSP r_s0, operation Mode is: A*B.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: Generating DSP r_s0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: operator r_s0 is absorbed into DSP r_s0.
-DSP Report: Generating DSP res0, operation Mode is: A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: Generating DSP res0, operation Mode is: (PCIN>>17)+A*B.
-DSP Report: operator res0 is absorbed into DSP res0.
-DSP Report: operator res0 is absorbed into DSP res0.
+DSP Report: Generating DSP mul_full, operation Mode is: A*B.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: Generating DSP mul_full, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: Generating DSP mul_full, operation Mode is: A*B.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: Generating DSP mul_full, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
+DSP Report: operator mul_full is absorbed into DSP mul_full.
 WARNING: [Synth 8-6841] Block RAM (u_bram/mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
 (address width (14) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:02:14 ; elapsed = 00:02:23 . Memory (MB): peak = 1206.832 ; gain = 191.938
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:01:57 ; elapsed = 00:02:09 . Memory (MB): peak = 1204.480 ; gain = 179.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -456,14 +539,6 @@ DSP: Preliminary Mapping	Report (see note below)
 +------------+----------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
 |Module Name | DSP Mapping    | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
 +------------+----------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
-|fpu_unit    | A*B            | 18     | 15     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|fpu_unit    | (PCIN>>17)+A*B | 15     | 15     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|fpu_unit    | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|fpu_unit    | (PCIN>>17)+A*B | 18     | 15     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|muldiv_unit | A*B            | 18     | 15     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|muldiv_unit | (PCIN>>17)+A*B | 15     | 15     | -      | -      | 30     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|muldiv_unit | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
-|muldiv_unit | (PCIN>>17)+A*B | 18     | 15     | -      | -      | 47     | 0    | 0    | -    | -    | -     | 0    | 0    | 
 |muldiv_unit | A*B            | 18     | 16     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
 |muldiv_unit | (PCIN>>17)+A*B | 16     | 16     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
 |muldiv_unit | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
@@ -478,13 +553,13 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:02:34 ; elapsed = 00:02:45 . Memory (MB): peak = 1219.906 ; gain = 205.012
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:02:13 ; elapsed = 00:02:25 . Memory (MB): peak = 1204.852 ; gain = 179.926
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:02:43 ; elapsed = 00:02:55 . Memory (MB): peak = 1288.664 ; gain = 273.770
+Finished Timing Optimization : Time (s): cpu = 00:02:54 ; elapsed = 00:03:11 . Memory (MB): peak = 1353.410 ; gain = 328.484
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -536,7 +611,7 @@ INFO: [Synth 8-7052] The timing for the instance u_bram/mem_reg_3_2 (implemented
 INFO: [Synth 8-7052] The timing for the instance u_bram/mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 INFO: [Synth 8-7052] The timing for the instance u_bram/mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:03:01 ; elapsed = 00:03:14 . Memory (MB): peak = 1356.816 ; gain = 341.922
+Finished Technology Mapping : Time (s): cpu = 00:03:12 ; elapsed = 00:03:31 . Memory (MB): peak = 1398.777 ; gain = 373.852
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -554,37 +629,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:03:11 ; elapsed = 00:03:25 . Memory (MB): peak = 1368.844 ; gain = 353.949
+Finished IO Insertion : Time (s): cpu = 00:03:20 ; elapsed = 00:03:40 . Memory (MB): peak = 1413.887 ; gain = 388.961
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:03:11 ; elapsed = 00:03:25 . Memory (MB): peak = 1368.844 ; gain = 353.949
+Finished Renaming Generated Instances : Time (s): cpu = 00:03:20 ; elapsed = 00:03:40 . Memory (MB): peak = 1413.887 ; gain = 388.961
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:03:16 ; elapsed = 00:03:29 . Memory (MB): peak = 1368.844 ; gain = 353.949
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:03:21 ; elapsed = 00:03:41 . Memory (MB): peak = 1413.887 ; gain = 388.961
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:03:16 ; elapsed = 00:03:30 . Memory (MB): peak = 1368.844 ; gain = 353.949
+Finished Renaming Generated Ports : Time (s): cpu = 00:03:21 ; elapsed = 00:03:41 . Memory (MB): peak = 1413.887 ; gain = 388.961
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:03:17 ; elapsed = 00:03:30 . Memory (MB): peak = 1371.070 ; gain = 356.176
+Finished Handling Custom Attributes : Time (s): cpu = 00:03:22 ; elapsed = 00:03:42 . Memory (MB): peak = 1413.961 ; gain = 389.035
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:03:17 ; elapsed = 00:03:31 . Memory (MB): peak = 1371.070 ; gain = 356.176
+Finished Renaming Generated Nets : Time (s): cpu = 00:03:22 ; elapsed = 00:03:42 . Memory (MB): peak = 1413.961 ; gain = 389.035
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -602,44 +677,43 @@ Report Cell Usage:
 |      |Cell     |Count |
 +------+---------+------+
 |1     |clk_wiz  |     1|
-|2     |CARRY4   |  1610|
-|3     |DSP48E1  |    11|
-|4     |LUT1     |   313|
-|5     |LUT2     |   734|
-|6     |LUT3     |  3549|
-|7     |LUT4     |   531|
-|8     |LUT5     |  2672|
-|9     |LUT6     |  2628|
-|10    |MUXF7    |   669|
-|11    |MUXF8    |    60|
-|12    |RAMB36E1 |    16|
-|28    |FDCE     |  4789|
-|29    |FDPE     |    27|
-|30    |FDRE     |    33|
-|31    |IBUF     |     2|
-|32    |OBUF     |     5|
+|2     |CARRY4   |   155|
+|3     |DSP48E1  |     4|
+|5     |LUT1     |   174|
+|6     |LUT2     |   601|
+|7     |LUT3     |   346|
+|8     |LUT4     |   386|
+|9     |LUT5     |   801|
+|10    |LUT6     |  2067|
+|11    |MUXF7    |   457|
+|12    |MUXF8    |   197|
+|13    |RAMB36E1 |    16|
+|29    |FDCE     |  3611|
+|30    |FDPE     |    29|
+|31    |FDRE     |    33|
+|32    |IBUF     |     2|
+|33    |OBUF     |     5|
 +------+---------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:03:17 ; elapsed = 00:03:31 . Memory (MB): peak = 1371.070 ; gain = 356.176
+Finished Writing Synthesis Report : Time (s): cpu = 00:03:22 ; elapsed = 00:03:42 . Memory (MB): peak = 1413.961 ; gain = 389.035
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 2 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:02:54 ; elapsed = 00:03:21 . Memory (MB): peak = 1371.070 ; gain = 209.938
-Synthesis Optimization Complete : Time (s): cpu = 00:03:18 ; elapsed = 00:03:31 . Memory (MB): peak = 1371.070 ; gain = 356.176
+Synthesis Optimization Runtime : Time (s): cpu = 00:03:03 ; elapsed = 00:03:36 . Memory (MB): peak = 1413.961 ; gain = 246.652
+Synthesis Optimization Complete : Time (s): cpu = 00:03:22 ; elapsed = 00:03:42 . Memory (MB): peak = 1413.961 ; gain = 389.035
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.462 . Memory (MB): peak = 1385.227 ; gain = 0.000
-INFO: [Netlist 29-17] Analyzing 2366 Unisim elements for replacement
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.111 . Memory (MB): peak = 1413.961 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 829 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.016 . Memory (MB): peak = 1385.227 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1413.961 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
 INFO: [Common 17-83] Releasing license: Synthesis
-98 Infos, 46 Warnings, 0 Critical Warnings and 0 Errors encountered.
+95 Infos, 99 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:03:38 ; elapsed = 00:03:59 . Memory (MB): peak = 1385.227 ; gain = 370.332
+synth_design: Time (s): cpu = 00:03:35 ; elapsed = 00:04:00 . Memory (MB): peak = 1413.961 ; gain = 389.035
 INFO: [Common 17-1381] The checkpoint 'C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/soc_top.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:08 ; elapsed = 00:00:07 . Memory (MB): peak = 1385.227 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_utilization -file soc_top_utilization_synth.rpt -pb soc_top_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Fri Oct  9 22:25:43 2026...
+INFO: [Common 17-206] Exiting Vivado at Mon Oct 12 18:43:00 2026...

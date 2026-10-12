@@ -28,6 +28,17 @@ obj/
 # Generated verification outputs
 riscv_processor_cpu/phase5/compliance/build/
 riscv_processor_cpu/formal/riscv-formal/.riscv-formal/
-riscv_processor_cpu/sim/*_vectors.txt
-riscv_processor_cpu/sim/regress/
 __pycache__/
+
+# Simulation outputs (rebuilt by make / tb/run_regression.py)
+riscv_processor_cpu/sim/
+*.vcd
+*.fst
+*.vvp
+
+# Vivado run logs are part of the kept run output
+!riscv_processor_cpu/phase8/vivado/vivado_project/*.runs/*/runme.log
+
+# Local editor / assistant settings
+.codex/
+.vscode/

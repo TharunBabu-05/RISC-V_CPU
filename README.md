@@ -228,6 +228,7 @@ Result: setup slack went from **−61.3 ns to +17.2 ns**, and LUT usage dropped 
 RISC-V_CPU/
 ├── README.md                         # Main showcase and quickstart
 ├── proof/                            # Vivado synthesis + implementation screenshots
+├── riscv-tests/                      # Submodule: official ISA tests (git submodule update --init --recursive)
 └── riscv_processor_cpu/
     ├── rtl/                          # Main advanced CPU architecture modules
     │   ├── cpu_top.sv
@@ -261,7 +262,7 @@ RISC-V_CPU/
 ### 1. Open The Firmware Folder
 
 ```powershell
-cd "C:\Users\tharu\RISC-V_CPU\riscv_processor_cpu\phase8\software"
+cd riscv_processor_cpu\phase8\software
 ```
 
 ### 2. Choose A Firmware

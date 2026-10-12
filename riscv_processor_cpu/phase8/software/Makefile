@@ -63,8 +63,8 @@ all: $(BUILD)/$(HEX) $(BUILD)/$(DUMP)
 	@echo "=========================================="
 	@echo "  Firmware built successfully!"
 	@echo "  HEX file: $(BUILD)/$(HEX)"
-	@echo "  Copy this file to phase8/rtl/ and update"
-	@echo "  bram.sv INIT_FILE parameter."
+	@echo "  Run 'make program' to install it as"
+	@echo "  phase8/rtl/firmware.vmem."
 	@echo "=========================================="
 
 # ---- Link ELF ----
@@ -102,7 +102,7 @@ $(BUILD):
 program: $(BUILD)/$(HEX)
 	cp $(BUILD)/$(TARGET).vmem ../rtl/firmware.vmem
 	@echo "Firmware copied to ../rtl/firmware.vmem"
-	@echo "Now update bram.sv: set INIT_FILE = \"firmware.vmem\""
+	@echo "Re-run synthesis in Vivado to put it in the bitstream."
 	@echo "Then re-run Vivado synthesis."
 
 # ---- Print code size ----

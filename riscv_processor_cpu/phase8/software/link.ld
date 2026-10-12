@@ -7,9 +7,6 @@
  *      .data   : 0x0000_C000 (initialized globals)
  *      .bss    : after .data (zero-initialized globals)
  *      .stack  : top 0x0001_0000 (grows downward, 16-byte aligned per the RISC-V ABI)
- *
- *  Data BRAM: 0x2000_0000 – 0x2000_FFFF  (64 KB)
- *    (Used for heap / large arrays if needed)
  * ============================================================ */
 
 OUTPUT_ARCH(riscv)

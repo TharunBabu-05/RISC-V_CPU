@@ -2,10 +2,10 @@
 //  soc_top.sv  —  RV32 SoC Top-Level for Arty S7-50 (Snake build)
 // ============================================================
 //  This module integrates:
-//    1. cpu_top   — Our RV32I 5-stage pipelined processor
-//    2. bram      — 64KB unified BRAM (instruction + data)
-//    3. uart      — Memory-mapped UART peripheral (115200 baud)
-//    4. bus_mux   — Address decoder routing CPU to peripherals
+//    1. cpu_top_soc — RV32IM + Zicsr 5-stage pipelined processor
+//    2. bram        — 64KB unified BRAM (instruction + data)
+//    3. uart        — Memory-mapped UART peripheral (115200 baud)
+//    4. address decoder routing CPU data accesses to BRAM / UART
 //
 //  ===================================================
 //  Memory Map (Physical Address Space)
@@ -21,14 +21,12 @@
 //       +0x8: Status   (bit0=TX_READY, bit1=RX_VALID)
 //
 //  ===================================================
-//  On-chip resources used (Arty S7-50):
-//    BRAM: 2× RAMB36 blocks (64KB total)
-//    LUTs: ~2000-4000 estimated (mainly CPU datapath)
-//    FFs:  ~1500-3000 (pipeline registers)
+//  On-chip resources used (Arty S7-50, Vivado 2020.2 post-route):
+//    3,749 LUTs, 3,674 FFs, 4 DSP48E1, 16 RAMB36 tiles (64KB)
 //  ===================================================
 //
 //  Board: Xilinx Arty S7-50 (XC7S50-CSGA324)
-//  Clock: 12 MHz on-board (we use Xilinx MMCM to gen 100 MHz)
+//  Clock: 12 MHz on-board oscillator -> clk_wiz_0 MMCM -> 25 MHz clk_sys
 // ============================================================
 `timescale 1ns/1ps
 
@@ -53,22 +51,21 @@ module soc_top (
     //  MMCM config (verified from clk_wiz_0 IP):
     //    CLKFBOUT_MULT_F = 62.5, DIVCLK_DIVIDE = 1, CLKOUT0_DIVIDE_F = 30
     //    => 12 MHz × 62.5 / 30 = 25 MHz
-    //  NOTE: Wire is named 'clk_100mhz' for legacy; it actually carries 25 MHz.
     // -------------------------------------------------------
-    logic clk_100mhz;   // WARNING: actually 25 MHz — see MMCM config above
+    logic clk_sys;      // 25 MHz system clock
     logic pll_locked;
 
 `ifndef SIMULATION
     // Xilinx MMCM (Clocking Wizard IP)
     clk_wiz_0 u_pll (
         .clk_in1 (clk_12mhz),
-        .clk_out1(clk_100mhz),
+        .clk_out1(clk_sys),
         .locked  (pll_locked)
         // No reset port — IP was created with USE_RESET=false
     );
 `else
     // Simulation bypass
-    assign clk_100mhz = clk_12mhz;
+    assign clk_sys = clk_12mhz;
     assign pll_locked = 1'b1;
 `endif
 
@@ -83,7 +80,7 @@ module soc_top (
 
     assign rst_btn_n = !rst_btn;
 
-    always_ff @(posedge clk_100mhz or negedge rst_btn_n) begin
+    always_ff @(posedge clk_sys or negedge rst_btn_n) begin
         if (!rst_btn_n) begin
             rst_sync_cnt <= '0;
             rst_n        <= 1'b0;
@@ -105,14 +102,8 @@ module soc_top (
 
     // -------------------------------------------------------
     //  Internal bus signals
-    //  Our cpu_top connects to memory through the memory.sv
-    //  internal logic. We need to expose the data bus externally
-    //  via a simplified interface using the debug/mem ports.
-    //
-    //  NOTE: We insert a "memory adapter" layer to bridge
-    //  the cpu_top's internal memory interface to our SoC BRAM
-    //  and UART. The cpu_top's internal memory.sv is replaced
-    //  by the SoC memory system via parameters.
+    //  cpu_top_soc exposes a separate instruction port (BRAM
+    //  port A) and data port (address decoder -> BRAM / UART).
     // -------------------------------------------------------
 
     // -------------------------------------------------------
@@ -165,7 +156,7 @@ module soc_top (
     logic        sel_bram_mem;
     logic        sel_uart_mem;
 
-    always_ff @(posedge clk_100mhz or negedge rst_n) begin
+    always_ff @(posedge clk_sys or negedge rst_n) begin
         if (!rst_n) begin
             uart_rdata_latched <= 32'h0;
             sel_bram_mem       <= 1'b0;
@@ -224,11 +215,12 @@ module soc_top (
     // -------------------------------------------------------
     bram #(
         .SIZE_BYTES(65536),
-        // Absolute path so $readmemh works in Vivado simulation and synthesis.
-        // For synthesis, Vivado uses this file to initialize the BRAM bitstream.
-        .INIT_FILE ("C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/firmware.vmem")
+        // phase8/rtl/firmware.vmem. It is a source of the Vivado project
+        // (create_project.tcl), so synthesis finds it by name; reset synth_1
+        // after changing it. Simulations run from phase8/rtl or override it.
+        .INIT_FILE ("firmware.vmem")
     ) u_bram (
-        .clk    (clk_100mhz),
+        .clk    (clk_sys),
         // Port A — instruction fetch
         .a_addr (imem_addr),
         .a_rdata(imem_rdata),
@@ -247,7 +239,7 @@ module soc_top (
         .CLK_FREQ (25_000_000),    // 25 MHz — MMCM output: 12MHz × 62.5 / 30 = 25 MHz (verified)
         .BAUD_RATE(115_200)
     ) u_uart (
-        .clk        (clk_100mhz),  // 25 MHz signal on the wire named clk_100mhz
+        .clk        (clk_sys),
         .rst_n      (rst_n),
         .addr       (dmem_addr[3:0]),
         .wr_data    (dmem_wdata),
@@ -259,16 +251,12 @@ module soc_top (
     );
 
     // -------------------------------------------------------
-    //  CPU Instantiation
-    //  NOTE: cpu_top uses its internal memory.sv by default.
-    //  We create a "soc_cpu_top.sv" wrapper that replaces the
-    //  internal memory with our external BRAM bus connections.
-    //  (This is in Step 2 of Phase 8 - the SoC CPU wrapper)
+    //  CPU (cpu_top_soc: external instruction and data buses)
     // -------------------------------------------------------
     cpu_top_soc #(
         .XLEN(32)
     ) u_cpu (
-        .clk            (clk_100mhz),
+        .clk            (clk_sys),
         .rst_n          (rst_n),
         .ext_interrupt  (1'b0),
 
@@ -304,8 +292,6 @@ module soc_top (
     //    LD3 briefly ON when you type = UART RX received the byte
     //    LD2 always ON = CPU stuck in banner or echo TX loop
     //    LD3 always ON = UART RX stuck valid (glitch / wiring issue)
-    logic uart_tx_ready_sig, uart_rx_valid_sig;  // reserved for future use
-
     assign led[0] = rst_n;              // CPU running (LD0)
     assign led[1] = pll_locked;         // PLL locked (LD1)
     assign led[2] = ~uart_tx;           // TX active: pulses ON when transmitting (LD2)

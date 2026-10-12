@@ -46,15 +46,15 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 During physical bring-up on the Arty S7 FPGA, three critical hardware issues were discovered and solved:
 
 ### 1. Clock Generation (MMCM 25 MHz)
-* **On-board oscillator:** 12 MHz crystal on pin `R2`.
+* **On-board oscillator:** 12 MHz oscillator on pin `F14` (`clk_12mhz` in the XDC).
 * **MMCM parameters:** `CLKFBOUT_MULT_F = 62.5`, `DIVCLK_DIVIDE = 1`, `CLKOUT0_DIVIDE_F = 30.0`.
 * **Actual Clock:** $12\text{ MHz} \times \frac{62.5}{30} = \mathbf{25\text{ MHz}}$.
-* **Fix Applied:** Configured `CLK_FREQ = 25_000_000` in [`soc_top.sv`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv) so the UART clock divider matches 115,200 baud exactly:
+* **Fix Applied:** Configured `CLK_FREQ = 25_000_000` in [`soc_top.sv`](rtl/soc_top.sv) so the UART clock divider matches 115,200 baud exactly:
   $$\text{Divider} = \frac{25\,000\,000}{115\,200} \approx 217\text{ cycles/bit}$$
 
 ### 2. UART RX Pull-Up Resistor Fix
 * **Problem:** In serial UART, an idle line must stay at logic **HIGH (1)**. Because the FPGA RX pin (`V12`) originally lacked an internal pull-up, it floated LOW during reset or button press, causing the UART RX core to interpret the float as continuous zero bits (an infinite stream of false start bits and garbage characters).
-* **Fix Applied in [`arty_s7_50.xdc`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc):**
+* **Fix Applied in [`arty_s7_50.xdc`](constraints/arty_s7_50.xdc):**
   ```tcl
   set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports { uart_rx }];
   ```
@@ -65,7 +65,7 @@ During physical bring-up on the Arty S7 FPGA, three critical hardware issues wer
   - C programs (`snake.c`) perform byte reads (`lbu`/`lb`) for strings and byte writes (`sb`) for character buffers.
   - The BRAM bus only transfers 32-bit words. When the CPU executed `lbu`, without formatting logic it received the entire unshifted 32-bit word, causing strings to repeat characters and fail to detect the null terminator `\0`.
   - When the CPU executed `sb`, the single byte in `rs2[7:0]` was not aligned to the destination byte lane (`b_we`).
-* **Fix Applied in [`cpu_top_soc.sv`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv):**
+* **Fix Applied in [`cpu_top_soc.sv`](rtl/cpu_top_soc.sv):**
   - **Store Data Replication:** Replicated `ex_fwd_b[7:0]` across all 4 byte lanes for `SB`, and halfwords for `SH`.
   - **Load Data Extraction:** Added combinational extraction in the MEM stage based on `ex_mem_alu_result[1:0]` and `ex_mem_funct3` to properly zero-extend (`LBU`, `LHU`) and sign-extend (`LB`, `LH`).
 
@@ -80,7 +80,7 @@ During physical bring-up on the Arty S7 FPGA, three critical hardware issues wer
 | **Terminal Output** | `Hello from RISC-V SoC!`<br>`Type anything:` | ANSI Game Board (40×20 cells), Score, Food (`*`), Snake (`@oooo`) |
 | **Keyboard Input** | Echoes back each character (Enter key $\to$ `\r\n`) | Real-time WASD steering, non-blocking |
 | **Target Build File** | `build/hello.vmem` | `build/snake.vmem` |
-| **Installed Location** | [`phase8/rtl/firmware.vmem`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/firmware.vmem) | [`phase8/rtl/firmware.vmem`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/firmware.vmem) |
+| **Installed Location** | [`phase8/rtl/firmware.vmem`](rtl/firmware.vmem) | [`phase8/rtl/firmware.vmem`](rtl/firmware.vmem) |
 
 ---
 
@@ -89,7 +89,7 @@ During physical bring-up on the Arty S7 FPGA, three critical hardware issues wer
 Whenever you want to load a firmware onto the RISC-V CPU, run the appropriate PowerShell / Makefile command in the `phase8/software` folder:
 
 ```powershell
-cd "c:\Users\tharu\RISC-V_CPU\riscv_processor_cpu\phase8\software"
+cd riscv_processor_cpu\phase8\software
 ```
 
 ### Option A: Deploy Hello World + Key Echo Firmware
@@ -134,7 +134,7 @@ cd "c:\Users\tharu\RISC-V_CPU\riscv_processor_cpu\phase8\software"
    - Click **Open target** $\to$ **Auto Connect**.
    - Click **Program device** $\to$ choose `xc7s50_0` $\to$ confirm bitstream file:
      ```
-     c:\Users\tharu\RISC-V_CPU\riscv_processor_cpu\phase8\vivado\vivado_project\rv32_soc_arty_s7.runs\impl_1\soc_top.bit
+     riscv_processor_cpu\phase8\vivado\vivado_project\rv32_soc_arty_s7.runs\impl_1\soc_top.bit
      ```
    - Click **Program**.
 
@@ -215,6 +215,6 @@ _
 | :--- | :--- | :--- |
 | **PuTTY still shows old firmware** after compilation | Vivado reused old synthesis checkpoint. | Right-click `synth_1` in Vivado $\to$ **Reset Runs**, then click **Generate Bitstream**. |
 | **PuTTY shows nothing / blank screen** | CPU in reset or baud rate mismatch. | 1. Check **LD0** and **LD1** are lit.<br>2. Press **BTN0** to reset.<br>3. Confirm baud rate is `115200` on `COM4`. |
-| **PuTTY prints continuous garbage / error icons** | RX pin floating without pull-up. | Verify [`arty_s7_50.xdc`](file:///c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc) has `PULLUP TRUE` on `uart_rx`. |
+| **PuTTY prints continuous garbage / error icons** | RX pin floating without pull-up. | Verify [`arty_s7_50.xdc`](constraints/arty_s7_50.xdc) has `PULLUP TRUE` on `uart_rx`. |
 | **Typed characters do not echo** | COM port occupied or TX line error. | Close other serial monitors (Arduino IDE, TeraTerm), unplug and reconnect USB cable. |
 | **Snake game field is broken / overlapping** | Terminal window too small or local echo enabled. | Maximize PuTTY window (minimum 80×25) and set **Local echo** to `Force off`. |

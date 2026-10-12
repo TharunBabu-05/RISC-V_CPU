@@ -3,7 +3,7 @@
 //  Standard 8N1 format: 1 start bit, 8 data bits, 1 stop bit
 //
 //  Parameters:
-//    CLK_FREQ  : System clock frequency in Hz (default 100 MHz)
+//    CLK_FREQ  : System clock frequency in Hz (default 25 MHz)
 //    BAUD_RATE : Baud rate (default 115200)
 //
 //  Interface:
@@ -15,7 +15,7 @@
 `timescale 1ns/1ps
 
 module uart_tx #(
-    parameter int CLK_FREQ  = 100_000_000,  // 100 MHz Arty S7 clock
+    parameter int CLK_FREQ  = 25_000_000,   // SoC clock (MMCM output)
     parameter int BAUD_RATE = 115_200
 ) (
     input  logic       clk,
@@ -34,7 +34,7 @@ module uart_tx #(
     //  Baud rate generator
     //  Counts from 0 to (CLKS_PER_BIT-1) to generate 1 baud tick
     // -------------------------------------------------------
-    localparam int CLKS_PER_BIT = CLK_FREQ / BAUD_RATE; // 868 @ 100 MHz / 115200
+    localparam int CLKS_PER_BIT = CLK_FREQ / BAUD_RATE; // 217 @ 25 MHz / 115200
 
     // -------------------------------------------------------
     //  FSM states

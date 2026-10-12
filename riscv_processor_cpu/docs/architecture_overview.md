@@ -6,6 +6,8 @@
 IF -> ID -> EX -> MEM -> WB
 ```
 
+![5-stage pipeline with forwarding and hazard units](diagrams/pipeline_overview.svg)
+
 - **IF**: Fetch path with instruction-cache facade and branch predictor assist.
 - **ID**: Decode, register fetch, immediate generation, hazard observation.
 - **EX**: ALU/branch resolution, mul/div issue, control decisions.

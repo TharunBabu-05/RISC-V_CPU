@@ -22,7 +22,4 @@
 #define UART_TX_READY   (1U << 0)   /* 1 = transmitter idle, safe to write  */
 #define UART_RX_VALID   (1U << 1)   /* 1 = received byte waiting to be read */
 
-/* ---- Data BRAM Base (optional heap) ---- */
-#define DMEM_BASE    0x20000000UL
-
 #endif /* SOC_H */

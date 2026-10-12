@@ -5,13 +5,21 @@
 ##
 ##  STEP 1: Close any open project in Vivado first.
 ##  STEP 2: Tools → Run Tcl Script → select this file.
+##
+##  Batch use:  vivado -mode batch -source create_project.tcl [-tclargs <project_dir>]
 ## ============================================================
 
-## ---- Hardcoded Absolute Paths (most reliable for Vivado 2020.2) ----
-set phase8_rtl  "C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl"
-set cpu_rtl     "C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl"
-set xdc_file    "C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc"
-set project_dir "C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project"
+## ---- Paths relative to this script (phase8/vivado/) ----
+set script_dir  [file dirname [file normalize [info script]]]
+set phase8_dir  [file normalize "$script_dir/.."]
+set phase8_rtl  "$phase8_dir/rtl"
+set cpu_rtl     [file normalize "$phase8_dir/../rtl"]
+set xdc_file    "$phase8_dir/constraints/arty_s7_50.xdc"
+set fw_file     "$phase8_rtl/firmware.vmem"
+set project_dir "$script_dir/vivado_project"
+if {[info exists argc] && $argc > 0} {
+    set project_dir [file normalize [lindex $argv 0]]
+}
 
 puts "============================================"
 puts "  RISC-V SoC — Vivado Project Setup"
@@ -19,6 +27,7 @@ puts "============================================"
 puts "  Phase8 RTL : $phase8_rtl"
 puts "  CPU RTL    : $cpu_rtl"
 puts "  XDC        : $xdc_file"
+puts "  Firmware   : $fw_file"
 puts "  Project    : $project_dir"
 puts "============================================"
 
@@ -31,6 +40,9 @@ if {![file isdirectory $cpu_rtl]} {
 }
 if {![file exists $xdc_file]} {
     error "ERROR: XDC file not found: $xdc_file"
+}
+if {![file exists $fw_file]} {
+    error "ERROR: firmware not found: $fw_file (run 'make program' in phase8/software)"
 }
 puts "  All source directories verified OK."
 
@@ -104,6 +116,15 @@ if {[llength $all_sv] > 0} {
     puts "  WARNING: No .sv files found in sources_1!"
 }
 
+## ---- Firmware image ----
+## soc_top loads "firmware.vmem" into the BRAM with $readmemh. As a project
+## source, synthesis finds it by name (no absolute path in the RTL).
+puts "
+--- Adding firmware image ---"
+add_files -fileset sources_1 $fw_file
+set_property file_type {Memory Initialization Files} [get_files $fw_file]
+puts "  Added: firmware.vmem"
+
 ## ---- Add Constraints ----
 puts "\n--- Adding XDC constraints ---"
 add_files -fileset constrs_1 $xdc_file
@@ -114,7 +135,7 @@ set_property top soc_top [current_fileset]
 update_compile_order -fileset sources_1
 puts "\n  Top module set to: soc_top"
 
-## ---- Clocking Wizard IP (MMCM: 12 MHz → 100 MHz) ----
+## ---- Clocking Wizard IP (MMCM: 12 MHz x 62.5 / 30 = 25 MHz) ----
 puts "\n--- Creating Clocking Wizard IP (clk_wiz_0) ---"
 create_ip \
     -name clk_wiz \
@@ -127,14 +148,14 @@ set_property -dict [list \
     CONFIG.Component_Name                 {clk_wiz_0}                      \
     CONFIG.PRIM_SOURCE                    {Single_ended_clock_capable_pin} \
     CONFIG.PRIM_IN_FREQ                   {12.000}                          \
-    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ     {100.000}                         \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ     {25.000}                          \
     CONFIG.USE_LOCKED                     {true}                            \
     CONFIG.USE_RESET                      {false}                           \
     CONFIG.RESET_TYPE                     {ACTIVE_LOW}                      \
 ] [get_ips clk_wiz_0]
 
 generate_target all [get_ips clk_wiz_0]
-puts "  clk_wiz_0 IP created (12 MHz → 100 MHz MMCM)."
+puts "  clk_wiz_0 IP created (12 MHz -> 25 MHz MMCM)."
 
 ## ---- Synthesis Settings ----
 set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY rebuilt [get_runs synth_1]
