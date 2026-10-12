@@ -1,23 +1,20 @@
 # Phase 5 Checklist
 
-## Handoff Status
+Ticked items have a result in the repository; unticked items are open.
 
-- [x] Compliance flow is documented for `riscv-tests` and `riscv-arch-test`.
-- [x] Formal verification scope is documented for pipeline, hazard, and CSR properties.
-- [x] Synthesis handoff guidance is documented for clocking, resets, and memory replacement.
-- [x] ISA coverage and known limitations are captured in one place.
-- [x] Directed simulation regressions and build instructions remain aligned with the phase plan.
-- [x] A `make phase5` entry point lists the phase-5 handoff artifacts.
+## Done
+- [x] riscv-tests executed on both cores, all applicable tests pass — [phase5_compliance.md](phase5_compliance.md)
+- [x] riscv-formal on the FPGA core, 52/52 checks pass — [phase5_formal_verification.md](phase5_formal_verification.md)
+- [x] FPGA timing closure at 25 MHz (Vivado), hardware verified on the Arty S7-50 — [phase5_synthesis.md](phase5_synthesis.md)
+- [x] Directed and unit regression with a failing exit code on any failure (`make regress`)
+- [x] ISA coverage and known limitations in one place — [isa_coverage.md](isa_coverage.md)
 
-## Execution Notes
-
-- External compliance, formal, and synthesis runs still depend on local tool installation and target-specific constraints.
-- The repository now contains the artifacts needed to start those runs without further structural setup.
+## Open
+- [ ] riscv-arch-test (RISCOF) signature-based compliance
+- [ ] riscv-formal CSR and bus checks; formal coverage of interrupts
+- [ ] RVFI port for the research core (FPU / vector are verified by simulation only)
+- [ ] PMP, hardware misaligned access, S-mode (needed by the two N/A riscv-tests and by an OS)
 
 ## Related Docs
-
-- [Compliance handoff](phase5_compliance.md)
-- [Formal verification handoff](phase5_formal_verification.md)
-- [Synthesis handoff](phase5_synthesis.md)
-- [ISA coverage](isa_coverage.md)
-- [Build guide](build_simulation_guide.md)
+- [Compliance](phase5_compliance.md) · [Formal verification](phase5_formal_verification.md) ·
+  [Synthesis](phase5_synthesis.md) · [ISA coverage](isa_coverage.md) · [Build guide](build_simulation_guide.md)

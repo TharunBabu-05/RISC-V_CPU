@@ -38,7 +38,8 @@ endmodule
 //  via funct3 passed from MEM stage
 // ----------------------------------------------------------
 module data_mem #(
-    parameter int XLEN = 32
+    parameter int XLEN = 32,
+    parameter int WORDS = 1024        // power of two
 ) (
     input  logic        clk,
     input  logic [XLEN-1:0] addr,
@@ -51,15 +52,18 @@ module data_mem #(
     input  logic [XLEN-1:0] ptw_addr,
     output logic [31:0] ptw_rdata
 );
-    logic [31:0] mem [0:1023];
+    localparam int AW = $clog2(WORDS);
+    logic [31:0] mem [0:WORDS-1];
+    logic [AW-1:0] widx;
+    assign widx = addr[AW+1:2];
 
     initial begin
         integer i;
-        for (i = 0; i < 1024; i = i + 1)
+        for (i = 0; i < WORDS; i = i + 1)
             mem[i] = 32'b0;
     end
 
-    assign ptw_rdata = ptw_read ? mem[ptw_addr[11:2]] : 32'b0;
+    assign ptw_rdata = ptw_read ? mem[ptw_addr[AW+1:2]] : 32'b0;
 
     generate
         if (XLEN == 64) begin : gen_mem64
@@ -69,24 +73,24 @@ module data_mem #(
                     case (funct3)
                         3'b000: begin   // SB
                             case (addr[1:0])
-                                2'b00: mem[addr[11:2]][7:0]   <= wr_data[7:0];
-                                2'b01: mem[addr[11:2]][15:8]  <= wr_data[7:0];
-                                2'b10: mem[addr[11:2]][23:16] <= wr_data[7:0];
-                                2'b11: mem[addr[11:2]][31:24] <= wr_data[7:0];
+                                2'b00: mem[widx][7:0]   <= wr_data[7:0];
+                                2'b01: mem[widx][15:8]  <= wr_data[7:0];
+                                2'b10: mem[widx][23:16] <= wr_data[7:0];
+                                2'b11: mem[widx][31:24] <= wr_data[7:0];
                             endcase
                         end
                         3'b001: begin   // SH
                             case (addr[1])
-                                1'b0: mem[addr[11:2]][15:0]  <= wr_data[15:0];
-                                1'b1: mem[addr[11:2]][31:16] <= wr_data[15:0];
+                                1'b0: mem[widx][15:0]  <= wr_data[15:0];
+                                1'b1: mem[widx][31:16] <= wr_data[15:0];
                             endcase
                         end
-                        3'b010: mem[addr[11:2]] <= wr_data[31:0]; // SW
+                        3'b010: mem[widx] <= wr_data[31:0]; // SW
                         3'b011: begin // SD
-                            mem[addr[11:2]]     <= wr_data[31:0];
-                            mem[addr[11:2] + 1] <= wr_data[63:32];
+                            mem[widx]     <= wr_data[31:0];
+                            mem[widx + 1] <= wr_data[63:32];
                         end
-                        default: mem[addr[11:2]] <= wr_data[31:0];
+                        default: mem[widx] <= wr_data[31:0];
                     endcase
                 end
             end
@@ -94,8 +98,8 @@ module data_mem #(
             // Read (combinatorial)
             logic [31:0] raw_word;
             logic [63:0] raw_dword;
-            assign raw_word  = mem_read ? mem[addr[11:2]] : 32'b0;
-            assign raw_dword = mem_read ? {mem[addr[11:2] + 1], mem[addr[11:2]]} : 64'b0;
+            assign raw_word  = mem_read ? mem[widx] : 32'b0;
+            assign raw_dword = mem_read ? {mem[widx + 1], mem[widx]} : 64'b0;
 
             always_comb begin
                 case (funct3)
@@ -144,27 +148,27 @@ module data_mem #(
                     case (funct3)
                         3'b000: begin   // SB
                             case (addr[1:0])
-                                2'b00: mem[addr[11:2]][7:0]   <= wr_data[7:0];
-                                2'b01: mem[addr[11:2]][15:8]  <= wr_data[7:0];
-                                2'b10: mem[addr[11:2]][23:16] <= wr_data[7:0];
-                                2'b11: mem[addr[11:2]][31:24] <= wr_data[7:0];
+                                2'b00: mem[widx][7:0]   <= wr_data[7:0];
+                                2'b01: mem[widx][15:8]  <= wr_data[7:0];
+                                2'b10: mem[widx][23:16] <= wr_data[7:0];
+                                2'b11: mem[widx][31:24] <= wr_data[7:0];
                             endcase
                         end
                         3'b001: begin   // SH
                             case (addr[1])
-                                1'b0: mem[addr[11:2]][15:0]  <= wr_data[15:0];
-                                1'b1: mem[addr[11:2]][31:16] <= wr_data[15:0];
+                                1'b0: mem[widx][15:0]  <= wr_data[15:0];
+                                1'b1: mem[widx][31:16] <= wr_data[15:0];
                             endcase
                         end
-                        3'b010: mem[addr[11:2]] <= wr_data[31:0]; // SW
-                        default: mem[addr[11:2]] <= wr_data[31:0];
+                        3'b010: mem[widx] <= wr_data[31:0]; // SW
+                        default: mem[widx] <= wr_data[31:0];
                     endcase
                 end
             end
 
             // Read (combinatorial)
             logic [31:0] raw_word;
-            assign raw_word = mem_read ? mem[addr[11:2]] : 32'b0;
+            assign raw_word = mem_read ? mem[widx] : 32'b0;
 
             always_comb begin
                 case (funct3)

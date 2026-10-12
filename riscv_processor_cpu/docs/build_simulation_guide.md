@@ -23,7 +23,9 @@ make sim_muldiv       # RV32M multiply/divide regression
 make sim_rv64         # RV64I datapath sanity regression
 make sim_mmu          # Sv32 MMU/page-fault regression
 make sim_fp           # FP arithmetic integration regression
-make sim_vector       # Vector arithmetic integration regression
+make sim_vector       # RVV subset integration regression
+make sim_fpu_unit     # FPU vs. tb/fpu_ref.py vectors (needs Python 3)
+make sim_vector_unit  # vector unit vs. tb/vec_ref.py vectors (needs Python 3)
 ```
 
 ## Optional Lint

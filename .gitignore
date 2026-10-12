@@ -24,3 +24,10 @@ dist/
 out/
 
 obj/
+
+# Generated verification outputs
+riscv_processor_cpu/phase5/compliance/build/
+riscv_processor_cpu/formal/riscv-formal/.riscv-formal/
+riscv_processor_cpu/sim/*_vectors.txt
+riscv_processor_cpu/sim/regress/
+__pycache__/

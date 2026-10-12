@@ -8,11 +8,27 @@
 //  sstatus is a restricted view of mstatus. mip.MEIP reflects the
 //  external interrupt line. cycle/instret are 64-bit counters
 //  (upper halves via the *h CSRs on RV32).
+//
+//  S-mode is not implemented: mstatus.MPP only holds M or U (writes of
+//  S/H read back as U) and misa.S is clear. The supervisor CSRs remain
+//  accessible from M-mode for the experimental Sv32 MMU.
+//
+//  Debug triggers (Sdtrig) are implemented with zero triggers: tselect,
+//  tdata1/2/3 read as zero (tdata1.type = 0, "no trigger").
+//
+//  HAS_FPU: fflags/frm/fcsr exist, misa.F is set, and mstatus.FS
+//           gates them (FS = Off makes them illegal; any FP state
+//           change marks FS Dirty, reflected in mstatus.SD).
+//  HAS_VEC: vstart/vxsat/vxrm/vcsr and the read-only vl/vtype/vlenb
+//           exist; vl and vtype change only through vset{i}vl{i}.
 // ============================================================
 `timescale 1ns/1ps
 
 module csr_file #(
-    parameter int XLEN = 32
+    parameter int XLEN = 32,
+    parameter bit HAS_FPU = 1'b1,
+    parameter bit HAS_VEC = 1'b1,
+    parameter int VLEN    = 128
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -28,8 +44,20 @@ module csr_file #(
     input  logic [XLEN-1:0] trap_mcause,
     input  logic [XLEN-1:0] trap_mtval,
     input  logic [XLEN-1:0] trap_mip,        // live pending interrupts (MEIP = bit 11)
+    // Floating-point state updates from the FPU
+    input  logic        fflags_set_valid,
+    input  logic [4:0]  fflags_set,
+    input  logic        fs_dirty,           // an F instruction changed FP state
+    // Vector configuration updates (vset{i}vl{i})
+    input  logic        vcfg_write,
+    input  logic [XLEN-1:0] vcfg_vl,
+    input  logic [XLEN-1:0] vcfg_vtype,
     output logic [XLEN-1:0] csr_rdata,
     output logic        csr_illegal,
+    output logic [2:0]      frm_out,
+    output logic [XLEN-1:0] vl_out,
+    output logic [XLEN-1:0] vtype_out,
+    output logic [XLEN-1:0] vstart_out,
     // Additional outputs for interrupt_unit
     output logic [XLEN-1:0] mstatus_out,
     output logic [XLEN-1:0] mie_out,
@@ -66,42 +94,53 @@ module csr_file #(
     // Counters (64-bit on every XLEN)
     logic [63:0]     mcycle;    // 0xB00 / 0xB80, cycle 0xC00 / 0xC80
     logic [63:0]     minstret;  // 0xB02 / 0xB82, instret 0xC02 / 0xC82
-    // FP / vector stub CSRs
-    logic [XLEN-1:0] fflags;    // 0x001
-    logic [XLEN-1:0] frm;       // 0x002
-    logic [XLEN-1:0] fcsr;      // 0x003
+    // Floating-point CSRs (fcsr 0x003 = {frm, fflags})
+    logic [4:0]      fflags;    // 0x001
+    logic [2:0]      frm;       // 0x002
+    // Vector CSRs (vcsr 0x00F = {vxrm, vxsat})
     logic [XLEN-1:0] vstart;    // 0x008
-    logic [XLEN-1:0] vxsat;     // 0x009
-    logic [XLEN-1:0] vxrm;      // 0x00A
-    logic [XLEN-1:0] vl;        // 0xC20
-    logic [XLEN-1:0] vtype;     // 0xC21
+    logic            vxsat;     // 0x009
+    logic [1:0]      vxrm;      // 0x00A
+    logic [XLEN-1:0] vl;        // 0xC20 (read-only)
+    logic [XLEN-1:0] vtype;     // 0xC21 (read-only)
     logic [1:0]      current_priv;
 
     localparam logic [1:0] PRIV_U = 2'b00;
     localparam logic [1:0] PRIV_S = 2'b01;
     localparam logic [1:0] PRIV_M = 2'b11;
 
-    // misa: MXL (1 = 32-bit, 2 = 64-bit) and extensions I, M
+    // misa: MXL (1 = 32-bit, 2 = 64-bit) and extensions I, M (+ F).
+    // The vector unit implements an RVV subset, so misa.V is not set.
+    localparam logic [25:0] MISA_EXT = 26'h0001100 | (HAS_FPU ? 26'h0000020 : 26'h0);
     localparam logic [XLEN-1:0] MISA_VAL =
-        {((XLEN == 64) ? 2'b10 : 2'b01), {(XLEN-28){1'b0}}, 26'h0001100};
+        {((XLEN == 64) ? 2'b10 : 2'b01), {(XLEN-28){1'b0}}, MISA_EXT};
 
-    // sstatus exposes SIE, SPIE, SPP, SUM, MXR (and SD) of mstatus
+    // sstatus exposes SIE, SPIE, SPP, FS, SUM, MXR (and SD) of mstatus
     localparam logic [XLEN-1:0] SSTATUS_MASK =
-        {1'b1, {(XLEN-32){1'b0}}, 31'h000C_0122};
+        {1'b1, {(XLEN-32){1'b0}}, 31'h000C_6122};
 
-    logic [XLEN-1:0] mip_rd;
+    logic [XLEN-1:0] mip_rd, mstatus_rd;
     assign mip_rd = mip_sw | (trap_mip & {{(XLEN-12){1'b0}}, 12'h800});
+    // SD summarises a Dirty FS field
+    assign mstatus_rd = {(mstatus[14:13] == 2'b11), mstatus[XLEN-2:0]};
+
+    logic fp_csr;
+    assign fp_csr = (csr_addr == 12'h001) || (csr_addr == 12'h002) || (csr_addr == 12'h003);
 
     // ---------------- Legality ----------------
     logic csr_exists, counter_csr, counter_ok;
     always_comb begin
         case (csr_addr)
-            12'h001, 12'h002, 12'h003, 12'h008, 12'h009, 12'h00A,
+            12'h001, 12'h002, 12'h003:
+                csr_exists = HAS_FPU;
+            12'h008, 12'h009, 12'h00A, 12'h00F, 12'hC20, 12'hC21, 12'hC22:
+                csr_exists = HAS_VEC;
             12'h100, 12'h104, 12'h105, 12'h140, 12'h141, 12'h142, 12'h143, 12'h144, 12'h180,
             12'h300, 12'h301, 12'h302, 12'h303, 12'h304, 12'h305, 12'h306,
             12'h340, 12'h341, 12'h342, 12'h343, 12'h344,
-            12'hB00, 12'hB02, 12'hC00, 12'hC02, 12'hC20, 12'hC21,
-            12'hF11, 12'hF12, 12'hF13, 12'hF14, 12'hF15:
+            12'hB00, 12'hB02, 12'hC00, 12'hC02,
+            12'hF11, 12'hF12, 12'hF13, 12'hF14, 12'hF15,
+            12'h7A0, 12'h7A1, 12'h7A2, 12'h7A3:
                 csr_exists = 1'b1;
             12'hB80, 12'hB82, 12'hC80, 12'hC82:
                 csr_exists = (XLEN == 32);
@@ -117,9 +156,8 @@ module csr_file #(
     always_comb begin
         csr_illegal = !csr_exists ||
                       (current_priv < csr_addr[9:8]) ||
-                      // read-only space; vl/vtype stay writable for the vector stub
-                      (csr_write_attempt && (csr_addr[11:10] == 2'b11) &&
-                       (csr_addr != 12'hC20) && (csr_addr != 12'hC21)) ||
+                      (csr_write_attempt && (csr_addr[11:10] == 2'b11)) ||   // read-only space
+                      (fp_csr && (mstatus[14:13] == 2'b00)) ||                // FP state is Off
                       !counter_ok;
     end
 
@@ -147,19 +185,21 @@ module csr_file #(
             satp       <= {XLEN{1'b0}};
             mcycle     <= 64'b0;
             minstret   <= 64'b0;
-            fflags     <= {XLEN{1'b0}};
-            frm        <= {XLEN{1'b0}};
-            fcsr       <= {XLEN{1'b0}};
+            fflags     <= 5'd0;
+            frm        <= 3'd0;
             vstart     <= {XLEN{1'b0}};
-            vxsat      <= {XLEN{1'b0}};
-            vxrm       <= {XLEN{1'b0}};
-            vl         <= {{(XLEN-3){1'b0}}, 3'd4};
-            vtype      <= {XLEN{1'b0}};
+            vxsat      <= 1'b0;
+            vxrm       <= 2'd0;
+            vl         <= {XLEN{1'b0}};
+            vtype      <= {1'b1, {(XLEN-1){1'b0}}};    // vill until the first vsetvl
             current_priv <= PRIV_M;
         end else begin
-            // Free-running counters (a CSR write below takes precedence)
-            mcycle <= mcycle + 64'd1;
-            if (retire)
+            // Counters. An instruction that writes a counter suppresses that
+            // counter's increment; `retire` comes from the instruction leaving
+            // EX, the same stage that reads and writes CSRs.
+            if (!(csr_write && (csr_addr == 12'hB00 || csr_addr == 12'hB80)))
+                mcycle <= mcycle + 64'd1;
+            if (retire && !(csr_write && (csr_addr == 12'hB02 || csr_addr == 12'hB82)))
                 minstret <= minstret + 64'd1;
 
             if (trap_write) begin
@@ -194,7 +234,10 @@ module csr_file #(
                     12'h143: stval    <= csr_wdata;
                     12'h144: sip      <= csr_wdata;
                     12'h180: satp     <= csr_wdata;
-                    12'h300: mstatus  <= csr_wdata;
+                    // MPP is WARL: only M (11) and U (00) exist
+                    12'h300: mstatus  <= {csr_wdata[XLEN-1:13],
+                                          (csr_wdata[12:11] == 2'b11) ? 2'b11 : 2'b00,
+                                          csr_wdata[10:0]};
                     12'h302: medeleg  <= csr_wdata;
                     12'h303: mideleg  <= csr_wdata;
                     12'h304: mie      <= csr_wdata;
@@ -210,16 +253,27 @@ module csr_file #(
                     12'hB02: if (XLEN == 64) minstret <= csr_wdata; else minstret[31:0] <= csr_wdata[31:0];
                     12'hB80: mcycle[63:32]   <= csr_wdata[31:0];
                     12'hB82: minstret[63:32] <= csr_wdata[31:0];
-                    12'h001: fflags   <= csr_wdata;
-                    12'h002: frm      <= csr_wdata;
-                    12'h003: fcsr     <= csr_wdata;
-                    12'h008: vstart   <= csr_wdata;
-                    12'h009: vxsat    <= csr_wdata;
-                    12'h00A: vxrm     <= csr_wdata;
-                    12'hC20: vl       <= csr_wdata;
-                    12'hC21: vtype    <= csr_wdata;
+                    12'h001: fflags   <= csr_wdata[4:0];
+                    12'h002: frm      <= csr_wdata[2:0];
+                    12'h003: begin frm <= csr_wdata[7:5]; fflags <= csr_wdata[4:0]; end
+                    12'h008: vstart   <= csr_wdata & (VLEN/8 - 1);
+                    12'h009: vxsat    <= csr_wdata[0];
+                    12'h00A: vxrm     <= csr_wdata[1:0];
+                    12'h00F: begin vxrm <= csr_wdata[2:1]; vxsat <= csr_wdata[0]; end
                     default: ; // read-only or unimplemented (flagged illegal)
                 endcase
+                if (fp_csr) mstatus[14:13] <= 2'b11;              // FP state written: Dirty
+            end
+
+            // Updates from the instruction in EX (never in the same cycle as a CSR write)
+            if (fflags_set_valid)
+                fflags <= fflags | fflags_set;
+            if (fs_dirty)
+                mstatus[14:13] <= 2'b11;
+            if (vcfg_write) begin
+                vl     <= vcfg_vl;
+                vtype  <= vcfg_vtype;
+                vstart <= {XLEN{1'b0}};
             end
         end
     end
@@ -227,7 +281,7 @@ module csr_file #(
     // ---------------- Read port (combinational) ----------------
     always_comb begin
         case (csr_addr)
-            12'h100: csr_rdata = mstatus & SSTATUS_MASK;
+            12'h100: csr_rdata = mstatus_rd & SSTATUS_MASK;
             12'h104: csr_rdata = sie;
             12'h105: csr_rdata = stvec;
             12'h140: csr_rdata = sscratch;
@@ -236,7 +290,7 @@ module csr_file #(
             12'h143: csr_rdata = stval;
             12'h144: csr_rdata = sip;
             12'h180: csr_rdata = satp;
-            12'h300: csr_rdata = mstatus;
+            12'h300: csr_rdata = mstatus_rd;
             12'h301: csr_rdata = MISA_VAL;
             12'h302: csr_rdata = medeleg;
             12'h303: csr_rdata = mideleg;
@@ -252,21 +306,27 @@ module csr_file #(
             12'hB02, 12'hC02: csr_rdata = minstret[XLEN-1:0];
             12'hB80, 12'hC80: csr_rdata = {{(XLEN-32){1'b0}}, mcycle[63:32]};
             12'hB82, 12'hC82: csr_rdata = {{(XLEN-32){1'b0}}, minstret[63:32]};
-            12'h001: csr_rdata = fflags;
-            12'h002: csr_rdata = frm;
-            12'h003: csr_rdata = fcsr;
+            12'h001: csr_rdata = {{(XLEN-5){1'b0}}, fflags};
+            12'h002: csr_rdata = {{(XLEN-3){1'b0}}, frm};
+            12'h003: csr_rdata = {{(XLEN-8){1'b0}}, frm, fflags};
             12'h008: csr_rdata = vstart;
-            12'h009: csr_rdata = vxsat;
-            12'h00A: csr_rdata = vxrm;
+            12'h009: csr_rdata = {{(XLEN-1){1'b0}}, vxsat};
+            12'h00A: csr_rdata = {{(XLEN-2){1'b0}}, vxrm};
+            12'h00F: csr_rdata = {{(XLEN-3){1'b0}}, vxrm, vxsat};
             12'hC20: csr_rdata = vl;
             12'hC21: csr_rdata = vtype;
+            12'hC22: csr_rdata = VLEN / 8;                        // vlenb
             // mvendorid, marchid, mimpid, mhartid, mconfigptr read as zero
             default: csr_rdata = {XLEN{1'b0}};
         endcase
     end
 
     // Additional read ports for interrupt_unit
-    assign mstatus_out = mstatus;
+    assign mstatus_out = mstatus_rd;
+    assign frm_out     = frm;
+    assign vl_out      = vl;
+    assign vtype_out   = vtype;
+    assign vstart_out  = vstart;
     assign mie_out = mie;
     assign mtvec_out = mtvec;
     assign mepc_out = mepc;

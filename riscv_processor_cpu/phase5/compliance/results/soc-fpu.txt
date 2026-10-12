@@ -1,0 +1,13 @@
+# riscv-tests on core 'soc-fpu': 11/11 applicable tests passed (0 not applicable), 4 s
+
+PASS         rv32uf-p-fadd
+PASS         rv32uf-p-fdiv
+PASS         rv32uf-p-fclass
+PASS         rv32uf-p-fcmp
+PASS         rv32uf-p-fcvt
+PASS         rv32uf-p-fcvt_w
+PASS         rv32uf-p-fmadd
+PASS         rv32uf-p-fmin
+PASS         rv32uf-p-ldst
+PASS         rv32uf-p-move
+PASS         rv32uf-p-recoding

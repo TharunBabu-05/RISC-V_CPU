@@ -1,4 +1,0 @@
-ISA=rv64im
-XLEN=64
-EXTENSIONS=IM
-TEST_SUITE=riscv-tests

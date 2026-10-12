@@ -114,7 +114,7 @@ module tb_trap;
         check_record(7, "write read-only CSR",  32'd2,  csr_ro_write_instr, 32'h3C);
         check("vectored interrupt entry (x26)", dut.u_regfile.regs[26], 32'd1);
         check("interrupt record mcause",        `DMEM[192 + 3*8], 32'h8000_000B);
-        check("misa = RV32IM",                  dut.u_regfile.regs[11], 32'h4000_1100);
+        check("misa = RV32IMF",                 dut.u_regfile.regs[11], 32'h4000_1120);
         check("mhartid",                        dut.u_regfile.regs[12], 32'h0);
         check("cycle counting",                 (dut.u_regfile.regs[14] != 0) && (dut.u_regfile.regs[15] > dut.u_regfile.regs[14]), 1);
         check("instret counting",               dut.u_regfile.regs[16] != 0, 1);

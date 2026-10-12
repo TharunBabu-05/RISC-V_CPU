@@ -1,21 +1,27 @@
-# Production Plan (Phase 5)
+# Production Plan (Phase 5) — status with evidence
 
-See [phase 5 checklist](phase5_checklist.md) for the current handoff status.
+Each item is ticked only when there is a result in the repository to back it.
 
-## Synthesis
-- [x] Add timing constraints and clock/reset IO.
-- [x] Replace memories with FPGA BRAM or ASIC SRAM macros.
-- [x] Run timing closure at target frequency.
+## Synthesis / FPGA
+- [x] Timing constraints and clock/reset IO for the Arty S7-50 (`phase8/constraints/arty_s7_50.xdc`).
+- [x] Memories mapped to FPGA block RAM (`phase8/rtl/bram.sv`, 16 × RAMB36).
+- [x] Timing closure at the target frequency: 25 MHz, WNS +17.154 ns, 0 failing endpoints
+      (Vivado 2020.2; screenshot in `proof/vivado_implementation_timing_met.png`).
+- [ ] Higher clock frequency (the design has roughly 60 % timing headroom at 25 MHz).
+- [ ] ASIC flow (`phase5/synthesis/dc_synth.tcl` is an untested template).
 
-## Formal Verify
-- [x] Add SVA assertions for pipeline control, hazards, and CSR behavior.
-- [x] Use a bounded model checker (SymbiYosys) for key properties.
+## Formal verification
+- [x] riscv-formal on the FPGA core: every RV32IM instruction checked against a formal ISA model, plus
+      register, PC, causality, uniqueness and illegal-instruction checks (`formal/riscv-formal/`,
+      results in `formal/riscv-formal/results.txt`). See [phase5_formal_verification.md](phase5_formal_verification.md).
+- [ ] CSR checks (`csrw`, `csr_ill`) and bus checks in riscv-formal.
+- [ ] Formal checks for the FPU / vector unit (they are verified by simulation against reference models).
 
-## Toolchain/Compliance
-- [x] Document the riscv-tests and riscv-arch-test execution flow.
-- [x] Add ISA profile/config guidance for the compliance harness.
+## Compliance
+- [x] riscv-tests rv32ui / rv32um / rv32mi / rv32uf executed on the research core: 75/75 applicable pass.
+- [x] riscv-tests rv32ui / rv32um / rv32mi executed on the FPGA design: 64/64 applicable pass; rv32uf with the
+      optional FPU: 11/11. See [phase5_compliance.md](phase5_compliance.md).
+- [ ] riscv-arch-test (RISCOF) signature-based compliance.
 
 ## Documentation
-- [x] Architecture overview and pipeline diagrams.
-- [x] ISA coverage table and known limitations.
-- [x] Build and simulation instructions.
+- [x] Architecture overview, ISA coverage and known limitations, build/simulation guide.

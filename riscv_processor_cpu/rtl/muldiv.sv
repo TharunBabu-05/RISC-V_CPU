@@ -114,7 +114,11 @@ module muldiv_unit #(
                         op_r <= op;
                         a_r  <= a;
                         b_r  <= b;
+`ifdef RISCV_FORMAL_ALTOPS
+                        if (1'b0) begin
+`else
                         if (op[2]) begin
+`endif
                             // Division: dividend bits are shifted out of quo
                             quo     <= a_abs;
                             rem     <= {XLEN{1'b0}};
@@ -137,7 +141,22 @@ module muldiv_unit #(
                 end
 
                 S_MUL_SEL: begin
+`ifdef RISCV_FORMAL_ALTOPS
+                    // riscv-formal alternative operations (see riscv-formal rvfi.rst):
+                    // keeps the M instructions' data flow checkable without real mul/div
+                    case (op_r)
+                        OP_MUL:    result <= (a_r + b_r) ^ 32'h5876063e;
+                        OP_MULH:   result <= (a_r + b_r) ^ 32'hf6583fb7;
+                        OP_MULHSU: result <= (a_r - b_r) ^ 32'hecfbe137;
+                        OP_MULHU:  result <= (a_r + b_r) ^ 32'h949ce5e8;
+                        OP_DIV:    result <= (a_r - b_r) ^ 32'h7f8529ec;
+                        OP_DIVU:   result <= (a_r - b_r) ^ 32'h10e8fd70;
+                        OP_REM:    result <= (a_r - b_r) ^ 32'h8da68fa5;
+                        default:   result <= (a_r - b_r) ^ 32'h3138d0e1;   // REMU
+                    endcase
+`else
                     result <= (op_r == OP_MUL) ? prod_r[XLEN-1:0] : prod_r[2*XLEN-1:XLEN];
+`endif
                     state  <= S_DONE;
                 end
 

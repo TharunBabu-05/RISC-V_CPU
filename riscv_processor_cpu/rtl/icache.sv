@@ -5,7 +5,8 @@
 
 module icache #(
     parameter int XLEN = 32,
-    parameter IMEM_FILE = ""
+    parameter IMEM_FILE = "",
+    parameter int WORDS = 1024        // power of two
 ) (
     input  logic        clk,
     input  logic [XLEN-1:0] addr,
@@ -13,16 +14,17 @@ module icache #(
 );
 
     // Pass-through instruction storage (replace with real cache later)
-    logic [31:0] mem [0:1023];
+    localparam int AW = $clog2(WORDS);
+    logic [31:0] mem [0:WORDS-1];
 
     initial begin
         integer i;
-        for (i = 0; i < 1024; i = i + 1)
+        for (i = 0; i < WORDS; i = i + 1)
             mem[i] = 32'h0000_0013; // NOP (ADDI x0,x0,0)
         if (IMEM_FILE != "")
             $readmemh(IMEM_FILE, mem);
     end
 
-    assign instr = mem[addr[11:2]];
+    assign instr = mem[addr[AW+1:2]];
 
 endmodule

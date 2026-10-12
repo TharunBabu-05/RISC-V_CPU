@@ -6,6 +6,8 @@
 //    1. a taken branch in EX must still redirect fetch
 //    2. a load in EX with a dependent instruction in ID (load-use)
 //       must still execute
+//    3. an instruction held in EX must keep the operand it forwarded
+//       from WB in its first cycle (the producer retires during the stall)
 // ============================================================
 `timescale 1ns/1ps
 
@@ -46,10 +48,16 @@ module tb_mem_stall;
         dut.u_imem.mem[6] = rv_lw  (5'd8, 5'd0, 12'h180);     // cache miss in MEM ...
         dut.u_imem.mem[7] = rv_lw  (5'd9, 5'd0, 12'h1C0);     // ... while this load is in EX
         dut.u_imem.mem[8] = rv_addi(5'd10, 5'd9, 12'd1);      // ... and this load-use is in ID
-        dut.u_imem.mem[9] = rv_jal (5'd0, 21'd0);
+        dut.u_imem.mem[9]  = rv_addi(5'd11, 5'd0, 12'd77);    // producer (in WB when the store is in EX)
+        dut.u_imem.mem[10] = rv_lw  (5'd12, 5'd0, 12'h200);   // cache miss in MEM
+        dut.u_imem.mem[11] = rv_sw  (5'd11, 5'd0, 12'h204);   // held in EX, store data forwarded from WB
+        dut.u_imem.mem[12] = rv_addi(5'd13, 5'd0, 12'd5);
+        dut.u_imem.mem[13] = rv_lw  (5'd14, 5'd0, 12'h240);   // cache miss in MEM
+        dut.u_imem.mem[14] = rv_add (5'd15, 5'd13, 5'd13);    // held in EX, ALU operand forwarded from WB
+        dut.u_imem.mem[15] = rv_jal (5'd0, 21'd0);
 
         #12 rst_n = 1;
-        repeat (100) @(posedge clk);
+        repeat (160) @(posedge clk);
 
         check("load before branch (x2)",    dut.u_regfile.regs[2],  32'h55);
         check("branch shadow 1 skipped (x5)", dut.u_regfile.regs[5], 32'h0);
@@ -58,6 +66,8 @@ module tb_mem_stall;
         check("missing load (x8)",          dut.u_regfile.regs[8],  32'h66);
         check("load held in EX (x9)",       dut.u_regfile.regs[9],  32'h77);
         check("load-use consumer (x10)",    dut.u_regfile.regs[10], 32'h78);
+        check("store held in EX keeps forwarded data", `DMEM[129], 32'd77);
+        check("ALU op held in EX keeps forwarded operand (x15)", dut.u_regfile.regs[15], 32'd10);
 
         if (errors == 0) $display("All checks passed - stalls during cache miss.");
         else             $display("stalls during cache miss FAILED: %0d errors", errors);

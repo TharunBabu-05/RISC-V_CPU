@@ -1,5 +1,14 @@
 # Phase 5 Synthesis Handoff
 
+## Measured result (FPGA)
+
+The FPGA design (`phase8/rtl/soc_top.sv`, Arty S7-50, Vivado 2020.2) meets all timing constraints at 25 MHz:
+worst setup slack +14.6 ns, 0 failing setup/hold endpoints; 3,749 LUTs, 3,674 flip-flops, 4 DSPs, 16 BRAM tiles.
+The first implementation missed timing by 61 ns because of single-cycle combinational dividers; see the main
+README ("Timing Closure"). Board screenshots: `proof/`.
+
+The generic guidance below applies to other targets; only the Vivado flow has been run.
+
 ## 1) Clock/Reset and Timing Constraints
 
 Use a single synchronous core clock and active-low reset at top level.

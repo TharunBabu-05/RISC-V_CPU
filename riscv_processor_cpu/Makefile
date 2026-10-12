@@ -58,9 +58,9 @@ SRCS_VEC := \
 	$(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) \
 	$(TB_DIR)/tb_vector.sv
 
-.PHONY: all sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_predict sim_irq_precise sim_trap sim_mem_stall sim_rv64_jalr sim_mmu_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
-         phase5 phase5-checklist phase5-compliance phase5-formal phase5-synthesis \
-         phase5-all phase5-compliance-run phase5-report phase5-clean
+.PHONY: regress compliance formal verify phase6-all sim_p6_alu sim_p6_hazards sim_p6_control
+.PHONY: all sim sim_muldiv sim_muldiv_unit sim_fpu_unit sim_vector_unit sim_csr_forward sim_dcache_store sim_branch_predict sim_irq_precise sim_trap sim_mem_stall sim_rv64_jalr sim_mmu_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
+         phase5-formal phase5-synthesis phase5-all phase5-compliance-run phase5-clean
 
 all: sim
 
@@ -68,11 +68,11 @@ build-sim:
 	mkdir -p $(SIM_DIR)
 
 sim: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP) $(SRCS)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP) $(SRCS)
 	cd $(SIM_DIR) && vvp cpu_sim
 
 sim_muldiv: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_MULDIV) $(SRCS_MULDIV)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_MULDIV) $(SRCS_MULDIV)
 	cd $(SIM_DIR) && vvp cpu_sim_muldiv
 
 sim_muldiv_unit: build-sim
@@ -80,11 +80,11 @@ sim_muldiv_unit: build-sim
 	cd $(SIM_DIR) && vvp muldiv_unit
 
 sim_csr_forward: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(SIM_DIR)/csr_forward $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_csr_forward.sv
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/csr_forward $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_csr_forward.sv
 	cd $(SIM_DIR) && vvp csr_forward
 
 sim_dcache_store: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(SIM_DIR)/dcache_store $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_dcache_store.sv
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/dcache_store $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_dcache_store.sv
 	cd $(SIM_DIR) && vvp dcache_store
 
 sim_branch_predict: build-sim
@@ -107,28 +107,44 @@ sim_rv64_jalr: build-sim
 	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/rv64_jalr $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_rv64_jalr.sv
 	cd $(SIM_DIR) && vvp rv64_jalr
 
+sim_btb_stale: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/btb_stale $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_btb_stale.sv
+	cd $(SIM_DIR) && vvp btb_stale
+
 sim_mmu_unit: build-sim
 	iverilog -g2012 -o $(SIM_DIR)/mmu_unit $(RTL_DIR)/mmu.sv $(TB_DIR)/tb_mmu_unit.sv
 	cd $(SIM_DIR) && vvp mmu_unit
 
+# Unit tests against bit-exact Python reference models (vectors generated first)
+sim_fpu_unit: build-sim
+	python $(TB_DIR)/fpu_ref.py selftest
+	python $(TB_DIR)/fpu_ref.py vectors $(SIM_DIR)/fpu_vectors.txt
+	iverilog -g2012 -o $(SIM_DIR)/fpu_unit $(RTL_DIR)/fpu_unit.sv $(TB_DIR)/tb_fpu_unit.sv
+	cd $(SIM_DIR) && vvp fpu_unit +VECTORS=fpu_vectors.txt
+
+sim_vector_unit: build-sim
+	python $(TB_DIR)/vec_ref.py vectors $(SIM_DIR)/vec_vectors.txt
+	iverilog -g2012 -o $(SIM_DIR)/vector_unit $(RTL_DIR)/vector_unit.sv $(TB_DIR)/tb_vector_unit.sv
+	cd $(SIM_DIR) && vvp vector_unit +VECTORS=vec_vectors.txt
+
 sim_branch_edge: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_BRANCH) $(SRCS_BRANCH)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_BRANCH) $(SRCS_BRANCH)
 	cd $(SIM_DIR) && vvp cpu_sim_branch
 
 sim_rv64: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_RV64) $(SRCS_RV64)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_RV64) $(SRCS_RV64)
 	cd $(SIM_DIR) && vvp cpu_sim_rv64
 
 sim_mmu: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_MMU) $(SRCS_MMU)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_MMU) $(SRCS_MMU)
 	cd $(SIM_DIR) && vvp cpu_sim_mmu
 
 sim_fp: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_FP) $(SRCS_FP)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_FP) $(SRCS_FP)
 	cd $(SIM_DIR) && vvp cpu_sim_fp
 
 sim_vector: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_VEC) $(SRCS_VEC)
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_VEC) $(SRCS_VEC)
 	cd $(SIM_DIR) && vvp cpu_sim_vector
 
 lint:
@@ -140,34 +156,27 @@ wave: sim
 clean:
 	rm -f $(VVP) $(VCD)
 
-phase5:
-	@$(MAKE) phase5-checklist
-	@$(MAKE) phase5-compliance
-	@$(MAKE) phase5-formal
-	@$(MAKE) phase5-synthesis
+# ============================================================
+#  Verification entry points (each fails if anything fails)
+# ============================================================
+# All directed and unit testbenches (tb/run_regression.py)
+regress:
+	python tb/run_regression.py
 
-phase5-checklist:
-	@echo Phase 5 checklist:
-	@echo   docs/phase5_checklist.md
-	@echo   docs/production_plan.md
-	@echo   README.md
+# Official riscv-tests ISA suites on the research core and the FPGA SoC
+compliance:
+	python phase5/compliance/run_compliance.py
 
-phase5-compliance:
-	@echo Phase 5 handoff artifacts:
-	@echo   docs/phase5_compliance.md
-	@echo   phase5/compliance/README.md
-	@echo   phase5/compliance/rv32i.profile
-	@echo   phase5/compliance/rv32im.profile
-	@echo   phase5/compliance/rv64i.profile
-	@echo   phase5/compliance/rv64im.profile
+# riscv-formal on the FPGA SoC core (needs oss-cad-suite)
+formal:
+	python formal/riscv-formal/run_riscv_formal.py
 
-phase5-formal:
-	@echo Phase 5 formal artifacts:
-	@echo   docs/phase5_formal_verification.md
-	@echo   phase5/formal/README.md
-	@echo   phase5/formal/pipeline_control.sby
-	@echo   phase5/formal/hazard_checks.sby
-	@echo   phase5/formal/csr_checks.sby
+verify: regress compliance formal
+
+# Older names kept as aliases
+phase5-all: regress
+phase5-compliance-run: compliance
+phase5-formal: formal
 
 phase5-synthesis:
 	@echo Phase 5 synthesis artifacts:
@@ -175,54 +184,9 @@ phase5-synthesis:
 	@echo   phase5/synthesis/README.md
 	@echo   phase5/synthesis/core_constraints.tcl
 
-phase5-compliance-run:
-	python phase5/compliance/run_rv32_compliance.py
-
-# Phase 5 Complete Workflow Targets
-
-phase5-all: sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_predict sim_irq_precise sim_trap sim_mem_stall sim_rv64_jalr sim_mmu_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector
-	@echo "==============================================="
-	@echo "All Phase 5 directed simulations PASSED"
-	@echo "==============================================="
-	@echo ""
-	@echo "Next steps:"
-	@echo "1. Run compliance: make phase5-compliance-run"
-	@echo "2. Run formal (requires SymbiYosys): cd phase5/formal && sby -f pipeline_control.sby"
-	@echo "3. Run synthesis: cd phase5/synthesis && vivado -mode tcl -source vivado_synth.tcl"
-
-phase5-report:
-	@echo "==============================================="
-	@echo "Phase 5 Completion Report"
-	@echo "==============================================="
-	@echo ""
-	@echo "Completion Status:"
-	@echo "  - RTL Implementation: COMPLETE"
-	@echo "  - Directed Simulations: COMPLETE (7/7 passing)"
-	@echo "  - Compliance Framework: COMPLETE (local targets passing)"
-	@echo "  - Formal Verification: READY (tool installation required)"
-	@echo "  - Synthesis Templates: COMPLETE (3 scripts provided)"
-	@echo ""
-	@echo "Documentation:"
-	@[ -f phase5/phase5_completion_report.md ] && echo "  ✓ phase5/phase5_completion_report.md" || echo "  ✗ phase5/phase5_completion_report.md"
-	@[ -f phase5/phase5_implementation_guide.md ] && echo "  ✓ phase5/phase5_implementation_guide.md" || echo "  ✗ phase5/phase5_implementation_guide.md"
-	@[ -f docs/phase5_checklist.md ] && echo "  ✓ docs/phase5_checklist.md" || echo "  ✗ docs/phase5_checklist.md"
-	@[ -f docs/phase5_compliance.md ] && echo "  ✓ docs/phase5_compliance.md" || echo "  ✗ docs/phase5_compliance.md"
-	@[ -f docs/phase5_formal_verification.md ] && echo "  ✓ docs/phase5_formal_verification.md" || echo "  ✗ docs/phase5_formal_verification.md"
-	@[ -f docs/phase5_synthesis.md ] && echo "  ✓ docs/phase5_synthesis.md" || echo "  ✗ docs/phase5_synthesis.md"
-	@echo ""
-	@echo "Synthesis Scripts:"
-	@[ -f phase5/synthesis/vivado_synth.tcl ] && echo "  ✓ phase5/synthesis/vivado_synth.tcl" || echo "  ✗ phase5/synthesis/vivado_synth.tcl"
-	@[ -f phase5/synthesis/dc_synth.tcl ] && echo "  ✓ phase5/synthesis/dc_synth.tcl" || echo "  ✗ phase5/synthesis/dc_synth.tcl"
-	@[ -f phase5/synthesis/yosys_synth.ys ] && echo "  ✓ phase5/synthesis/yosys_synth.ys" || echo "  ✗ phase5/synthesis/yosys_synth.ys"
-	@echo ""
-	@echo "For detailed information, see:"
-	@echo "  - phase5/phase5_completion_report.md (status and sign-off)"
-	@echo "  - phase5/phase5_implementation_guide.md (step-by-step instructions)"
-
 phase5-clean:
 	rm -f $(VVP) $(VCD) $(VVP_MULDIV) $(VVP_BRANCH) $(VVP_RV64) $(VVP_MMU) $(VVP_FP) $(VVP_VEC)
-	rm -rf phase5/formal/*_dir
-	@echo "Phase 5 temporary files cleaned"
+	rm -rf sim/regress phase5/compliance/build
 
 # ============================================================
 #  Phase 6 - Advanced Verification (Corner Cases)
@@ -234,31 +198,15 @@ VVP_P6_CONTROL := $(SIM_DIR)/p6_control
 SRCS_P6_BASE := $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS))
 
 sim_p6_alu: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_P6_ALU) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_alu.sv
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_P6_ALU) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_alu.sv
 	cd $(SIM_DIR) && vvp p6_alu
 
 sim_p6_hazards: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_P6_HAZARDS) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_hazards.sv
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_P6_HAZARDS) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_hazards.sv
 	cd $(SIM_DIR) && vvp p6_hazards
 
 sim_p6_control: build-sim
-	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_P6_CONTROL) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_control.sv
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(VVP_P6_CONTROL) $(SRCS_P6_BASE) $(TB_DIR)/tb_phase6_control.sv
 	cd $(SIM_DIR) && vvp p6_control
 
 phase6-all: sim_p6_alu sim_p6_hazards sim_p6_control
-	@echo "================================================"
-	@echo "Phase 6: All advanced verification tests PASSED"
-	@echo "================================================"
-	@echo " - ALU corner cases (overflow, shifts, sign-ext)"
-	@echo " - Pipeline hazard deep tests (forwarding chains)"
-	@echo " - Control flow tests (all 6 branch types, loops)"
-
-phase6-report:
-	@echo "============================================"
-	@echo "Phase 6 Verification Report"
-	@echo "============================================"
-	@echo "  Phase 5 regressions: 7/7 PASSING"
-	@echo "  Phase 6 ALU corner cases: PASSING"
-	@echo "  Phase 6 Hazard deep tests: PASSING"
-	@echo "  Phase 6 Control flow tests: PASSING"
-	@echo "  Total test suites: 10/10 PASSING"

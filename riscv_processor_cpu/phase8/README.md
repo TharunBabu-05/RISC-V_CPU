@@ -31,7 +31,7 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 ### 🏆 Milestones Completed
 1. **Pipelined RV32I Core:** 5 stages (IF, ID, EX, MEM, WB) with hazard detection and data forwarding.
 2. **Hardware M-Extension:** Multiplier and Divider unit (`mul`, `div`, `rem`).
-3. **Formal Verification:** Pipeline control, hazard mitigation, and CSRs verified mathematically with SymbiYosys.
+3. **Verification:** the FPGA core passes all applicable official riscv-tests (64/64) and 52/52 riscv-formal checks (every RV32IM instruction proven against the ISA model). See `docs/phase5_compliance.md` and `docs/phase5_formal_verification.md`.
 4. **On-Chip Memory:** 64KB dual-port Block RAM (Port A: instruction fetch, Port B: data load/store).
 5. **Memory-Mapped UART:** TX/RX peripheral at physical address `0x1000_0000` with 115200 baud support.
 6. **Hardware Debug Indicators:** Status LEDs tied to CPU run state, PLL lock, and serial communication.

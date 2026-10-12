@@ -27,4 +27,4 @@ branch predictor -> cpu_top pipeline -> MMU -> D-cache -> L2 -> DRAM model
 - `csr_file.sv` + `interrupt_unit.sv`: trap/CSR control plane.
 - `mmu.sv`: Sv32 translation and page-fault signaling.
 - `dcache.sv`, `l2_cache.sv`, `dram_ctrl.sv`, `memory.sv`: memory hierarchy model.
-- `fp_*` and `vector_*` units: integrated behavioral FP/vector paths.
+- `fpu_unit` / `fp_regfile`: IEEE-754 RV32F unit; `vector_unit` / `vector_regfile`: RVV 1.0 integer subset (research core only, see `fp_extension.md`).

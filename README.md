@@ -64,12 +64,14 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
 | M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
 | FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+17.154 ns**, 0 failing endpoints |
-| CSR / exception infrastructure | ✅ | CSR file and interrupt/trap blocks exist in the architecture tree |
+| CSR / exception infrastructure | ✅ | Machine/user modes, precise exceptions and interrupts, vectored `mtvec`, 64-bit counters |
 | FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, BRAM, UART, LEDs |
 | UART bring-up | ✅ | Hello + keyboard echo verified on real board |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, byte load/store fixes |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
-| Formal / phase docs | ✅ | Formal, compliance, architecture, and production notes under `docs/` and `phase5/` |
+| ISA compliance (riscv-tests) | ✅ | All applicable official tests pass: 64/64 on the FPGA design, 75/75 on the research core (rv32ui/um/mi/uf) |
+| Formal verification (riscv-formal) | ✅ | 52/52 checks pass on the FPGA core: every RV32IM instruction proven against the ISA model |
+| F extension / RVV subset | ✅ | IEEE-754 RV32F unit and RVV 1.0 integer subset in the research core (not in the FPGA build) |
 
 ---
 
@@ -214,7 +216,7 @@ The first implementation missed timing by **61 ns** at 25 MHz (40 ns clock perio
 The fix:
 
 - `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
-- `fpu_unit.sv` reuses the same iterative divider.
+- The FPU stub's divider was removed from the board build (the FPU now uses its own iterative FDIV/FSQRT and is not part of the FPGA SoC by default).
 
 Result: setup slack went from **−61.3 ns to +17.2 ns**, and LUT usage dropped by more than half. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
 
@@ -239,9 +241,11 @@ RISC-V_CPU/
     │   ├── mmu.sv
     │   ├── fpu_unit.sv
     │   └── vector_unit.sv
-    ├── tb/                           # Simulation testbenches
+    ├── tb/                           # Testbenches + Python reference models + run_regression.py
     ├── docs/                         # Architecture and verification notes
-    ├── phase5/                       # Formal/compliance/synthesis milestone
+    ├── formal/riscv-formal/          # riscv-formal setup for the FPGA core
+    ├── phase5/compliance/            # riscv-tests runner and results
+    ├── phase5/                       # Synthesis templates and Phase 5 report
     └── phase8/                       # FPGA SoC deployment
         ├── rtl/                      # Arty S7 SoC RTL
         ├── software/                 # Bare-metal firmware
@@ -341,21 +345,26 @@ Snake controls:
 
 ## 🧪 Verification And Testing
 
-The project includes several layers of validation:
+| Layer | Command | Result |
+| :--- | :--- | :--- |
+| Directed + unit testbenches | `make regress` | 22/22 pass (incl. 43,013 FPU and 12,200 vector reference vectors) |
+| Official riscv-tests (ISA compliance) | `make compliance` | FPGA design 64/64, research core 75/75, FPGA + FPU 11/11 (2 tests N/A: need PMP / hardware misaligned access) |
+| riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
+| Timing closure (Vivado, 25 MHz) | — | All constraints met (see proof screenshots above) |
+| On the board | — | Hello/echo and Snake running on the Arty S7-50 |
 
-- RTL simulation with Icarus Verilog testbenches
-- UART loopback testing
-- SoC behavioral simulation
-- RISC-V compliance scaffolding
-- Formal verification experiments under `phase5/formal`
-- Physical FPGA validation on Arty S7-50
-- Final interactive firmware proof through PuTTY
+The verification flows found and fixed real bugs along the way (wrong-path fetch from stale branch predictions,
+stale operands behind a cache miss, `minstret` timing, an S-mode inconsistency). Details:
+[compliance](riscv_processor_cpu/docs/phase5_compliance.md),
+[formal](riscv_processor_cpu/docs/phase5_formal_verification.md),
+[FPU / vector](riscv_processor_cpu/docs/fp_extension.md).
 
 Useful references:
 
 - [`riscv_processor_cpu/docs/architecture_overview.md`](riscv_processor_cpu/docs/architecture_overview.md)
 - [`riscv_processor_cpu/docs/isa_coverage.md`](riscv_processor_cpu/docs/isa_coverage.md)
 - [`riscv_processor_cpu/docs/phase5_formal_verification.md`](riscv_processor_cpu/docs/phase5_formal_verification.md)
+- [`riscv_processor_cpu/docs/phase5_compliance.md`](riscv_processor_cpu/docs/phase5_compliance.md)
 - [`riscv_processor_cpu/phase8/README.md`](riscv_processor_cpu/phase8/README.md)
 
 ---
@@ -370,7 +379,9 @@ Useful references:
 | `riscv-none-elf-gcc` | Bare-metal firmware build |
 | Icarus Verilog / VVP | Simulation |
 | PuTTY | UART terminal |
-| SymbiYosys | Formal verification experiments |
+| SymbiYosys + riscv-formal | Formal verification of the FPGA core |
+| riscv-tests | Official ISA compliance suites |
+| Python | Reference models (FPU, vector) and test runners |
 
 ---
 
@@ -386,9 +397,9 @@ timeline
     ISA Growth : M extension
                : CSR and exception infrastructure
                : Caches, MMU, FP, vector research blocks
-    Verification : Simulation
-                 : Compliance scaffolding
-                 : Formal verification
+    Verification : Simulation and reference models
+                 : riscv-tests compliance
+                 : riscv-formal proofs
     FPGA SoC : Arty S7-50 top level
              : 64KB BRAM
              : Memory-mapped UART

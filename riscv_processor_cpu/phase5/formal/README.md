@@ -1,13 +1,7 @@
-# Formal Verification Jobs
+# Formal verification
 
-These SymbiYosys job files seed the Phase 5 formal flow.
+The earlier SymbiYosys jobs in this folder were retired: their assertions restated the RTL's own equations and
+could not detect data bugs. Formal verification now uses riscv-formal on the FPGA core:
 
-## Property Targets
-
-- pipeline control: flush and stall behavior
-- hazard handling: load-use stall and forwarding exclusivity
-- CSR behavior: trap entry and return sequencing
-
-## Next Step
-
-- Add a formal top wrapper that binds the existing CPU RTL to the assertions targeted by these jobs.
+- setup and runner: [`formal/riscv-formal/`](../../formal/riscv-formal/)
+- method and results: [`docs/phase5_formal_verification.md`](../../docs/phase5_formal_verification.md)

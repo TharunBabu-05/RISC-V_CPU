@@ -1,4 +1,0 @@
-ISA=rv64i
-XLEN=64
-EXTENSIONS=I
-TEST_SUITE=riscv-tests

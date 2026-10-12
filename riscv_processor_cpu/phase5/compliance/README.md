@@ -1,28 +1,11 @@
-# Compliance Profiles
+# riscv-tests compliance runner
 
-The profiles below are the starting point for the compliance harness.
+`run_compliance.py` builds the official riscv-tests ISA suites and runs them on the research core and on the
+FPGA SoC design. Results are in [`results/`](results/). See [docs/phase5_compliance.md](../../docs/phase5_compliance.md)
+for the method, the current results and the two tests marked not applicable.
 
-## Profiles
+```powershell
+python phase5/compliance/run_compliance.py --help
+```
 
-- rv32i: base integer tests
-- rv32im: integer plus multiply/divide tests
-- rv64i: 64-bit datapath smoke tests
-- rv64im: 64-bit datapath plus multiply/divide tests
-
-## Usage
-
-- Run the local RV32 scaffold with `python run_rv32_compliance.py`.
-- The runner auto-discovers sibling `riscv-tests` or `riscv-arch-test` checkouts when they exist next to the repo.
-- Point the runner at a specific checkout with `--suite-root` or set `PHASE5_COMPLIANCE_SUITE_ROOT`.
-- Override the command shape with `--command-template` or `PHASE5_COMPLIANCE_COMMAND_TEMPLATE` when a checkout uses a custom invocation.
-- Signature outputs are mapped under `phase5/compliance/signature/<profile>` and passed through as `SIGNATURE_DIR` for external checkouts.
-- See [command templates](command_templates.md) for the concrete external invocation shapes.
-
-## Next External Step
-
-- Set `--suite-root` to a real `riscv-tests` or `riscv-arch-test` checkout and start with `--profile rv32i`, then `--profile rv32im`.
-
-## Execution Notes
-
-- Use the simulation build already wired into the repository to smoke-test the target ISA before external compliance runs.
-- Capture signature-region expectations in the harness once the external test runner is connected.
+`build/` holds generated ELF/hex files and compiled testbenches (not committed).
