@@ -6,7 +6,7 @@
  *      .text   : 0x0000_0000 (code + rodata, 48 KB max)
  *      .data   : 0x0000_C000 (initialized globals)
  *      .bss    : after .data (zero-initialized globals)
- *      .stack  : 0x0000_FFFC (grows downward, 4KB reserved)
+ *      .stack  : top 0x0001_0000 (grows downward, 16-byte aligned per the RISC-V ABI)
  *
  *  Data BRAM: 0x2000_0000 – 0x2000_FFFF  (64 KB)
  *    (Used for heap / large arrays if needed)
@@ -53,7 +53,7 @@ SECTIONS {
     .stack : {
         . = ALIGN(16);
         _stack_bottom = .;
-        . = ORIGIN(BRAM) + LENGTH(BRAM) - 4;
+        . = ORIGIN(BRAM) + LENGTH(BRAM);   /* sp must be 16-byte aligned */
         _stack_top = .;
     } > BRAM
 

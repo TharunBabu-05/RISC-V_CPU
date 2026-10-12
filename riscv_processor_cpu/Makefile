@@ -58,7 +58,7 @@ SRCS_VEC := \
 	$(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) \
 	$(TB_DIR)/tb_vector.sv
 
-.PHONY: all sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
+.PHONY: all sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_predict sim_irq_precise sim_trap sim_mem_stall sim_rv64_jalr sim_mmu_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector build-sim lint wave clean \
          phase5 phase5-checklist phase5-compliance phase5-formal phase5-synthesis \
          phase5-all phase5-compliance-run phase5-report phase5-clean
 
@@ -86,6 +86,30 @@ sim_csr_forward: build-sim
 sim_dcache_store: build-sim
 	iverilog -g2012 -I$(RTL_DIR) -o $(SIM_DIR)/dcache_store $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_dcache_store.sv
 	cd $(SIM_DIR) && vvp dcache_store
+
+sim_branch_predict: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/branch_predict $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_branch_predict.sv
+	cd $(SIM_DIR) && vvp branch_predict
+
+sim_irq_precise: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/irq_precise $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_irq_precise.sv
+	cd $(SIM_DIR) && vvp irq_precise
+
+sim_trap: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/trap $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_trap.sv
+	cd $(SIM_DIR) && vvp trap
+
+sim_mem_stall: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/mem_stall $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_mem_stall.sv
+	cd $(SIM_DIR) && vvp mem_stall
+
+sim_rv64_jalr: build-sim
+	iverilog -g2012 -I$(RTL_DIR) -I$(TB_DIR) -o $(SIM_DIR)/rv64_jalr $(filter-out $(TB_DIR)/tb_cpu.sv,$(SRCS)) $(TB_DIR)/tb_rv64_jalr.sv
+	cd $(SIM_DIR) && vvp rv64_jalr
+
+sim_mmu_unit: build-sim
+	iverilog -g2012 -o $(SIM_DIR)/mmu_unit $(RTL_DIR)/mmu.sv $(TB_DIR)/tb_mmu_unit.sv
+	cd $(SIM_DIR) && vvp mmu_unit
 
 sim_branch_edge: build-sim
 	iverilog -g2012 -I$(RTL_DIR) -o $(VVP_BRANCH) $(SRCS_BRANCH)
@@ -156,7 +180,7 @@ phase5-compliance-run:
 
 # Phase 5 Complete Workflow Targets
 
-phase5-all: sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector
+phase5-all: sim sim_muldiv sim_muldiv_unit sim_csr_forward sim_dcache_store sim_branch_predict sim_irq_precise sim_trap sim_mem_stall sim_rv64_jalr sim_mmu_unit sim_branch_edge sim_rv64 sim_mmu sim_fp sim_vector
 	@echo "==============================================="
 	@echo "All Phase 5 directed simulations PASSED"
 	@echo "==============================================="

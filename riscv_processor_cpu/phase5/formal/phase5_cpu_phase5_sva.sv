@@ -76,8 +76,9 @@ module phase5_cpu_phase5_sva #(
 
     always_ff @(posedge clk) begin
         if (past_valid) begin
-            assert(pc_write === (hazard_pc_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
-            assert(if_id_write === (hazard_if_id_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
+            // A flush (trap/redirect) overrides a load-use stall
+            assert(pc_write === ((hazard_pc_write || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
+            assert(if_id_write === ((hazard_if_id_write || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall));
             assert(control_mux === hazard_control_mux);
             assert(hazard_pc_write === !expected_stall);
             assert(hazard_if_id_write === !expected_stall);
@@ -139,11 +140,12 @@ module phase5_cpu_phase5_sva #(
                 assert(trap_mepc == exc_pc);
             end
 
-            if (id_ex_mret_r) begin
+            // An xRET that traps (e.g. MRET outside M-mode) goes to the trap vector instead
+            if (id_ex_mret_r && !trap_taken) begin
                 assert(pc_next == ex_csr_mepc);
             end
 
-            if (id_ex_sret_r) begin
+            if (id_ex_sret_r && !trap_taken) begin
                 assert(pc_next == ex_csr_sepc);
             end
         end

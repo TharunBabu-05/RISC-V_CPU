@@ -65,6 +65,7 @@ module mmu #(
     logic               itlb_x     [0:TLB_ENTRIES-1];
     logic               itlb_a     [0:TLB_ENTRIES-1];
     logic               itlb_d     [0:TLB_ENTRIES-1];
+    logic               itlb_super [0:TLB_ENTRIES-1];  // 4 MiB megapage
 
     logic               dtlb_valid [0:TLB_ENTRIES-1];
     logic [VPN_BITS-1:0] dtlb_vpn   [0:TLB_ENTRIES-1];
@@ -75,6 +76,7 @@ module mmu #(
     logic               dtlb_x     [0:TLB_ENTRIES-1];
     logic               dtlb_a     [0:TLB_ENTRIES-1];
     logic               dtlb_d     [0:TLB_ENTRIES-1];
+    logic               dtlb_super [0:TLB_ENTRIES-1];  // 4 MiB megapage
 
     logic [VPN_BITS-1:0] inst_vpn;
     logic [VPN_BITS-1:0] data_vpn;
@@ -91,7 +93,8 @@ module mmu #(
         itlb_idx = 0;
         for (int i = 0; i < TLB_ENTRIES; i = i + 1) begin
             // TLB hit: valid, VPN match, and ASID match
-            if (itlb_valid[i] && itlb_vpn[i] == inst_vpn && itlb_asid[i] == satp_asid) begin
+            if (itlb_valid[i] && itlb_asid[i] == satp_asid &&
+                (itlb_super[i] ? (itlb_vpn[i][19:10] == inst_vpn[19:10]) : (itlb_vpn[i] == inst_vpn))) begin
                 itlb_hit = 1'b1;
                 itlb_idx = i;
             end
@@ -103,7 +106,8 @@ module mmu #(
         dtlb_idx = 0;
         for (int i = 0; i < TLB_ENTRIES; i = i + 1) begin
             // TLB hit: valid, VPN match, and ASID match
-            if (dtlb_valid[i] && dtlb_vpn[i] == data_vpn && dtlb_asid[i] == satp_asid) begin
+            if (dtlb_valid[i] && dtlb_asid[i] == satp_asid &&
+                (dtlb_super[i] ? (dtlb_vpn[i][19:10] == data_vpn[19:10]) : (dtlb_vpn[i] == data_vpn))) begin
                 dtlb_hit = 1'b1;
                 dtlb_idx = i;
             end
@@ -170,9 +174,11 @@ module mmu #(
             data_ready = !data_req || dtlb_hit;
 
             if (inst_req && itlb_hit)
-                inst_paddr = {itlb_ppn_hit, inst_vaddr[11:0]};
+                inst_paddr = itlb_super[itlb_idx] ? {itlb_ppn_hit[21:10], inst_vaddr[21:0]}
+                                                  : {itlb_ppn_hit, inst_vaddr[11:0]};
             if (data_req && dtlb_hit)
-                data_paddr = {dtlb_ppn_hit, data_vaddr[11:0]};
+                data_paddr = dtlb_super[dtlb_idx] ? {dtlb_ppn_hit[21:10], data_vaddr[21:0]}
+                                                  : {dtlb_ppn_hit, data_vaddr[11:0]};
 
             if (inst_req && itlb_hit && !itlb_perm_ok)
                 inst_fault = 1'b1;
@@ -185,12 +191,6 @@ module mmu #(
             data_fault = !fault_is_inst;
         end
 
-        if (sfence) begin
-            inst_ready = 1'b0;
-            data_ready = 1'b0;
-            inst_fault = 1'b0;
-            data_fault = 1'b0;
-        end
     end
 
     assign stall = (state != S_IDLE);
@@ -234,9 +234,9 @@ module mmu #(
                 itlb_asid[i] <= 9'd0;
                 dtlb_asid[i] <= 9'd0;
                 itlb_r[i] <= 1'b0; itlb_w[i] <= 1'b0; itlb_x[i] <= 1'b0;
-                itlb_a[i] <= 1'b0; itlb_d[i] <= 1'b0;
+                itlb_a[i] <= 1'b0; itlb_d[i] <= 1'b0; itlb_super[i] <= 1'b0;
                 dtlb_r[i] <= 1'b0; dtlb_w[i] <= 1'b0; dtlb_x[i] <= 1'b0;
-                dtlb_a[i] <= 1'b0; dtlb_d[i] <= 1'b0;
+                dtlb_a[i] <= 1'b0; dtlb_d[i] <= 1'b0; dtlb_super[i] <= 1'b0;
             end
         end else begin
             fault_pending <= 1'b0;
@@ -279,7 +279,8 @@ module mmu #(
                         pte_d = ptw_rdata[7];
                         pte_ppn = ptw_rdata[31:10];
 
-                        if (!pte_v || (pte_r && !pte_w && !pte_x)) begin
+                        if (!pte_v || (!pte_r && pte_w) ||
+                            ((pte_r || pte_x) && (pte_ppn[9:0] != 10'b0))) begin   // misaligned megapage
                             fault_pending <= 1'b1;
                             fault_is_inst <= req_is_inst;
                             state <= S_IDLE;
@@ -299,6 +300,7 @@ module mmu #(
                                 itlb_x[itlb_wr_ptr]     <= pte_x;
                                 itlb_a[itlb_wr_ptr]     <= pte_a;
                                 itlb_d[itlb_wr_ptr]     <= pte_d;
+                                itlb_super[itlb_wr_ptr] <= 1'b1;
                                 itlb_wr_ptr <= (itlb_wr_ptr + 1) % TLB_ENTRIES;
                             end else begin
                                 dtlb_valid[dtlb_wr_ptr] <= 1'b1;
@@ -310,6 +312,7 @@ module mmu #(
                                 dtlb_x[dtlb_wr_ptr]     <= pte_x;
                                 dtlb_a[dtlb_wr_ptr]     <= pte_a;
                                 dtlb_d[dtlb_wr_ptr]     <= pte_d;
+                                dtlb_super[dtlb_wr_ptr] <= 1'b1;
                                 dtlb_wr_ptr <= (dtlb_wr_ptr + 1) % TLB_ENTRIES;
                             end
                             state <= S_IDLE;
@@ -343,6 +346,8 @@ module mmu #(
                                     itlb_valid[itlb_wr_ptr] <= 1'b1;
                                     itlb_vpn[itlb_wr_ptr]   <= req_vaddr[31:12];
                                     itlb_ppn[itlb_wr_ptr]   <= pte_ppn;
+                                    itlb_asid[itlb_wr_ptr]  <= satp_asid;
+                                    itlb_super[itlb_wr_ptr] <= 1'b0;
                                     itlb_r[itlb_wr_ptr]     <= pte_r;
                                     itlb_w[itlb_wr_ptr]     <= pte_w;
                                     itlb_x[itlb_wr_ptr]     <= pte_x;
@@ -353,6 +358,8 @@ module mmu #(
                                     dtlb_valid[dtlb_wr_ptr] <= 1'b1;
                                     dtlb_vpn[dtlb_wr_ptr]   <= req_vaddr[31:12];
                                     dtlb_ppn[dtlb_wr_ptr]   <= pte_ppn;
+                                    dtlb_asid[dtlb_wr_ptr]  <= satp_asid;
+                                    dtlb_super[dtlb_wr_ptr] <= 1'b0;
                                     dtlb_r[dtlb_wr_ptr]     <= pte_r;
                                     dtlb_w[dtlb_wr_ptr]     <= pte_w;
                                     dtlb_x[dtlb_wr_ptr]     <= pte_x;

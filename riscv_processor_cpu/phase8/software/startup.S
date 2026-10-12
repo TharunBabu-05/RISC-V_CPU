@@ -3,6 +3,8 @@
  *
  *  This is the very first code that runs when the CPU resets.
  *  It runs before main() and sets up the C runtime environment:
+ *    0. Install the trap vector (mtvec) so a trap halts instead of
+ *       silently restarting the program from address 0
  *    1. Set stack pointer (sp) to top of BRAM data region
  *    2. Zero out the BSS segment (uninitialized global vars)
  *    3. Copy .data section from ROM to RAM if needed
@@ -24,8 +26,12 @@ _start:
     csrw    mie,   zero        /* Clear machine interrupt enable */
     csrw    mstatus, zero      /* Disable global interrupts */
 
+    /* ---- Install the trap vector (direct mode) ---- */
+    la      t0, _trap_handler
+    csrw    mtvec, t0
+
     /* ---- Step 2: Set stack pointer ---- */
-    /* Stack grows downward from the top of BRAM (0x0001_0000) */
+    /* Stack grows downward from the top of BRAM (0x0001_0000, 16-byte aligned per the ABI) */
     la      sp, _stack_top
 
     /* ---- Step 3: Zero the BSS section ---- */

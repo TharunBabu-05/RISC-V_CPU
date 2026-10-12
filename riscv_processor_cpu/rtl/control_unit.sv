@@ -173,3 +173,98 @@ module control_unit (
     end
 
 endmodule
+
+
+// ============================================================
+//  illegal_detect  –  Flags encodings this core does not implement
+//
+//  Covers RV32I/RV64I base, M, Zicsr (CSR address checks happen in
+//  EX, where the privilege level is known), FENCE/FENCE.I (executed
+//  as NOPs), WFI (NOP), SFENCE.VMA, and the FP/vector stub opcodes.
+//  Anything else raises an illegal-instruction exception (mcause 2).
+// ============================================================
+module illegal_detect #(
+    parameter int XLEN = 32
+) (
+    input  logic [31:0] instr,
+    output logic        illegal
+);
+
+    logic [6:0] opcode, funct7;
+    logic [2:0] funct3;
+    assign opcode = instr[6:0];
+    assign funct3 = instr[14:12];
+    assign funct7 = instr[31:25];
+
+    // Shift-immediate upper bits: RV32 uses imm[11:5], RV64 uses imm[11:6]
+    logic shamt_ok_sll, shamt_ok_sr;
+    always_comb begin
+        if (XLEN == 64) begin
+            shamt_ok_sll = (instr[31:26] == 6'b000000);
+            shamt_ok_sr  = (instr[31:26] == 6'b000000) || (instr[31:26] == 6'b010000);
+        end else begin
+            shamt_ok_sll = (funct7 == 7'b0000000);
+            shamt_ok_sr  = (funct7 == 7'b0000000) || (funct7 == 7'b0100000);
+        end
+    end
+
+    always_comb begin
+        illegal = 1'b1;
+        case (opcode)
+            7'b0110111,                                   // LUI
+            7'b0010111,                                   // AUIPC
+            7'b1101111: illegal = 1'b0;                   // JAL
+            7'b1100111: illegal = (funct3 != 3'b000);     // JALR
+            7'b1100011: illegal = (funct3 == 3'b010) || (funct3 == 3'b011);   // BRANCH
+            7'b0000011: begin                             // LOAD
+                case (funct3)
+                    3'b000, 3'b001, 3'b010, 3'b100, 3'b101: illegal = 1'b0;
+                    3'b011, 3'b110: illegal = (XLEN != 64);              // LD, LWU
+                    default: illegal = 1'b1;
+                endcase
+            end
+            7'b0100011: begin                             // STORE
+                case (funct3)
+                    3'b000, 3'b001, 3'b010: illegal = 1'b0;
+                    3'b011: illegal = (XLEN != 64);                       // SD
+                    default: illegal = 1'b1;
+                endcase
+            end
+            7'b0010011: begin                             // OP-IMM
+                case (funct3)
+                    3'b001:  illegal = !shamt_ok_sll;
+                    3'b101:  illegal = !shamt_ok_sr;
+                    default: illegal = 1'b0;
+                endcase
+            end
+            7'b0110011: begin                             // OP (incl. M)
+                case (funct7)
+                    7'b0000000, 7'b0000001: illegal = 1'b0;
+                    7'b0100000: illegal = !((funct3 == 3'b000) || (funct3 == 3'b101));  // SUB, SRA
+                    default:    illegal = 1'b1;
+                endcase
+            end
+            7'b0001111: illegal = !((funct3 == 3'b000) || (funct3 == 3'b001));   // FENCE, FENCE.I
+            7'b1110011: begin                             // SYSTEM
+                case (funct3)
+                    3'b000: illegal = !((instr == 32'h0000_0073) ||   // ECALL
+                                        (instr == 32'h0010_0073) ||   // EBREAK
+                                        (instr == 32'h3020_0073) ||   // MRET
+                                        (instr == 32'h1020_0073) ||   // SRET
+                                        (instr == 32'h1050_0073) ||   // WFI
+                                        ((funct7 == 7'b0001001) && (instr[11:7] == 5'b0)));  // SFENCE.VMA
+                    3'b100: illegal = 1'b1;
+                    default: illegal = 1'b0;              // CSR ops: address checked in EX
+                endcase
+            end
+            // FP / vector stubs (see fpu_unit.sv, vector_unit.sv)
+            7'b0000111: illegal = (funct3 != 3'b010);     // FLW
+            7'b0100111: illegal = (funct3 != 3'b010);     // FSW
+            7'b1010011: illegal = !((funct7 == 7'b0000000) || (funct7 == 7'b0000100) ||
+                                    (funct7 == 7'b0001000) || (funct7 == 7'b0001100));  // FADD/FSUB/FMUL/FDIV.S
+            7'b1010111: illegal = (funct3 > 3'b100);      // vector stub ops 0-4
+            default:    illegal = 1'b1;
+        endcase
+    end
+
+endmodule

@@ -14,7 +14,7 @@
 //       Both instruction fetch (Port A) and data load/store (Port B)
 //       share the same 64KB BRAM at 0x0000_0000.
 //       Firmware linker script (link.ld) places everything here:
-//         .text at 0x0000_0000, .data/.bss at 0x0000_C000, stack top 0x0000_FFFC
+//         .text at 0x0000_0000, .data/.bss at 0x0000_C000, stack top 0x0001_0000
 //    0x1000_0000 – 0x1000_000B  : UART Registers
 //       +0x0: TX Write (write byte → sends over UART)
 //       +0x4: RX Read  (read byte ← received from PC)

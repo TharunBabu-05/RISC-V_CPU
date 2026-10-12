@@ -147,7 +147,7 @@ module tb_cpu;
         dut.u_imem.mem[28] = addi (5'd29, 5'd0, 12'd123);     // must execute after MRET
         dut.u_imem.mem[29] = csrrs(5'd30, 5'd0, 12'h341);     // x30 = mepc
         dut.u_imem.mem[30] = csrrs(5'd31, 5'd0, 12'h342);     // x31 = mcause
-        dut.u_imem.mem[31] = NOP;
+        dut.u_imem.mem[31] = jal(5'd0, 21'd0);              // halt: do not fall into the handler
 
         // Trap handler @ 0x80 (word 32)
         dut.u_imem.mem[32] = addi (5'd24, 5'd0, 12'd99);      // handler marker

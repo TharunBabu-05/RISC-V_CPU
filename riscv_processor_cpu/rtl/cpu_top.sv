@@ -85,7 +85,7 @@ module cpu_top #(
         .predict_valid (predict_valid),
         .predict_taken (predict_taken),
         .predict_target(predict_target),
-        .update        ((id_ex_branch || id_ex_jump) && !muldiv_stall && !fpu_stall && !vec_stall),
+        .update        ((id_ex_branch || id_ex_jump) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall),
         .pc_update     (id_ex_pc),
         .actual_taken  (branch_taken || id_ex_jump),
         .actual_target ((id_ex_jump && id_ex_opcode == OP_JALR) ? ex_jalr_target : ex_branch_target)
@@ -98,6 +98,7 @@ module cpu_top #(
     logic [XLEN-1:0] if_id_pred_target;
     logic [31:0] if_id_instr;
     logic        if_id_pred_taken;
+    logic        if_id_valid;   // 0 for reset/flush bubbles
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -105,17 +106,20 @@ module cpu_top #(
             if_id_pred_target <= {XLEN{1'b0}};
             if_id_pred_taken  <= 1'b0;
             if_id_instr <= 32'h0000_0013; // NOP
+            if_id_valid <= 1'b0;
         end else if (if_id_write) begin
             if (flush_if_id) begin
                 if_id_pc    <= {XLEN{1'b0}};
                 if_id_pred_target <= {XLEN{1'b0}};
                 if_id_pred_taken  <= 1'b0;
                 if_id_instr <= 32'h0000_0013;
+                if_id_valid <= 1'b0;
             end else begin
                 if_id_pc    <= pc;
                 if_id_pred_target <= predict_target;
                 if_id_pred_taken  <= predict_valid && predict_taken;
                 if_id_instr <= if_instr;
+                if_id_valid <= 1'b1;
             end
         end
     end
@@ -251,6 +255,15 @@ module cpu_top #(
                     (if_id_instr[31:25] == 7'b0001001);
     end
 
+    // Illegal-instruction detection (encodings this core does not implement)
+    logic id_illegal, id_ok, id_fencei;
+    illegal_detect #(.XLEN(XLEN)) u_illegal (
+        .instr  (if_id_instr),
+        .illegal(id_illegal)
+    );
+    assign id_ok     = !id_illegal;
+    assign id_fencei = (if_id_instr[6:0] == 7'b0001111) && (if_id_instr[14:12] == 3'b001);
+
     // Hazard unit
     logic pc_write, if_id_write, control_mux;
     (* keep *) logic hazard_pc_write, hazard_if_id_write, hazard_control_mux;
@@ -271,8 +284,8 @@ module cpu_top #(
         .control_mux   (hazard_control_mux)
     );
 
-    assign pc_write    = hazard_pc_write    && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
-    assign if_id_write = hazard_if_id_write && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
+    assign pc_write    = (hazard_pc_write    || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
+    assign if_id_write = (hazard_if_id_write || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
     assign control_mux = hazard_control_mux;
 
     // ===================================================
@@ -299,6 +312,8 @@ module cpu_top #(
     logic [2:0]  id_ex_fp_op, id_ex_vec_op;
     logic [2:0]  id_ex_muldiv_op;
     logic        id_ex_write;
+    logic        id_ex_valid, id_ex_illegal, id_ex_fencei;
+    logic [31:0] id_ex_instr;
 
     assign id_mret = (if_id_instr == 32'h3020_0073);
     assign id_sret = (if_id_instr == 32'h1020_0073);
@@ -349,7 +364,11 @@ module cpu_top #(
             id_ex_vec_reg_write <= 1'b0;
             id_ex_vec_op     <= 3'b0;
             id_ex_muldiv_op  <= 3'b0;
-        end else if (control_mux || flush_ex) begin
+            id_ex_valid      <= 1'b0;
+            id_ex_illegal    <= 1'b0;
+            id_ex_fencei     <= 1'b0;
+            id_ex_instr      <= 32'h0000_0013;
+        end else if ((control_mux || flush_ex) && !mem_stall && !mmu_stall) begin
             id_ex_pc         <= {XLEN{1'b0}};
             id_ex_pred_target<= {XLEN{1'b0}};
             id_ex_rs1        <= {XLEN{1'b0}};
@@ -392,6 +411,10 @@ module cpu_top #(
             id_ex_vec_reg_write <= 1'b0;
             id_ex_vec_op     <= 3'b0;
             id_ex_muldiv_op  <= 3'b0;
+            id_ex_valid      <= 1'b0;
+            id_ex_illegal    <= 1'b0;
+            id_ex_fencei     <= 1'b0;
+            id_ex_instr      <= 32'h0000_0013;
         end else if (id_ex_write) begin
             id_ex_pc         <= if_id_pc;
             id_ex_pred_target<= if_id_pred_target;
@@ -406,35 +429,39 @@ module cpu_top #(
             id_ex_rs2_addr   <= id_rs2_addr;
             id_ex_rd         <= id_rd_addr;
             id_ex_funct3     <= if_id_instr[14:12];
-            id_ex_reg_write  <= id_reg_write;
+            id_ex_reg_write  <= (id_reg_write) && id_ok;
             id_ex_alu_src    <= id_alu_src;
-            id_ex_mem_read   <= id_mem_read || id_fp_load;
-            id_ex_mem_write  <= id_mem_write || id_fp_store;
-            id_ex_mem_to_reg <= id_mem_to_reg || id_fp_load;
-            id_ex_branch     <= id_branch;
-            id_ex_jump       <= id_jump;
-            id_ex_csr_en     <= id_csr_en;
-            id_ex_ecall_r    <= id_ecall;
-            id_ex_ebreak_r   <= id_ebreak;
-            id_ex_mret_r     <= id_mret;
-            id_ex_sret_r     <= id_sret;
-            id_ex_sfence     <= id_sfence;
+            id_ex_mem_read   <= (id_mem_read || id_fp_load) && id_ok;
+            id_ex_mem_write  <= (id_mem_write || id_fp_store) && id_ok;
+            id_ex_mem_to_reg <= (id_mem_to_reg || id_fp_load) && id_ok;
+            id_ex_branch     <= (id_branch) && id_ok;
+            id_ex_jump       <= (id_jump) && id_ok;
+            id_ex_csr_en     <= (id_csr_en) && id_ok;
+            id_ex_ecall_r    <= (id_ecall) && id_ok;
+            id_ex_ebreak_r   <= (id_ebreak) && id_ok;
+            id_ex_mret_r     <= (id_mret) && id_ok;
+            id_ex_sret_r     <= (id_sret) && id_ok;
+            id_ex_sfence     <= (id_sfence) && id_ok;
             id_ex_csr_op     <= id_csr_op;
             id_ex_csr_addr   <= id_csr_addr;
             id_ex_csr_zimm   <= id_csr_zimm;
             id_ex_alu_ctrl   <= id_alu_ctrl;
             id_ex_opcode     <= if_id_instr[6:0];
-            id_ex_muldiv_en  <= id_muldiv_en;
+            id_ex_muldiv_en  <= (id_muldiv_en) && id_ok;
             id_ex_pred_taken <= if_id_pred_taken;
-            id_ex_fp_en      <= id_fp_en;
-            id_ex_fp_load    <= id_fp_load;
-            id_ex_fp_store   <= id_fp_store;
-            id_ex_fp_reg_write <= id_fp_reg_write;
+            id_ex_fp_en      <= (id_fp_en) && id_ok;
+            id_ex_fp_load    <= (id_fp_load) && id_ok;
+            id_ex_fp_store   <= (id_fp_store) && id_ok;
+            id_ex_fp_reg_write <= (id_fp_reg_write) && id_ok;
             id_ex_fp_op      <= id_fp_op;
-            id_ex_vec_en     <= id_vec_en;
-            id_ex_vec_reg_write <= id_vec_reg_write;
+            id_ex_vec_en     <= (id_vec_en) && id_ok;
+            id_ex_vec_reg_write <= (id_vec_reg_write) && id_ok;
             id_ex_vec_op     <= id_vec_op;
             id_ex_muldiv_op  <= id_muldiv_op;
+            id_ex_valid      <= if_id_valid;
+            id_ex_illegal    <= id_illegal && if_id_valid;
+            id_ex_fencei     <= id_fencei && id_ok;
+            id_ex_instr      <= if_id_instr;
         end
     end
 
@@ -566,27 +593,35 @@ module cpu_top #(
     logic [XLEN-1:0] ex_csr_rdata, ex_csr_wdata, ex_csr_src;
     logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mtvec, ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
     logic [1:0]      current_priv;
-    logic [XLEN-1:0] trap_pc, trap_mcause, trap_mepc, mip;
+    logic [XLEN-1:0] trap_pc, trap_mcause, trap_mepc, trap_mtval, mip;
+    logic [1:0]      trap_kind;
+    logic            ex_csr_illegal, ex_csr_write_attempt;
     logic        ex_csr_write;
     logic        trap_taken;
     logic        wb_retire;
 
     assign ex_csr_src = id_ex_csr_op[2] ? id_ex_csr_zimm : ex_fwd_a;
+    // CSRRW/CSRRWI always write; CSRRS/C(I) write unless rs1/uimm is x0/0
+    assign ex_csr_write_attempt = id_ex_csr_en &&
+        ((id_ex_csr_op == CSR_RW) || (id_ex_csr_op == CSR_RWI) || (id_ex_rs1_addr != 5'b0));
 
     csr_file #(.XLEN(XLEN)) u_csr (
         .clk         (clk),
         .rst_n       (rst_n),
-        .csr_write   (ex_csr_write),
+        .csr_write   (ex_csr_write && !mem_stall && !mmu_stall),
         .trap_write  (trap_taken),
-        .mret_exec   (id_ex_mret_r),
-        .sret_exec   (id_ex_sret_r),
+        .mret_exec   (id_ex_mret_r && !mem_stall && !mmu_stall),
+        .sret_exec   (id_ex_sret_r && !mem_stall && !mmu_stall),
         .retire      (wb_retire),
         .csr_addr    (id_ex_csr_addr),
         .csr_wdata   (ex_csr_wdata),
+        .csr_write_attempt(ex_csr_write_attempt),
         .trap_mepc   (trap_mepc),
         .trap_mcause (trap_mcause),
+        .trap_mtval  (trap_mtval),
         .trap_mip    (mip),
         .csr_rdata   (ex_csr_rdata),
+        .csr_illegal (ex_csr_illegal),
         .mstatus_out (ex_csr_mstatus),
         .mie_out     (ex_csr_mie),
         .mtvec_out   (ex_csr_mtvec),
@@ -633,7 +668,7 @@ module cpu_top #(
     logic [XLEN-1:0] ex_jalr_target;
     logic [XLEN-1:0] jalr_sum;
     assign jalr_sum = ex_fwd_a + id_ex_imm;
-    assign ex_jalr_target = {jalr_sum[31:1], 1'b0};
+    assign ex_jalr_target = {jalr_sum[XLEN-1:1], 1'b0};
 
     // Branch taken logic (decode funct3 for BEQ/BNE/BLT/BGE/BLTU/BGEU)
     logic branch_taken;
@@ -705,43 +740,92 @@ module cpu_top #(
             exc_pc = id_ex_pc;
     end
 
+    // Misaligned data access (no hardware support: raise an exception)
+    logic ex_misaligned_mem, ex_misaligned_load, ex_misaligned_store, ex_misaligned_fetch;
+    always_comb begin
+        case (id_ex_funct3[1:0])
+            2'b00:   ex_misaligned_mem = 1'b0;                         // byte
+            2'b01:   ex_misaligned_mem = ex_alu_result_raw[0];         // halfword
+            2'b10:   ex_misaligned_mem = |ex_alu_result_raw[1:0];      // word
+            default: ex_misaligned_mem = |ex_alu_result_raw[2:0];      // doubleword
+        endcase
+    end
+    assign ex_misaligned_load  = id_ex_mem_read  && ex_misaligned_mem;
+    assign ex_misaligned_store = id_ex_mem_write && ex_misaligned_mem;
+    // Taken jump/branch to an address that is not 4-byte aligned (no C extension)
+    assign ex_misaligned_fetch = control_taken && control_target[1];
+
+    // EX-stage exceptions and interrupts are only taken while MEM is not
+    // frozen, otherwise the trap redirect could not update the PC.
+    logic ex_can_trap, irq_enable, ex_illegal;
+    assign ex_can_trap = !mem_stall && !mmu_stall_raw;
+    assign ex_illegal  = id_ex_illegal ||
+                         (id_ex_csr_en  && ex_csr_illegal) ||
+                         (id_ex_mret_r  && (current_priv != 2'b11)) ||
+                         (id_ex_sret_r  && (current_priv == 2'b00));
+    // Interrupts complete the EX instruction and resume after it, so EX must
+    // hold a real instruction that has finished and has no side effects that
+    // the trap would discard (CSR writes, xRET, fences).
+    assign irq_enable  = id_ex_valid && ex_can_trap &&
+                         !muldiv_stall && !fpu_stall && !vec_stall &&
+                         !id_ex_csr_en && !id_ex_mret_r && !id_ex_sret_r &&
+                         !id_ex_sfence && !id_ex_fencei;
+
     interrupt_unit #(.XLEN(XLEN)) u_int (
         .clk             (clk),
         .rst_n           (rst_n),
         .pc              (exc_pc),
         .next_pc         (ex_ret_pc),
-        .instr           (32'b0),  // Simplified: no illegal instr detect (future enhancement)
-        .instr_valid     (1'b1),   // Assume valid unless async interrupt
-        .illegal_instr   (1'b0),   // Not detecting yet
+        .instr           (id_ex_instr),
+        .instr_valid     (ex_can_trap),
+        .current_priv    (current_priv),
+        .illegal_instr   (ex_illegal),
         .ecall           (id_ex_ecall_r),
         .ebreak          (id_ex_ebreak_r),
+        .misaligned_fetch(ex_misaligned_fetch),
+        .misaligned_load (ex_misaligned_load),
+        .misaligned_store(ex_misaligned_store),
+        .misaligned_addr (ex_misaligned_fetch ? control_target : ex_alu_result_raw),
         .page_fault      (page_fault_exception),
         .page_fault_cause(page_fault_cause),
+        .page_fault_addr (inst_fault ? pc : ex_mem_alu_result),
         .ext_interrupt   (ext_interrupt),
+        .irq_enable      (irq_enable),
         .mstatus         (ex_csr_mstatus),
         .mie             (ex_csr_mie),
         .mtvec           (ex_csr_mtvec),
         .mcause_out      (trap_mcause),
         .mepc_out        (trap_mepc),
+        .mtval_out       (trap_mtval),
         .mip_out         (mip),
         .trap_taken      (trap_taken),
         .trap_pc         (trap_pc),
-        .trap_cause      ()  // Not used in WB, only trap_taken matters
+        .trap_cause      (trap_kind)
     );
-    
+
+    // An exception raised by the EX instruction squashes it (no writeback)
+    logic ex_exc_taken;
+    assign ex_exc_taken = trap_taken && (trap_kind == 2'b01) && !page_fault_exception;
+
     logic flush_ex, flush_ex_mem;
     logic flush_ex_mem_r;  // Delayed by 1 cycle to flush instruction AFTER branch
-    
-    assign flush_ex = (branch_taken || id_ex_jump || branch_mispredict || trap_taken || id_ex_mret_r || id_ex_sret_r);
-    assign flush_if_id = flush_ex;  // Flush IF/ID immediately when branch taken
-    
+
+    // Redirect fetch only on a misprediction (a correctly predicted taken
+    // branch keeps the fetched target), xRET, SFENCE.VMA / FENCE.I (refetch
+    // younger instructions), or a trap. Never while MEM is frozen.
+    logic ex_redirect;
+    assign ex_redirect = (branch_mispredict || id_ex_mret_r || id_ex_sret_r || id_ex_sfence || id_ex_fencei) &&
+                         !mem_stall && !mmu_stall;
+    assign flush_ex    = ex_redirect || trap_taken;
+    assign flush_if_id = flush_ex;
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             flush_ex_mem_r <= 1'b0;
         else
             flush_ex_mem_r <= flush_ex;
     end
-    
+
     assign flush_ex_mem = flush_ex_mem_r;
 
     always_comb begin
@@ -751,14 +835,10 @@ module cpu_top #(
             pc_next = ex_csr_mepc;
         else if (id_ex_sret_r)
             pc_next = ex_csr_sepc;
-        else if (branch_mispredict && !control_taken)
+        else if (branch_mispredict)
+            pc_next = control_taken ? control_target : fallthrough_target;
+        else if (id_ex_sfence || id_ex_fencei)
             pc_next = fallthrough_target;
-        else if (id_ex_jump && id_ex_opcode == 7'b1100111) // JALR
-            pc_next = ex_jalr_target;
-        else if (id_ex_jump)                          // JAL
-            pc_next = ex_branch_target;
-        else if (branch_taken)
-            pc_next = ex_branch_target;
         else if (predict_valid && predict_taken)
             pc_next = predict_target;
         else
@@ -783,6 +863,7 @@ module cpu_top #(
     logic        ex_mem_fp_reg_write, ex_mem_fp_load, ex_mem_fp_store;
     logic        ex_mem_vec_reg_write;
     logic [XLEN-1:0] ex_mem_csr_rdata;
+    logic        ex_mem_valid;
 
     assign ex_mem_fwd_data = ex_mem_csr_en ? ex_mem_csr_rdata :
                              ex_mem_jump   ? ex_mem_pc_plus4  :
@@ -811,6 +892,7 @@ module cpu_top #(
             ex_mem_fp_store   <= 1'b0;
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= {XLEN{1'b0}};
+            ex_mem_valid      <= 1'b0;
         end else if (mem_stall || mmu_stall) begin
             ex_mem_alu_result <= ex_mem_alu_result;
             ex_mem_rs2        <= ex_mem_rs2;
@@ -833,6 +915,7 @@ module cpu_top #(
             ex_mem_fp_store   <= ex_mem_fp_store;
             ex_mem_vec_reg_write <= ex_mem_vec_reg_write;
             ex_mem_csr_rdata  <= ex_mem_csr_rdata;
+            ex_mem_valid      <= ex_mem_valid;
         end else if (muldiv_stall || fpu_stall || vec_stall) begin
             // Hold EX stage and insert a bubble into MEM while mul/div completes
             ex_mem_alu_result <= {XLEN{1'b0}};
@@ -856,6 +939,32 @@ module cpu_top #(
             ex_mem_fp_store   <= 1'b0;
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= {XLEN{1'b0}};
+            ex_mem_valid      <= 1'b0;
+        end else if (ex_exc_taken) begin
+            // The EX instruction raised an exception: it must not retire
+            // Hold EX stage and insert a bubble into MEM while mul/div completes
+            ex_mem_alu_result <= {XLEN{1'b0}};
+            ex_mem_rs2        <= {XLEN{1'b0}};
+            ex_mem_fp_rs2     <= 32'b0;
+            ex_mem_fp_result  <= 32'b0;
+            ex_mem_vec_result <= 128'b0;
+            ex_mem_pc_plus4   <= {XLEN{1'b0}};
+            ex_mem_pc         <= {XLEN{1'b0}};
+            ex_mem_rd         <= 5'b0;
+            ex_mem_funct3     <= 3'b0;
+            ex_mem_reg_write  <= 1'b0;
+            ex_mem_mem_read   <= 1'b0;
+            ex_mem_mem_write  <= 1'b0;
+            ex_mem_mem_to_reg <= 1'b0;
+            ex_mem_zero       <= 1'b0;
+            ex_mem_jump       <= 1'b0;
+            ex_mem_csr_en     <= 1'b0;
+            ex_mem_fp_reg_write <= 1'b0;
+            ex_mem_fp_load    <= 1'b0;
+            ex_mem_fp_store   <= 1'b0;
+            ex_mem_vec_reg_write <= 1'b0;
+            ex_mem_csr_rdata  <= {XLEN{1'b0}};
+            ex_mem_valid      <= 1'b0;
         end else if (flush_ex_mem) begin
             // When flushing, clear control signals but latch data normally
             // This prevents accidental writes from delayed pipeline instructions
@@ -880,6 +989,7 @@ module cpu_top #(
             ex_mem_fp_store   <= 1'b0;
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= ex_csr_rdata;
+            ex_mem_valid      <= 1'b0;
         end else begin
             ex_mem_alu_result <= ex_result;
             ex_mem_rs2        <= ex_fwd_b;
@@ -902,6 +1012,7 @@ module cpu_top #(
             ex_mem_fp_store   <= id_ex_fp_store;
             ex_mem_vec_reg_write <= id_ex_vec_reg_write;
             ex_mem_csr_rdata  <= ex_csr_rdata;
+            ex_mem_valid      <= id_ex_valid;
         end
     end
 
@@ -909,7 +1020,7 @@ module cpu_top #(
     //  MEMORY STAGE
     // ===================================================
     logic sfence_exec;
-    assign sfence_exec = id_ex_sfence && !flush_ex;
+    assign sfence_exec = id_ex_sfence && !mem_stall && !mmu_stall;
 
     logic [XLEN-1:0] mem_rd_data;
     logic [XLEN-1:0] data_paddr;
@@ -923,7 +1034,9 @@ module cpu_top #(
     assign data_req = ex_mem_mem_read || ex_mem_mem_write;
     assign mem_page_fault = data_req && data_fault;
     assign mem_page_fault_store = ex_mem_mem_write;
-    assign mmu_stall = (!inst_ready || (data_req && !data_ready)) && !trap_taken;
+    logic mmu_stall_raw;
+    assign mmu_stall_raw = !inst_ready || (data_req && !data_ready);
+    assign mmu_stall = mmu_stall_raw && !trap_taken;
 
     mmu #(.XLEN(XLEN)) u_mmu (
         .clk        (clk),
@@ -971,6 +1084,7 @@ module cpu_top #(
     logic [127:0] mem_wb_vec_result;
     logic        mem_wb_mem_to_reg, mem_wb_jump, mem_wb_csr_en;
     logic        mem_wb_fp_reg_write, mem_wb_fp_load, mem_wb_vec_reg_write;
+    logic        mem_wb_valid;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -992,6 +1106,7 @@ module cpu_top #(
             mem_wb_fp_reg_write <= 1'b0;
             mem_wb_fp_load    <= 1'b0;
             mem_wb_vec_reg_write <= 1'b0;
+            mem_wb_valid      <= 1'b0;
         end else if (mem_stall || mmu_stall) begin
             mem_wb_alu_result <= {XLEN{1'b0}};
             mem_wb_mem_data   <= {XLEN{1'b0}};
@@ -1011,6 +1126,7 @@ module cpu_top #(
             mem_wb_fp_reg_write <= 1'b0;
             mem_wb_fp_load    <= 1'b0;
             mem_wb_vec_reg_write <= 1'b0;
+            mem_wb_valid      <= 1'b0;
         end else begin
             mem_wb_alu_result <= ex_mem_alu_result;
             mem_wb_mem_data   <= mem_rd_data;
@@ -1030,6 +1146,7 @@ module cpu_top #(
             mem_wb_fp_reg_write <= ex_mem_fp_reg_write;
             mem_wb_fp_load    <= ex_mem_fp_load;
             mem_wb_vec_reg_write <= ex_mem_vec_reg_write;
+            mem_wb_valid      <= ex_mem_valid;
         end
     end
 
@@ -1047,7 +1164,7 @@ module cpu_top #(
             wb_wr_data = mem_wb_alu_result;       // ALU / LUI / AUIPC
     end
 
-    assign wb_retire = wb_reg_write && !mem_stall && !mmu_stall;
+    assign wb_retire = mem_wb_valid;   // every retired instruction counts toward instret
     assign fp_wb_data = mem_wb_fp_load ? mem_wb_mem_data[31:0] : mem_wb_fp_result;
     assign vec_wb_data = mem_wb_vec_result;
 
