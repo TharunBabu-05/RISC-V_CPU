@@ -270,8 +270,16 @@ module dcache #(
     always_ff @(posedge clk) begin
         case (state)
             DC_IDLE: begin
-                if (mem_write) begin
-                    data[req_index]  <= store_merge(hit ? data[req_index] : l2_rd_data, addr, funct3, wr_data);
+                // Write-through: memory is always updated via L2 (see L2 control).
+                // A store hit merges into the cached line. A store miss only
+                // allocates when it overwrites the whole line; a partial store
+                // miss (SB/SH, or SW on RV64) is not allocated, because the
+                // rest of the line is unknown here (L2 read data is not valid
+                // during a write).
+                if (mem_write && hit) begin
+                    data[req_index] <= store_merge(data[req_index], addr, funct3, wr_data);
+                end else if (mem_write && funct3 == FILL_FUNCT3) begin
+                    data[req_index]  <= wr_data;
                     tags[req_index]  <= req_tag;
                     valid[req_index] <= 1'b1;
                 end
