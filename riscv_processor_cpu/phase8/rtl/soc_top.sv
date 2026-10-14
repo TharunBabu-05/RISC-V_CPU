@@ -22,7 +22,8 @@
 //
 //  ===================================================
 //  On-chip resources used (Arty S7-50, Vivado 2020.2 post-route):
-//    3,749 LUTs, 3,674 FFs, 4 DSP48E1, 16 RAMB36 tiles (64KB)
+//    6,367 LUTs, 3,870 FFs, 4 DSP48E1, 32 RAMB36 tiles
+//    (64KB logical memory, duplicated parity banks for unaligned accesses)
 //  ===================================================
 //
 //  Board: Xilinx Arty S7-50 (XC7S50-CSGA324)
@@ -181,32 +182,14 @@ module soc_top (
     // -------------------------------------------------------
     always_comb begin
         case (dmem_funct3)
-            3'b000: begin // SB - store byte
-                case (dmem_addr[1:0])
-                    2'b00: dmem_we = 4'b0001;
-                    2'b01: dmem_we = 4'b0010;
-                    2'b10: dmem_we = 4'b0100;
-                    2'b11: dmem_we = 4'b1000;
-                    default: dmem_we = 4'b0000;
-                endcase
-            end
-            3'b001: begin // SH - store halfword
-                dmem_we = dmem_addr[1] ? 4'b1100 : 4'b0011;
-            end
+            3'b000: dmem_we = 4'b0001; // SB
+            3'b001: dmem_we = 4'b0011; // SH
             default: dmem_we = dmem_wr_en ? 4'b1111 : 4'b0000; // SW
         endcase
         if (!dmem_wr_en) dmem_we = 4'b0000;
     end
 
-    // Store data for SB/SH arrives in the low byte/halfword from the CPU.
-    // Replicate it so the selected BRAM byte lanes receive the right value.
-    always_comb begin
-        case (dmem_funct3)
-            3'b000:  bram_wdata = {4{dmem_wdata[7:0]}};    // SB
-            3'b001:  bram_wdata = {2{dmem_wdata[15:0]}};   // SH
-            default: bram_wdata = dmem_wdata;               // SW
-        endcase
-    end
+    assign bram_wdata = dmem_wdata;
 
     // -------------------------------------------------------
     //  Unified 64KB BRAM

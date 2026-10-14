@@ -1,4 +1,4 @@
-# riscv-tests on core 'soc-fpu': 11/11 applicable tests passed (0 not applicable), 4 s
+# riscv-tests on core 'soc-fpu': 11/11 applicable tests passed (0 not applicable), 1 s
 
 PASS         rv32uf-p-fadd
 PASS         rv32uf-p-fdiv

@@ -92,6 +92,7 @@ set cpu_files [list \
     "$cpu_rtl/hazard.sv"           \
     "$cpu_rtl/imm_gen.sv"          \
     "$cpu_rtl/interrupt_unit.sv"   \
+    "$cpu_rtl/pmp_unit.sv"         \
     "$cpu_rtl/muldiv.sv"           \
     "$cpu_rtl/regfile.sv"          \
     "$cpu_rtl/vector_regfile.sv"   \

@@ -17,6 +17,7 @@ read_verilog -sv ../rtl/hazard.sv
 read_verilog -sv ../rtl/icache.sv
 read_verilog -sv ../rtl/imm_gen.sv
 read_verilog -sv ../rtl/interrupt_unit.sv
+read_verilog -sv ../rtl/pmp_unit.sv
 read_verilog -sv ../rtl/l2_cache.sv
 read_verilog -sv ../rtl/memory.sv
 read_verilog -sv ../rtl/mmu.sv

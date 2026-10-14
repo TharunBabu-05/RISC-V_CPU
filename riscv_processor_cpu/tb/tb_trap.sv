@@ -55,17 +55,17 @@ module tb_trap;
         dut.u_imem.mem[2]  = rv_csrw(MTVEC, 5'd7);               // vectored, base 0x200
         dut.u_imem.mem[3]  = RV_ECALL;                           // r0 @0x0C
         dut.u_imem.mem[4]  = ILLEGAL_WORD;                       // r1 @0x10
-        dut.u_imem.mem[5]  = rv_lw (5'd10, 5'd0, 12'h102);       // r2 misaligned load
-        dut.u_imem.mem[6]  = rv_sw (5'd10, 5'd0, 12'h106);       // r3 misaligned store
-        dut.u_imem.mem[7]  = rv_lh (5'd10, 5'd0, 12'h103);       // r4 misaligned half load
-        dut.u_imem.mem[8]  = rv_jal(5'd0, 21'd6);                // r5 jump target 0x26
+        dut.u_imem.mem[5]  = RV_NOP;
+        dut.u_imem.mem[6]  = RV_NOP;
+        dut.u_imem.mem[7]  = RV_NOP;
+        dut.u_imem.mem[8]  = rv_jal(5'd0, 21'd6);                // r2 jump target 0x26
         dut.u_imem.mem[9]  = rv_csrr(5'd11, MISA);
         dut.u_imem.mem[10] = rv_csrr(5'd12, MHARTID);
-        dut.u_imem.mem[11] = csr_bogus_instr;                    // r6 unimplemented CSR
+        dut.u_imem.mem[11] = csr_bogus_instr;                    // r3 unimplemented CSR
         dut.u_imem.mem[12] = rv_csrr(5'd14, CYCLE);
         dut.u_imem.mem[13] = rv_csrr(5'd15, CYCLE);
         dut.u_imem.mem[14] = rv_csrr(5'd16, INSTRET);
-        dut.u_imem.mem[15] = csr_ro_write_instr;                 // r7 write to read-only CSR
+        dut.u_imem.mem[15] = csr_ro_write_instr;                 // r4 write to read-only CSR
         dut.u_imem.mem[16] = rv_addi(5'd7, 5'd0, 12'd2);
         dut.u_imem.mem[17] = rv_csrrs(5'd0, 5'd7, MSTATUS);      // set SIE through mstatus
         dut.u_imem.mem[18] = rv_csrr(5'd18, SSTATUS);
@@ -106,14 +106,11 @@ module tb_trap;
 
         check_record(0, "ECALL",                32'd11, 32'h0,          32'h0C);
         check_record(1, "illegal instruction",  32'd2,  ILLEGAL_WORD,   32'h10);
-        check_record(2, "misaligned LW",        32'd4,  32'h102,        32'h14);
-        check_record(3, "misaligned SW",        32'd6,  32'h106,        32'h18);
-        check_record(4, "misaligned LH",        32'd4,  32'h103,        32'h1C);
-        check_record(5, "misaligned JAL target",32'd0,  32'h26,         32'h20);
-        check_record(6, "unimplemented CSR",    32'd2,  csr_bogus_instr,    32'h2C);
-        check_record(7, "write read-only CSR",  32'd2,  csr_ro_write_instr, 32'h3C);
+        check_record(2, "misaligned JAL target",32'd0,  32'h26,         32'h20);
+        check_record(3, "unimplemented CSR",    32'd2,  csr_bogus_instr,    32'h2C);
+        check_record(4, "write read-only CSR",  32'd2,  csr_ro_write_instr, 32'h3C);
         check("vectored interrupt entry (x26)", dut.u_regfile.regs[26], 32'd1);
-        check("interrupt record mcause",        `DMEM[192 + 3*8], 32'h8000_000B);
+        check("interrupt record mcause",        `DMEM[192 + 3*5], 32'h8000_000B);
         check("misa = RV32IMF",                 dut.u_regfile.regs[11], 32'h4000_1120);
         check("mhartid",                        dut.u_regfile.regs[12], 32'h0);
         check("cycle counting",                 (dut.u_regfile.regs[14] != 0) && (dut.u_regfile.regs[15] > dut.u_regfile.regs[14]), 1);

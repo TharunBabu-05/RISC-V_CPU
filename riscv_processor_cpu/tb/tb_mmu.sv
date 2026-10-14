@@ -93,13 +93,15 @@ module tb_mmu;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[16'h40] = PTE_DATA; // VPN1=0x040
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[128]    = 32'h1234_5678;
 
-        dut.u_imem.mem[0] = lui  (5'd1, 20'h80000);
-        dut.u_imem.mem[1] = csrrw(5'd0, 5'd1, 12'h180);
+        dut.u_imem.mem[0] = NOP;
+        dut.u_imem.mem[1] = NOP;
         dut.u_imem.mem[2] = lui  (5'd2, 20'h10000);
         dut.u_imem.mem[3] = addi (5'd2, 5'd2, 12'h200);
         dut.u_imem.mem[4] = lw   (5'd3, 5'd2, 12'h000);
 
         rst_n = 1;
+        #1 dut.u_csr.current_priv = 2'b01;
+        dut.u_csr.satp = SATP_SV32;
         repeat (80) @(posedge clk);
 
         $display("=== MMU Test 1: Success ===");
@@ -116,12 +118,14 @@ module tb_mmu;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[0]      = PTE_CODE;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[16'h41] = PTE_A0;   // VPN1=0x041
 
-        dut.u_imem.mem[0] = lui  (5'd1, 20'h80000);
-        dut.u_imem.mem[1] = csrrw(5'd0, 5'd1, 12'h180);
+        dut.u_imem.mem[0] = NOP;
+        dut.u_imem.mem[1] = NOP;
         dut.u_imem.mem[2] = lui  (5'd2, 20'h10400);   // 0x1040_0000
         dut.u_imem.mem[3] = lw   (5'd3, 5'd2, 12'h000);
 
         rst_n = 1;
+        #1 dut.u_csr.current_priv = 2'b01;
+        dut.u_csr.satp = SATP_SV32;
         repeat (80) @(posedge clk);
 
         $display("=== MMU Test 2: A=0 Load Fault ===");
@@ -137,13 +141,15 @@ module tb_mmu;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[0]      = PTE_CODE;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[16'h42] = PTE_D0;   // VPN1=0x042
 
-        dut.u_imem.mem[0] = lui  (5'd1, 20'h80000);
-        dut.u_imem.mem[1] = csrrw(5'd0, 5'd1, 12'h180);
+        dut.u_imem.mem[0] = NOP;
+        dut.u_imem.mem[1] = NOP;
         dut.u_imem.mem[2] = lui  (5'd2, 20'h10800);   // 0x1080_0000
         dut.u_imem.mem[3] = addi (5'd3, 5'd0, 12'd5);
         dut.u_imem.mem[4] = sw   (5'd2, 5'd3, 12'h000);
 
         rst_n = 1;
+        #1 dut.u_csr.current_priv = 2'b01;
+        dut.u_csr.satp = SATP_SV32;
         repeat (80) @(posedge clk);
 
         $display("=== MMU Test 3: D=0 Store Fault ===");
@@ -160,12 +166,14 @@ module tb_mmu;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[0]      = PTE_CODE;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[16'h43] = PTE_R0_X1; // VPN1=0x043
 
-        dut.u_imem.mem[0] = lui  (5'd1, 20'h80000);
-        dut.u_imem.mem[1] = csrrw(5'd0, 5'd1, 12'h180);
+        dut.u_imem.mem[0] = NOP;
+        dut.u_imem.mem[1] = NOP;
         dut.u_imem.mem[2] = lui  (5'd2, 20'h10C00);   // 0x10C0_0000
         dut.u_imem.mem[3] = lw   (5'd3, 5'd2, 12'h000);
 
         rst_n = 1;
+        #1 dut.u_csr.current_priv = 2'b01;
+        dut.u_csr.satp = SATP_SV32;
         repeat (80) @(posedge clk);
 
         $display("=== MMU Test 4: R=0 Load Fault ===");
@@ -181,13 +189,15 @@ module tb_mmu;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[0]      = PTE_CODE;
         dut.u_dcache.u_l2.u_dram.u_dmem.mem[16'h44] = PTE_X0;   // VPN1=0x044
 
-        dut.u_imem.mem[0] = lui  (5'd1, 20'h80000);
-        dut.u_imem.mem[1] = csrrw(5'd0, 5'd1, 12'h180);
+        dut.u_imem.mem[0] = NOP;
+        dut.u_imem.mem[1] = NOP;
         dut.u_imem.mem[2] = lui  (5'd2, 20'h11000);   // 0x1100_0000
         dut.u_imem.mem[3] = jalr (5'd0, 5'd2, 12'h000);
         dut.u_imem.mem[4] = NOP;
 
         rst_n = 1;
+        #1 dut.u_csr.current_priv = 2'b01;
+        dut.u_csr.satp = SATP_SV32;
         repeat (80) @(posedge clk);
 
         $display("=== MMU Test 5: X=0 Instruction Fault ===");

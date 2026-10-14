@@ -4,24 +4,33 @@
 
 | Area | Status | Notes |
 |---|---|---|
-| RV32I base integer | Implemented | Primary directed test target |
-| RV64I mode | Implemented option | Enabled via `XLEN=64` path; the `*W` instructions (OP-IMM-32 / OP-32) are not implemented and raise illegal-instruction |
-| M extension (mul/div) | Implemented | Multi-cycle unit: MUL* in 3 cycles, DIV/REM* via iterative radix-2 divider (XLEN+2 cycles) |
-| Machine + S/U-mode CSRs/traps | Implemented subset | `misa` (RV32IM / RV64IM), `mvendorid`/`marchid`/`mimpid`/`mhartid` (0), `mstatus`, `mie`, `mtvec` (Direct/Vectored), `mcounteren`, `mscratch`, `mepc`, `mcause`, `mtval`, `mip` (live MEIP), `medeleg`, `mideleg`, `sstatus` (view of `mstatus`), `sie`, `stvec`, `sscratch`, `sepc`, `scause`, `stval`, `sip`, `satp`, 64-bit `mcycle`/`minstret` with `cycle`/`instret` (+`*h` on RV32), Sdtrig CSRs with zero triggers. Privilege modes: **M and U** (S-mode is not implemented: `MPP` holds only M/U and `SRET` is illegal; the supervisor CSRs stay accessible from M-mode for the experimental MMU) |
-| Exceptions | Implemented | Illegal instruction (incl. unknown/privileged/read-only CSR access) with `mtval` = instruction, misaligned fetch/load/store with `mtval` = address, ECALL from U/S/M (8/9/11), EBREAK, page faults |
-| Interrupts | Implemented | Machine external interrupt; precise (the EX instruction completes, `mepc` = next PC); never taken on a bubble, during a multi-cycle op, CSR write, xRET or fence |
-| Branch predictor | Integrated | 2-bit BHT + BTB; a correctly predicted branch/jump costs no flush |
-| Sv32 MMU path | Integrated | ITLB/DTLB/PTW + page-fault causes; 4 MiB megapages (misaligned ones fault); `sfence.vma` flushes the TLBs and refetches; ASID-aware TLB tags |
-| F extension (RV32F) | Implemented (research core) | Full RV32F, IEEE-754 binary32, all rounding modes, fflags, `mstatus.FS`; optional on the SoC core (`HAS_FPU`, off by default). See `fp_extension.md` |
-| Vector (RVV 1.0 subset) | Implemented (research core) | Real RVV encodings: vset{i}vl{i}, unit-stride e8/e16/e32 loads/stores, integer arithmetic, compares, masking, vredsum, vmv. VLEN=128, LMUL=1. Not in the SoC core. See `fp_extension.md` |
+| RV32I base integer | Implemented | Primary directed and FPGA target |
+| RV64I mode | Implemented option | Enabled via `XLEN=64`; OP-IMM-32 / OP-32 instructions are not implemented |
+| M extension | Implemented | Three-cycle multiply and iterative divide/remainder |
+| M/S/U privilege | Implemented | `MRET`/`SRET`, delegated traps, machine/supervisor trap CSRs, CSR aliases, and counters |
+| PMP | Implemented | Four entries with OFF, TOR, NA4 and NAPOT matching, lock semantics, and instruction/load/store access faults |
+| Exceptions | Implemented | Illegal instruction, instruction-address misalignment, ECALL U/S/M, EBREAK, page faults, and access faults |
+| Interrupts | Implemented | Precise M/S delivery, delegation, Direct/Vectored targets, live MEIP, and software-writable supervisor pending bits |
+| Misaligned data | Implemented | Scalar byte/halfword/word accesses spanning word boundaries complete in hardware; vector misalignment still traps |
+| Branch predictor | Integrated | Two-bit BHT plus BTB; `FENCE.I` invalidates stale instruction-cache state |
+| Sv32 MMU | Integrated | ITLB/DTLB/PTW, ASIDs, 4 MiB megapages, U/S permissions, `SUM`, `MXR`, page faults, and `SFENCE.VMA` |
+| Cache hierarchy | Integrated | Direct-mapped L1 I/D and L2 caches with write-through data policy, refill, invalidation, and hit/miss counters |
+| F extension | Implemented (research core) | RV32F binary32, rounding modes, flags, and `mstatus.FS`; optional in the SoC (`HAS_FPU`) |
+| Vector extension | Implemented subset (research core) | VLEN=128, LMUL=1 integer subset with configuration, arithmetic, masks, reductions, and unit-stride memory |
+
+## Verification Status
+
+- Directed and unit regression: 26/26 testbenches pass.
+- Official riscv-tests: research 77/77, SoC 66/66, optional SoC FPU 11/11; no N/A tests.
+- riscv-formal: 52/52 configured RV32IM/RVFI checks pass on `cpu_top_soc`.
+- UART loopback/collision test: 20/20 bytes pass, including simultaneous RX arrival and CPU read.
 
 ## Known Limitations
 
-- riscv-tests (rv32ui/um/mi/uf) pass on both cores except two tests that need unimplemented optional features (hardware misaligned access, PMP); see `phase5_compliance.md`. riscv-arch-test is not set up.
-- No PMP, no S-mode, no A (atomics) or C (compressed) extensions.
-- Vector support is an RVV 1.0 subset (no LMUL != 1, strided/indexed/segment accesses, widening, fixed-point or vector FP); `misa.V` is not set. No D extension.
-- MMU integration is Phase 4-complete Sv32 functionality; Phase 5 coverage is still planned. Known gaps: M-mode accesses are still translated when `satp.MODE` is set (kept for the existing tests), the PTE U bit / `SUM` / `MXR` are not checked, global (G) pages are not special-cased, and page faults raised in IF/MEM are not yet fully precise.
-- Misaligned loads/stores are not split in hardware; they raise address-misaligned exceptions for software to handle.
-- `sie`/`sip` are separate registers rather than views of `mie`/`mip`, and supervisor interrupt delegation is not implemented.
-- `mstatus` is fully writable (WPRI fields are not hard-wired to zero).
-- Cache/memory hierarchy is simulation-oriented and requires implementation-specific macro replacement for physical synthesis.
+- No A (atomics), C (compressed), hypervisor, or external debug transport implementation.
+- RV64 `*W` instructions, D extension, and a complete RVV implementation are not present.
+- Global Sv32 PTEs are not specially retained across ASID-selective flushes.
+- `mstatus` implements the fields used by this core but is not a complete WARL/WPRI implementation of every privileged-spec field.
+- The standard RVFI proof uses an aligned-memory abstraction because its single memory transaction cannot describe one access spanning two words; hardware cross-word behavior is covered by directed and ISA compliance tests.
+- `dram_ctrl` is a synthesizable zero-wait backing-memory controller model, not an external DDR PHY. External DDR requires a board-specific controller and a ready/valid cache interface.
+- riscv-arch-test/RISCOF is not yet configured.

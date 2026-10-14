@@ -9,6 +9,7 @@ SRCS := \
 	$(RTL_DIR)/imm_gen.sv      \
 	$(RTL_DIR)/csr_file.sv     \
 	$(RTL_DIR)/interrupt_unit.sv \
+	$(RTL_DIR)/pmp_unit.sv     \
 	$(RTL_DIR)/branch_predictor.sv \
 	$(RTL_DIR)/fp_regfile.sv   \
 	$(RTL_DIR)/fpu_unit.sv     \

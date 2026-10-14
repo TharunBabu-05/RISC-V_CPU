@@ -783,13 +783,18 @@ module cpu_top_soc #(
 
     // CSR handling (Zicsr)
     logic [XLEN-1:0] ex_csr_rdata, ex_csr_wdata, ex_csr_src;
-    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mtvec, ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
+    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mip, ex_csr_mtvec, ex_csr_stvec;
+    logic [XLEN-1:0] ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
+    logic [XLEN-1:0] ex_csr_mideleg, ex_csr_medeleg;
+    logic [31:0]     ex_csr_pmpcfg0;
+    logic [XLEN-1:0] ex_csr_pmpaddr0, ex_csr_pmpaddr1, ex_csr_pmpaddr2, ex_csr_pmpaddr3;
     logic [1:0]      current_priv;
     logic [XLEN-1:0] trap_pc, trap_mcause, trap_mepc, trap_mtval, mip;
     logic [1:0]      trap_kind;
     logic            ex_csr_illegal, ex_csr_write_attempt;
     logic        ex_csr_write;
     logic        trap_taken;
+    logic        trap_to_s;
     logic        wb_retire;
 
     assign ex_csr_src = id_ex_csr_op[2] ? id_ex_csr_zimm : ex_fwd_a;
@@ -805,6 +810,7 @@ module cpu_top_soc #(
         .rst_n       (rst_n),
         .csr_write   (ex_csr_write && !mem_stall && !mmu_stall),
         .trap_write  (trap_taken),
+        .trap_to_s   (trap_to_s),
         .mret_exec   (id_ex_mret_r && !mem_stall && !mmu_stall),
         .sret_exec   (id_ex_sret_r && !mem_stall && !mmu_stall),
         .retire      (wb_retire),
@@ -829,14 +835,21 @@ module cpu_top_soc #(
         .vstart_out  (ex_vstart),
         .mstatus_out (ex_csr_mstatus),
         .mie_out     (ex_csr_mie),
+        .mip_out     (ex_csr_mip),
         .mtvec_out   (ex_csr_mtvec),
+        .stvec_out   (ex_csr_stvec),
         .mepc_out    (ex_csr_mepc),
         .sepc_out    (ex_csr_sepc),
         .satp_out    (ex_csr_satp),
         .current_priv_out(current_priv),
         .mcause_out  (),
-        .mideleg_out (),
-        .medeleg_out ()
+        .mideleg_out (ex_csr_mideleg),
+        .medeleg_out (ex_csr_medeleg),
+        .pmpcfg0_out (ex_csr_pmpcfg0),
+        .pmpaddr0_out(ex_csr_pmpaddr0),
+        .pmpaddr1_out(ex_csr_pmpaddr1),
+        .pmpaddr2_out(ex_csr_pmpaddr2),
+        .pmpaddr3_out(ex_csr_pmpaddr3)
     );
 
     always_comb begin
@@ -942,20 +955,23 @@ module cpu_top_soc #(
     logic page_fault_exception;
     logic [XLEN-1:0] page_fault_cause;
     logic [XLEN-1:0] exc_pc;
+    logic pmp_inst_allow, pmp_data_allow, pmp_inst_fault, pmp_data_fault, pmp_access_fault;
+    logic [XLEN-1:0] pmp_access_cause, pmp_access_addr;
+    logic [3:0] pmp_data_size;
     assign page_fault_exception = inst_fault || mem_page_fault;
     assign page_fault_cause = inst_fault ? EXC_INST_PAGE :
                               mem_page_fault_store ? EXC_STORE_PAGE : EXC_LOAD_PAGE;
 
     always_comb begin
-        if (inst_fault)
+        if (inst_fault || pmp_inst_fault)
             exc_pc = pc;
-        else if (mem_page_fault)
+        else if (mem_page_fault || pmp_data_fault)
             exc_pc = ex_mem_pc;
         else
             exc_pc = id_ex_pc;
     end
 
-    // Misaligned data access (no hardware support: raise an exception)
+    // Scalar unaligned accesses are completed by the banked SoC BRAM.
     logic ex_misaligned_mem, ex_misaligned_load, ex_misaligned_store, ex_misaligned_fetch;
     always_comb begin
         case (id_ex_funct3[1:0])
@@ -965,10 +981,54 @@ module cpu_top_soc #(
             default: ex_misaligned_mem = |ex_alu_result_raw[2:0];      // doubleword
         endcase
     end
-    assign ex_misaligned_load  = (id_ex_mem_read  && ex_misaligned_mem) || (ex_v_load  && ex_v_mis);
-    assign ex_misaligned_store = (id_ex_mem_write && ex_misaligned_mem) || (ex_v_store && ex_v_mis);
+    // Scalar unaligned accesses are completed by the banked SoC BRAM. The
+    // RVFI harness uses its standard aligned-memory model, which cannot
+    // describe a single access spanning two words, so that build retains the
+    // architectural trap behavior for its proof boundary.
+`ifdef RISCV_FORMAL
+    assign ex_misaligned_load  = id_ex_mem_read  && ex_misaligned_mem;
+    assign ex_misaligned_store = id_ex_mem_write && ex_misaligned_mem;
+`else
+    assign ex_misaligned_load  = ex_v_load  && ex_v_mis;
+    assign ex_misaligned_store = ex_v_store && ex_v_mis;
+`endif
     // Taken jump/branch to an address that is not 4-byte aligned (no C extension)
     assign ex_misaligned_fetch = control_taken && control_target[1];
+
+    always_comb begin
+        case (id_ex_funct3[1:0])
+            2'b00:   pmp_data_size = 4'd1;
+            2'b01:   pmp_data_size = 4'd2;
+            2'b10:   pmp_data_size = 4'd4;
+            default: pmp_data_size = (XLEN == 64) ? 4'd8 : 4'd4;
+        endcase
+    end
+
+    pmp_unit #(.XLEN(XLEN)) u_pmp_inst (
+        .addr(pc), .access_size(4'd4),
+        .access_r(1'b0), .access_w(1'b0), .access_x(1'b1),
+        .current_priv(current_priv), .pmpcfg0(ex_csr_pmpcfg0),
+        .pmpaddr0(ex_csr_pmpaddr0), .pmpaddr1(ex_csr_pmpaddr1),
+        .pmpaddr2(ex_csr_pmpaddr2), .pmpaddr3(ex_csr_pmpaddr3),
+        .allow(pmp_inst_allow)
+    );
+
+    pmp_unit #(.XLEN(XLEN)) u_pmp_data (
+        .addr(ex_alu_result_raw), .access_size(pmp_data_size),
+        .access_r(id_ex_mem_read), .access_w(id_ex_mem_write), .access_x(1'b0),
+        .current_priv(current_priv), .pmpcfg0(ex_csr_pmpcfg0),
+        .pmpaddr0(ex_csr_pmpaddr0), .pmpaddr1(ex_csr_pmpaddr1),
+        .pmpaddr2(ex_csr_pmpaddr2), .pmpaddr3(ex_csr_pmpaddr3),
+        .allow(pmp_data_allow)
+    );
+
+    assign pmp_inst_fault   = !pmp_inst_allow;
+    assign pmp_data_fault   = (id_ex_mem_read || id_ex_mem_write) && !pmp_data_allow;
+    assign pmp_access_fault = pmp_inst_fault || pmp_data_fault;
+    assign pmp_access_cause = pmp_inst_fault ? {{(XLEN-2){1'b0}}, 2'd1} :
+                              (id_ex_mem_write ? {{(XLEN-3){1'b0}}, 3'd7}
+                                               : {{(XLEN-3){1'b0}}, 3'd5});
+    assign pmp_access_addr  = pmp_inst_fault ? pc : ex_alu_result_raw;
 
     // EX-stage exceptions and interrupts are only taken while MEM is not
     // frozen, otherwise the trap redirect could not update the PC.
@@ -977,7 +1037,10 @@ module cpu_top_soc #(
     assign ex_illegal  = id_ex_illegal ||
                          (id_ex_csr_en  && ex_csr_illegal) ||
                          (id_ex_mret_r  && (current_priv != 2'b11)) ||
-                         id_ex_sret_r ||                    // no S-mode: SRET is illegal
+                         (id_ex_sret_r  && ((current_priv == 2'b00) ||
+                          (current_priv == 2'b01 && ex_csr_mstatus[22]))) ||
+                         (id_ex_sfence  && ((current_priv == 2'b00) ||
+                          (current_priv == 2'b01 && ex_csr_mstatus[20]))) ||
                          ex_f_illegal || ex_v_illegal;
     // Interrupts complete the EX instruction and resume after it, so EX must
     // hold a real instruction that has finished and has no side effects that
@@ -1006,23 +1069,32 @@ module cpu_top_soc #(
         .page_fault      (page_fault_exception),
         .page_fault_cause(page_fault_cause),
         .page_fault_addr (inst_fault ? pc : ex_mem_alu_result),
+        .access_fault    (pmp_access_fault),
+        .access_fault_cause(pmp_access_cause),
+        .access_fault_addr(pmp_access_addr),
         .ext_interrupt   (ext_interrupt),
         .irq_enable      (irq_enable),
         .mstatus         (ex_csr_mstatus),
         .mie             (ex_csr_mie),
+        .mip             (ex_csr_mip),
         .mtvec           (ex_csr_mtvec),
+        .stvec           (ex_csr_stvec),
+        .mideleg         (ex_csr_mideleg),
+        .medeleg         (ex_csr_medeleg),
         .mcause_out      (trap_mcause),
         .mepc_out        (trap_mepc),
         .mtval_out       (trap_mtval),
         .mip_out         (mip),
         .trap_taken      (trap_taken),
+        .trap_to_s       (trap_to_s),
         .trap_pc         (trap_pc),
         .trap_cause      (trap_kind)
     );
 
     // An exception raised by the EX instruction squashes it (no writeback)
     logic ex_exc_taken;
-    assign ex_exc_taken = trap_taken && (trap_kind == 2'b01) && !page_fault_exception;
+    assign ex_exc_taken = trap_taken && (trap_kind == 2'b01) &&
+                          !page_fault_exception && !pmp_access_fault;
 
     // FP flags / FS and vector configuration commit when the EX instruction completes
     assign ex_fp_flags_valid = id_ex_fp_en && fpu_done && !ex_f_illegal && !trap_taken;
@@ -1264,9 +1336,8 @@ module cpu_top_soc #(
     assign dmem_wdata  = id_ex_fp_store ?
                          {{(XLEN-32){1'b0}}, id_ex_fp_rs2} :
                          ex_fwd_b[31:0]; // Use forwarded data directly
-    // A misaligned access raises an exception and must not reach the bus
-    assign dmem_rd_en  = id_ex_mem_read  && !ex_misaligned_mem && !ex_f_illegal;
-    assign dmem_wr_en  = id_ex_mem_write && !ex_misaligned_mem && !ex_f_illegal;
+    assign dmem_rd_en  = id_ex_mem_read  && !ex_f_illegal && pmp_data_allow;
+    assign dmem_wr_en  = id_ex_mem_write && !ex_f_illegal && pmp_data_allow;
     assign dmem_funct3 = id_ex_funct3;
 
     // ---- Receive load data from external bus ----
@@ -1276,14 +1347,18 @@ module cpu_top_soc #(
     logic [15:0] load_half;
 
     always_comb begin
+`ifdef RISCV_FORMAL
         case (ex_mem_alu_result[1:0])
             2'b00: load_byte = dmem_rdata[7:0];
             2'b01: load_byte = dmem_rdata[15:8];
             2'b10: load_byte = dmem_rdata[23:16];
             default: load_byte = dmem_rdata[31:24];
         endcase
-
         load_half = ex_mem_alu_result[1] ? dmem_rdata[31:16] : dmem_rdata[15:0];
+`else
+        load_byte = dmem_rdata[7:0];
+        load_half = dmem_rdata[15:0];
+`endif
 
         case (ex_mem_funct3)
             3'b000:  load_data32 = {{24{load_byte[7]}}, load_byte};    // LB
@@ -1443,6 +1518,7 @@ module cpu_top_soc #(
     end
     assign rv_pc_wdata = ex_exc_taken  ? trap_pc[31:0] :
                          id_ex_mret_r  ? ex_csr_mepc[31:0] :
+                         id_ex_sret_r  ? ex_csr_sepc[31:0] :
                          control_taken ? control_target[31:0] : (id_ex_pc[31:0] + 32'd4);
     assign rv_leave_ex = !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
     assign rv_rd_we    = id_ex_reg_write && (id_ex_rd != 5'd0) && !ex_exc_taken;

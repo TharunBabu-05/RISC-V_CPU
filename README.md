@@ -21,6 +21,11 @@
 
 ## ✨ Project Snapshot
 
+For a source-derived visual explanation of the CPU pipeline, FPGA SoC, firmware build,
+verification flow, and UART runtime path, open
+[`riscv_processor_cpu/docs/architecture_workflow.html`](riscv_processor_cpu/docs/architecture_workflow.html)
+in a browser.
+
 This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with real firmware over UART.
 
 The current hardware milestone is no longer just simulation: the CPU boots from on-chip BRAM, talks through a memory-mapped UART peripheral, accepts keyboard input from PuTTY, and runs a playable **Snake game** compiled as bare-metal firmware.
@@ -63,13 +68,15 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | 5-stage pipeline | ✅ | IF, ID, EX, MEM, WB |
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
 | M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
-| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+17.154 ns**, 0 failing endpoints |
-| CSR / exception infrastructure | ✅ | Machine/user modes, precise exceptions and interrupts, vectored `mtvec`, 64-bit counters |
-| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, BRAM, UART, LEDs |
-| UART bring-up | ✅ | Hello + keyboard echo verified on real board |
-| C firmware support | ✅ | `startup.S`, linker script, UART driver, byte load/store fixes |
+| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+6.802 ns**, WHS **+0.028 ns**, 0 failing endpoints |
+| CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
+| Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
+| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, LEDs |
+| UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
+| C firmware support | ✅ | `startup.S`, linker script, UART driver, aligned and cross-word byte/halfword/word accesses |
+| Cache hierarchy | ✅ | Direct-mapped L1 I/D and L2 caches with refill, invalidation, write-through stores, and counters |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
-| ISA compliance (riscv-tests) | ✅ | All applicable official tests pass: 64/64 on the FPGA design, 75/75 on the research core (rv32ui/um/mi/uf) |
+| ISA compliance (riscv-tests) | ✅ | All applicable official tests pass: 66/66 FPGA, 77/77 research, 11/11 FPGA + FPU; zero N/A |
 | Formal verification (riscv-formal) | ✅ | 52/52 checks pass on the FPGA core: every RV32IM instruction proven against the ISA model |
 | F extension / RVV subset | ✅ | IEEE-754 RV32F unit and RVV 1.0 integer subset in the research core (not in the FPGA build) |
 
@@ -77,39 +84,39 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 
 ## ✅ Synthesis & Implementation Proof
 
-Screenshots from Vivado 2020.2 for the `rv32_soc_arty_s7` project (`xc7s50csga324-1`), taken after the timing fix and used to build the bitstream that runs Snake on the board.
+Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7s50csga324-1`). They show the current synthesis, implementation, utilization, and timing results. The generated bitstream is ready for the next physical-board programming pass; the earlier board proof documents Hello/Echo and Snake running on this processor.
 
 ### Synthesis — `synth_1` complete
 
 <div align="center">
-  <img src="proof/vivado_synthesis_design_runs.png" alt="Vivado Design Runs: synth_1 complete with resource usage" width="96%">
+  <img src="proof/vivado_synthesis_design_runs_2.png" alt="Vivado Design Runs: updated synth_1 and impl_1 resource usage" width="96%">
 </div>
 
 | Resource | Used | Available | Utilization |
 | :--- | ---: | ---: | ---: |
-| Slice LUTs | 4,445 | 32,600 | 13.6 % |
-| Flip-flops | 5,228 | 65,200 | 8.0 % |
-| Block RAM tiles | 16 | 75 | 21.3 % |
-| DSP slices | 11 | 120 | 9.2 % |
+| Slice LUTs | 6,475 | 32,600 | 19.9 % |
+| Flip-flops | 3,869 | 65,200 | 5.9 % |
+| Block RAM tiles | 32 | 75 | 42.7 % |
+| DSP slices | 4 | 120 | 3.3 % |
 
 ### Implementation — all timing constraints met
 
 <div align="center">
-  <img src="proof/vivado_implementation_timing_met.png" alt="Vivado Design Timing Summary: all user specified timing constraints are met" width="96%">
+  <img src="proof/vivado_implementation_timing_met_2.png" alt="Updated Vivado Design Timing Summary: all user specified timing constraints are met" width="96%">
 </div>
 
 | Check | Worst slack | Total negative slack | Failing endpoints |
 | :--- | ---: | ---: | ---: |
-| Setup | **+17.154 ns** | 0.000 ns | 0 / 16,038 |
-| Hold | +0.023 ns | 0.000 ns | 0 / 16,038 |
-| Pulse width | +16.667 ns | 0.000 ns | 0 / 5,271 |
+| Setup | **+6.802 ns** | 0.000 ns | 0 / 12,261 |
+| Hold | **+0.028 ns** | 0.000 ns | 0 / 12,261 |
+| Pulse width | +16.667 ns | 0.000 ns | 0 / 3,942 |
 
 ### Before vs after the timing fix
 
 | | Before | After |
 | :--- | :---: | :---: |
-| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+17.154 ns** (0 failing) |
-| Slice LUTs | 9,683 | 4,445 |
+| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+6.802 ns** (0 failing) |
+| Slice LUTs | 9,683 | 6,367 after implementation |
 | Timing status | Constraints **not** met | All constraints met |
 
 ---
@@ -218,7 +225,27 @@ The fix:
 - `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
 - The FPU stub's divider was removed from the board build (the FPU now uses its own iterative FDIV/FSQRT and is not part of the FPGA SoC by default).
 
-Result: setup slack went from **−61.3 ns to +17.2 ns**, and LUT usage dropped by more than half. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+Result: the current hardened design closes timing with **+6.802 ns setup slack** and **+0.028 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+
+### 5. UART RX Read/Arrival Collision
+
+RX arrival now has priority when a CPU read and a newly completed UART byte occur in the same cycle. The replacement byte remains valid instead of being silently cleared.
+
+### 6. Physical Memory Protection
+
+The core now implements four PMP entries with OFF, TOR, NA4 and NAPOT regions, lowest-entry priority, machine-mode bypass rules, lock bits, and instruction/load/store access-fault generation.
+
+### 7. Hardware Misaligned Accesses
+
+Scalar byte, halfword and word operations can cross a 32-bit word boundary. The FPGA memory uses even/odd true dual-port BRAM banks so both adjacent words are available in one cycle while still mapping to block RAM.
+
+### 8. Supervisor Privilege
+
+The privileged architecture now supports M/S/U modes, trap and interrupt delegation, supervisor CSRs and aliases, `SRET`, Sv32 permission checks, `SUM`, `MXR`, `TVM`, and `TSR` behavior.
+
+### 9. Functional Cache Hierarchy
+
+The research core now has direct-mapped L1 instruction/data caches and a unified L2 with refill, write-through stores, invalidation and hit/miss counters. The backing DRAM controller is a synthesizable zero-wait model; a physical DDR PHY remains board-specific work.
 
 ---
 
@@ -348,14 +375,17 @@ Snake controls:
 
 | Layer | Command | Result |
 | :--- | :--- | :--- |
-| Directed + unit testbenches | `make regress` | 22/22 pass (incl. 43,013 FPU and 12,200 vector reference vectors) |
-| Official riscv-tests (ISA compliance) | `make compliance` | FPGA design 64/64, research core 75/75, FPGA + FPU 11/11 (2 tests N/A: need PMP / hardware misaligned access) |
+| Directed + unit testbenches | `make regress` | 26/26 pass (incl. PMP, S-mode delegation, unaligned BRAM, 43,013 FPU and 12,200 vector vectors) |
+| UART loopback + collision | UART testbench | 20/20 bytes pass, including simultaneous receive/read |
+| Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
-| Timing closure (Vivado, 25 MHz) | — | All constraints met (see proof screenshots above) |
+| Timing closure (Vivado, 25 MHz) | — | WNS +6.802 ns, WHS +0.028 ns, 0 failing endpoints |
+| FPGA bitstream | Vivado 2020.2 | Synthesis, placement, routing and `write_bitstream` complete with 0 errors |
 | On the board | — | Hello/echo and Snake running on the Arty S7-50 |
 
-The verification flows found and fixed real bugs along the way (wrong-path fetch from stale branch predictions,
-stale operands behind a cache miss, `minstret` timing, an S-mode inconsistency). Details:
+The verification flows found and fixed real bugs along the way, including wrong-path fetch from stale branch
+predictions, stale operands behind cache misses, `minstret` timing, UART RX collisions, PMP corner cases,
+cross-word memory accesses, and M/S/U privilege transitions. Details:
 [compliance](riscv_processor_cpu/docs/phase5_compliance.md),
 [formal](riscv_processor_cpu/docs/phase5_formal_verification.md),
 [FPU / vector](riscv_processor_cpu/docs/fp_extension.md).

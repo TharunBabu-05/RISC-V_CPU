@@ -18,7 +18,7 @@ from pathlib import Path
 
 CPU = Path(__file__).resolve().parent.parent
 SIM = CPU / "sim" / "regress"          # build/run directory (not committed)
-RTL = ["alu", "muldiv", "regfile", "imm_gen", "csr_file", "interrupt_unit", "branch_predictor", "fp_regfile",
+RTL = ["alu", "muldiv", "regfile", "imm_gen", "csr_file", "interrupt_unit", "pmp_unit", "branch_predictor", "fp_regfile",
        "fpu_unit", "vector_regfile", "vector_unit", "control_unit", "hazard", "memory", "dram_ctrl", "l2_cache",
        "dcache", "icache", "mmu", "cpu_top"]
 
@@ -26,11 +26,13 @@ RTL = ["alu", "muldiv", "regfile", "imm_gen", "csr_file", "interrupt_unit", "bra
 CPU_TBS = ["tb_cpu", "tb_muldiv", "tb_branch_edge", "tb_cpu64", "tb_mmu", "tb_fp", "tb_vector", "tb_phase6_alu",
            "tb_phase6_hazards", "tb_phase6_control", "tb_csr_forward", "tb_dcache_store", "tb_branch_predict",
            "tb_irq_precise", "tb_trap", "tb_mem_stall", "tb_rv64_jalr", "tb_btb_stale"]
+CPU_TBS += ["tb_pmp", "tb_privilege", "tb_unaligned"]
 # unit testbenches: (name, rtl modules, vector generator)
 UNIT_TBS = [("tb_muldiv_unit", ["muldiv"], None),
             ("tb_mmu_unit", ["mmu"], None),
             ("tb_fpu_unit", ["fpu_unit"], "fpu_ref.py"),
             ("tb_vector_unit", ["vector_unit"], "vec_ref.py")]
+UNIT_TBS += [("tb_bram_unaligned", ["../phase8/rtl/bram"], None)]
 
 
 def run(cmd, **kw):

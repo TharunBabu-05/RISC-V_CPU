@@ -3,7 +3,9 @@
 ## Measured result (FPGA)
 
 The FPGA design (`phase8/rtl/soc_top.sv`, Arty S7-50, Vivado 2020.2) meets all timing constraints at 25 MHz:
-worst setup slack +14.6 ns, 0 failing setup/hold endpoints; 3,749 LUTs, 3,674 flip-flops, 4 DSPs, 16 BRAM tiles.
+worst setup slack +6.802 ns, worst hold slack +0.028 ns, 0 failing endpoints; 6,367 LUTs, 3,870 flip-flops,
+4 DSPs, and 32 BRAM tiles. The logical 64KB memory uses duplicated even/odd word banks so an unaligned
+32-bit access can read or write adjacent words in one cycle.
 The first implementation missed timing by 61 ns because of single-cycle combinational dividers; see the main
 README ("Timing Closure"). Board screenshots: `proof/`.
 
@@ -29,12 +31,12 @@ set_false_path -from [get_ports rst_n]
 
 ## 2) Memory Macro Replacement
 
-Current simulation models (`memory.sv`, cache/MMU path) are behavioral.
-For implementation:
+The research-core memory and cache/MMU path are synthesizable behavioral models. The FPGA SoC uses the
+inferred true dual-port block-RAM wrapper in `phase8/rtl/bram.sv`. For other implementations:
 
 - **FPGA path**
-  - Replace inferred arrays with vendor BRAM primitives/IP.
-  - Keep byte-enable behavior aligned with store semantics.
+  - Keep the inferred arrays or replace them with equivalent vendor BRAM primitives/IP.
+  - Preserve the parity-bank mapping and sequential byte-enable behavior.
 - **ASIC path**
   - Replace arrays with foundry SRAM macros.
   - Add wrapper modules for read/write latency alignment.

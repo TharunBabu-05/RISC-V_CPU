@@ -11,6 +11,7 @@ module mmu #(
     input  logic            rst_n,
 
     input  logic [XLEN-1:0] satp,
+    input  logic [XLEN-1:0] mstatus,
     input  logic [1:0]      current_priv,
     input  logic            sfence,
 
@@ -53,8 +54,9 @@ module mmu #(
     assign satp_mode = satp[31];
     assign satp_ppn  = satp[PPN_BITS-1:0];
     assign satp_asid = satp[30:22];
-    // MMU enabled: Sv32 mode active (M-mode exempt from translation on real HW, but enabled for testing)
-    assign mmu_en    = (XLEN == 32) && satp_mode;
+    // Sv32 translates S/U accesses. M-mode uses physical addresses unless a
+    // future implementation adds MPRV for explicit effective-privilege loads.
+    assign mmu_en    = (XLEN == 32) && satp_mode && (current_priv != PRIV_M);
 
     logic               itlb_valid [0:TLB_ENTRIES-1];
     logic [VPN_BITS-1:0] itlb_vpn   [0:TLB_ENTRIES-1];
@@ -65,6 +67,7 @@ module mmu #(
     logic               itlb_x     [0:TLB_ENTRIES-1];
     logic               itlb_a     [0:TLB_ENTRIES-1];
     logic               itlb_d     [0:TLB_ENTRIES-1];
+    logic               itlb_u     [0:TLB_ENTRIES-1];
     logic               itlb_super [0:TLB_ENTRIES-1];  // 4 MiB megapage
 
     logic               dtlb_valid [0:TLB_ENTRIES-1];
@@ -76,6 +79,7 @@ module mmu #(
     logic               dtlb_x     [0:TLB_ENTRIES-1];
     logic               dtlb_a     [0:TLB_ENTRIES-1];
     logic               dtlb_d     [0:TLB_ENTRIES-1];
+    logic               dtlb_u     [0:TLB_ENTRIES-1];
     logic               dtlb_super [0:TLB_ENTRIES-1];  // 4 MiB megapage
 
     logic [VPN_BITS-1:0] inst_vpn;
@@ -120,18 +124,30 @@ module mmu #(
         input logic pte_r,
         input logic pte_w,
         input logic pte_x,
+        input logic pte_u,
         input logic pte_a,
         input logic pte_d
     );
+        logic readable, privilege_ok;
         begin
+            readable = pte_r || (mstatus[19] && pte_x); // MXR
+            if (current_priv == PRIV_U)
+                privilege_ok = pte_u;
+            else if (current_priv == PRIV_S)
+                privilege_ok = is_inst ? !pte_u : (!pte_u || mstatus[18]); // SUM
+            else
+                privilege_ok = 1'b1;
+
             if (!pte_a)
+                perm_ok = 1'b0;
+            else if (!privilege_ok)
                 perm_ok = 1'b0;
             else if (is_inst)
                 perm_ok = pte_x;
             else if (is_store)
                 perm_ok = pte_w && pte_d;
             else
-                perm_ok = pte_r;
+                perm_ok = readable;
         end
     endfunction
 
@@ -153,10 +169,10 @@ module mmu #(
     assign itlb_ppn_hit = itlb_ppn[itlb_idx];
     assign dtlb_ppn_hit = dtlb_ppn[dtlb_idx];
     assign itlb_perm_ok = perm_ok(1'b1, 1'b0,
-                                  itlb_r[itlb_idx], itlb_w[itlb_idx], itlb_x[itlb_idx],
+                                  itlb_r[itlb_idx], itlb_w[itlb_idx], itlb_x[itlb_idx], itlb_u[itlb_idx],
                                   itlb_a[itlb_idx], itlb_d[itlb_idx]);
     assign dtlb_perm_ok = perm_ok(1'b0, data_write,
-                                  dtlb_r[dtlb_idx], dtlb_w[dtlb_idx], dtlb_x[dtlb_idx],
+                                  dtlb_r[dtlb_idx], dtlb_w[dtlb_idx], dtlb_x[dtlb_idx], dtlb_u[dtlb_idx],
                                   dtlb_a[dtlb_idx], dtlb_d[dtlb_idx]);
     assign req_vpn0 = req_vaddr[21:12];
     assign req_vpn1 = req_vaddr[31:22];
@@ -234,9 +250,9 @@ module mmu #(
                 itlb_asid[i] <= 9'd0;
                 dtlb_asid[i] <= 9'd0;
                 itlb_r[i] <= 1'b0; itlb_w[i] <= 1'b0; itlb_x[i] <= 1'b0;
-                itlb_a[i] <= 1'b0; itlb_d[i] <= 1'b0; itlb_super[i] <= 1'b0;
+                itlb_u[i] <= 1'b0; itlb_a[i] <= 1'b0; itlb_d[i] <= 1'b0; itlb_super[i] <= 1'b0;
                 dtlb_r[i] <= 1'b0; dtlb_w[i] <= 1'b0; dtlb_x[i] <= 1'b0;
-                dtlb_a[i] <= 1'b0; dtlb_d[i] <= 1'b0; dtlb_super[i] <= 1'b0;
+                dtlb_u[i] <= 1'b0; dtlb_a[i] <= 1'b0; dtlb_d[i] <= 1'b0; dtlb_super[i] <= 1'b0;
             end
         end else begin
             fault_pending <= 1'b0;
@@ -267,7 +283,7 @@ module mmu #(
                     end
 
                     S_L1: begin
-                        logic pte_v, pte_r, pte_w, pte_x, pte_a, pte_d;
+                        logic pte_v, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d;
                         logic [PPN_BITS-1:0] pte_ppn;
                         logic pte_ok;
 
@@ -275,6 +291,7 @@ module mmu #(
                         pte_r = ptw_rdata[1];
                         pte_w = ptw_rdata[2];
                         pte_x = ptw_rdata[3];
+                        pte_u = ptw_rdata[4];
                         pte_a = ptw_rdata[6];
                         pte_d = ptw_rdata[7];
                         pte_ppn = ptw_rdata[31:10];
@@ -285,7 +302,7 @@ module mmu #(
                             fault_is_inst <= req_is_inst;
                             state <= S_IDLE;
                         end else if (pte_r || pte_x) begin
-                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_a, pte_d);
+                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
                             if (!pte_ok) begin
                                 fault_pending <= 1'b1;
                                 fault_is_inst <= req_is_inst;
@@ -298,6 +315,7 @@ module mmu #(
                                 itlb_r[itlb_wr_ptr]     <= pte_r;
                                 itlb_w[itlb_wr_ptr]     <= pte_w;
                                 itlb_x[itlb_wr_ptr]     <= pte_x;
+                                itlb_u[itlb_wr_ptr]     <= pte_u;
                                 itlb_a[itlb_wr_ptr]     <= pte_a;
                                 itlb_d[itlb_wr_ptr]     <= pte_d;
                                 itlb_super[itlb_wr_ptr] <= 1'b1;
@@ -310,6 +328,7 @@ module mmu #(
                                 dtlb_r[dtlb_wr_ptr]     <= pte_r;
                                 dtlb_w[dtlb_wr_ptr]     <= pte_w;
                                 dtlb_x[dtlb_wr_ptr]     <= pte_x;
+                                dtlb_u[dtlb_wr_ptr]     <= pte_u;
                                 dtlb_a[dtlb_wr_ptr]     <= pte_a;
                                 dtlb_d[dtlb_wr_ptr]     <= pte_d;
                                 dtlb_super[dtlb_wr_ptr] <= 1'b1;
@@ -323,7 +342,7 @@ module mmu #(
                     end
 
                     S_L0: begin
-                        logic pte_v, pte_r, pte_w, pte_x, pte_a, pte_d;
+                        logic pte_v, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d;
                         logic [PPN_BITS-1:0] pte_ppn;
                         logic pte_ok;
 
@@ -331,6 +350,7 @@ module mmu #(
                         pte_r = ptw_rdata[1];
                         pte_w = ptw_rdata[2];
                         pte_x = ptw_rdata[3];
+                        pte_u = ptw_rdata[4];
                         pte_a = ptw_rdata[6];
                         pte_d = ptw_rdata[7];
                         pte_ppn = ptw_rdata[31:10];
@@ -340,7 +360,7 @@ module mmu #(
                             fault_is_inst <= req_is_inst;
                             state <= S_IDLE;
                         end else begin
-                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_a, pte_d);
+                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
                             if (pte_ok) begin
                                 if (req_is_inst) begin
                                     itlb_valid[itlb_wr_ptr] <= 1'b1;
@@ -351,6 +371,7 @@ module mmu #(
                                     itlb_r[itlb_wr_ptr]     <= pte_r;
                                     itlb_w[itlb_wr_ptr]     <= pte_w;
                                     itlb_x[itlb_wr_ptr]     <= pte_x;
+                                    itlb_u[itlb_wr_ptr]     <= pte_u;
                                     itlb_a[itlb_wr_ptr]     <= pte_a;
                                     itlb_d[itlb_wr_ptr]     <= pte_d;
                                     itlb_wr_ptr <= (itlb_wr_ptr + 1) % TLB_ENTRIES;
@@ -363,6 +384,7 @@ module mmu #(
                                     dtlb_r[dtlb_wr_ptr]     <= pte_r;
                                     dtlb_w[dtlb_wr_ptr]     <= pte_w;
                                     dtlb_x[dtlb_wr_ptr]     <= pte_x;
+                                    dtlb_u[dtlb_wr_ptr]     <= pte_u;
                                     dtlb_a[dtlb_wr_ptr]     <= pte_a;
                                     dtlb_d[dtlb_wr_ptr]     <= pte_d;
                                     dtlb_wr_ptr <= (dtlb_wr_ptr + 1) % TLB_ENTRIES;

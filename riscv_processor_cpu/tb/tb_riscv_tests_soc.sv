@@ -35,8 +35,12 @@ module tb_riscv_tests_soc #(
         if (!$value$plusargs("TIMEOUT=%d", timeout)) timeout = 200000;
 
         #1;
-        for (int i = 0; i < 16384; i++) dut.u_bram.mem[i] = 32'h0;
-        $readmemh(hex, dut.u_bram.mem);
+        for (int i = 0; i < 16384; i++) begin
+            dut.u_bram.even_mem[i] = 32'h0;
+            dut.u_bram.odd_mem[i]  = 32'h0;
+        end
+        $readmemh(hex, dut.u_bram.even_mem);
+        $readmemh(hex, dut.u_bram.odd_mem);
 
         #100 rst_btn = 0;
         wait (dut.rst_n);
@@ -45,7 +49,8 @@ module tb_riscv_tests_soc #(
         while (word == 32'h0 && cycles < timeout) begin
             @(posedge clk);
             #2;
-            word = dut.u_bram.mem[tohost[15:2]];
+            word = tohost[2] ? dut.u_bram.odd_mem[tohost[15:2]]
+                             : dut.u_bram.even_mem[tohost[15:2]];
             cycles++;
         end
 

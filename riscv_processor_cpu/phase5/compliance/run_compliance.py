@@ -37,20 +37,16 @@ DEFAULT_TESTS = CPU.parent / "riscv-tests"
 BUILD = HERE / "build"
 RESULTS = HERE / "results"
 
-RTL_RESEARCH = ["alu", "muldiv", "regfile", "imm_gen", "csr_file", "interrupt_unit", "branch_predictor",
+RTL_RESEARCH = ["alu", "muldiv", "regfile", "imm_gen", "csr_file", "interrupt_unit", "pmp_unit", "branch_predictor",
                 "fp_regfile", "fpu_unit", "vector_regfile", "vector_unit", "control_unit", "hazard", "memory",
                 "dram_ctrl", "l2_cache", "dcache", "icache", "mmu", "cpu_top"]
-RTL_SOC_SHARED = ["alu", "branch_predictor", "control_unit", "csr_file", "fp_regfile", "fpu_unit", "hazard",
+RTL_SOC_SHARED = ["alu", "branch_predictor", "control_unit", "csr_file", "fp_regfile", "fpu_unit", "hazard", "pmp_unit",
                   "imm_gen", "interrupt_unit", "regfile", "vector_regfile", "vector_unit", "muldiv"]
 RTL_SOC = ["soc_top", "cpu_top_soc", "uart_tx", "uart_rx", "uart", "bram"]
 
 # Tests that need an optional feature this CPU does not implement. They are
 # still run and reported, as N/A, and do not count as failures.
-NOT_APPLICABLE = {
-    "rv32ui-ma_data": "needs hardware misaligned load/store support; this core traps on "
-                      "misaligned accesses instead (allowed by the ISA, see rv32mi-*-misaligned)",
-    "rv32mi-pmpaddr": "needs Physical Memory Protection (PMP), which is not implemented",
-}
+NOT_APPLICABLE = {}
 
 CORES = {
     #           suites run by default                 -march for the tests      link base

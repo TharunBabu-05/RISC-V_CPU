@@ -59,8 +59,12 @@ module cpu_top #(
     // ===================================================
     logic [XLEN-1:0] pc, pc_next, pc_plus4;
     logic [31:0] if_instr;
-    logic [XLEN-1:0] inst_paddr;
-    logic            inst_ready, inst_fault;
+    logic [XLEN-1:0] inst_paddr, data_paddr;
+    logic            inst_ready, inst_fault, data_ready, data_fault;
+    logic            data_req, mem_page_fault, mem_page_fault_store;
+    logic            pmp_inst_allow, pmp_data_allow, pmp_inst_fault, pmp_data_fault, pmp_access_fault;
+    logic [XLEN-1:0] pmp_access_cause, pmp_access_addr;
+    logic            icache_invalidate;
     logic            predict_valid, predict_taken;
     logic [XLEN-1:0] predict_target;
 
@@ -76,6 +80,8 @@ module cpu_top #(
     // existing directed testbenches can still patch instruction storage.
     icache #(.XLEN(XLEN), .IMEM_FILE(IMEM_FILE)) u_imem (
         .clk  (clk),
+        .rst_n(rst_n),
+        .invalidate(icache_invalidate),
         .addr (inst_paddr),
         .instr(if_instr)
     );
@@ -742,13 +748,18 @@ module cpu_top #(
 
     // CSR handling (Zicsr)
     logic [XLEN-1:0] ex_csr_rdata, ex_csr_wdata, ex_csr_src;
-    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mtvec, ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
+    logic [XLEN-1:0] ex_csr_mstatus, ex_csr_mie, ex_csr_mip, ex_csr_mtvec, ex_csr_stvec;
+    logic [XLEN-1:0] ex_csr_mepc, ex_csr_sepc, ex_csr_satp;
+    logic [XLEN-1:0] ex_csr_mideleg, ex_csr_medeleg;
+    logic [31:0]     ex_csr_pmpcfg0;
+    logic [XLEN-1:0] ex_csr_pmpaddr0, ex_csr_pmpaddr1, ex_csr_pmpaddr2, ex_csr_pmpaddr3;
     logic [1:0]      current_priv;
     logic [XLEN-1:0] trap_pc, trap_mcause, trap_mepc, trap_mtval, mip;
     logic [1:0]      trap_kind;
     logic            ex_csr_illegal, ex_csr_write_attempt;
     logic        ex_csr_write;
     logic        trap_taken;
+    logic        trap_to_s;
     logic        wb_retire;
 
     assign ex_csr_src = id_ex_csr_op[2] ? id_ex_csr_zimm : ex_fwd_a;
@@ -764,6 +775,7 @@ module cpu_top #(
         .rst_n       (rst_n),
         .csr_write   (ex_csr_write && !mem_stall && !mmu_stall),
         .trap_write  (trap_taken),
+        .trap_to_s   (trap_to_s),
         .mret_exec   (id_ex_mret_r && !mem_stall && !mmu_stall),
         .sret_exec   (id_ex_sret_r && !mem_stall && !mmu_stall),
         .retire      (wb_retire),
@@ -788,14 +800,21 @@ module cpu_top #(
         .vstart_out  (ex_vstart),
         .mstatus_out (ex_csr_mstatus),
         .mie_out     (ex_csr_mie),
+        .mip_out     (ex_csr_mip),
         .mtvec_out   (ex_csr_mtvec),
+        .stvec_out   (ex_csr_stvec),
         .mepc_out    (ex_csr_mepc),
         .sepc_out    (ex_csr_sepc),
         .satp_out    (ex_csr_satp),
         .current_priv_out(current_priv),
         .mcause_out  (),
-        .mideleg_out (),
-        .medeleg_out ()
+        .mideleg_out (ex_csr_mideleg),
+        .medeleg_out (ex_csr_medeleg),
+        .pmpcfg0_out (ex_csr_pmpcfg0),
+        .pmpaddr0_out(ex_csr_pmpaddr0),
+        .pmpaddr1_out(ex_csr_pmpaddr1),
+        .pmpaddr2_out(ex_csr_pmpaddr2),
+        .pmpaddr3_out(ex_csr_pmpaddr3)
     );
 
     always_comb begin
@@ -900,15 +919,15 @@ module cpu_top #(
                               mem_page_fault_store ? EXC_STORE_PAGE : EXC_LOAD_PAGE;
 
     always_comb begin
-        if (inst_fault)
+        if (inst_fault || pmp_inst_fault)
             exc_pc = pc;
-        else if (mem_page_fault)
+        else if (mem_page_fault || pmp_data_fault)
             exc_pc = ex_mem_pc;
         else
             exc_pc = id_ex_pc;
     end
 
-    // Misaligned data access (no hardware support: raise an exception)
+    // Scalar unaligned accesses are completed by the memory hierarchy.
     logic ex_misaligned_mem, ex_misaligned_load, ex_misaligned_store, ex_misaligned_fetch;
     always_comb begin
         case (id_ex_funct3[1:0])
@@ -918,8 +937,8 @@ module cpu_top #(
             default: ex_misaligned_mem = |ex_alu_result_raw[2:0];      // doubleword
         endcase
     end
-    assign ex_misaligned_load  = (id_ex_mem_read  && ex_misaligned_mem) || (ex_v_load  && ex_v_mis);
-    assign ex_misaligned_store = (id_ex_mem_write && ex_misaligned_mem) || (ex_v_store && ex_v_mis);
+    assign ex_misaligned_load  = ex_v_load  && ex_v_mis;
+    assign ex_misaligned_store = ex_v_store && ex_v_mis;
     // Taken jump/branch to an address that is not 4-byte aligned (no C extension)
     assign ex_misaligned_fetch = control_taken && control_target[1];
 
@@ -930,7 +949,10 @@ module cpu_top #(
     assign ex_illegal  = id_ex_illegal ||
                          (id_ex_csr_en  && ex_csr_illegal) ||
                          (id_ex_mret_r  && (current_priv != 2'b11)) ||
-                         id_ex_sret_r ||                    // no S-mode: SRET is illegal
+                         (id_ex_sret_r  && ((current_priv == 2'b00) ||
+                          (current_priv == 2'b01 && ex_csr_mstatus[22]))) ||
+                         (id_ex_sfence  && ((current_priv == 2'b00) ||
+                          (current_priv == 2'b01 && ex_csr_mstatus[20]))) ||
                          ex_f_illegal || ex_v_illegal;
     // Interrupts complete the EX instruction and resume after it, so EX must
     // hold a real instruction that has finished and has no side effects that
@@ -959,23 +981,32 @@ module cpu_top #(
         .page_fault      (page_fault_exception),
         .page_fault_cause(page_fault_cause),
         .page_fault_addr (inst_fault ? pc : ex_mem_alu_result),
+        .access_fault    (pmp_access_fault),
+        .access_fault_cause(pmp_access_cause),
+        .access_fault_addr(pmp_access_addr),
         .ext_interrupt   (ext_interrupt),
         .irq_enable      (irq_enable),
         .mstatus         (ex_csr_mstatus),
         .mie             (ex_csr_mie),
+        .mip             (ex_csr_mip),
         .mtvec           (ex_csr_mtvec),
+        .stvec           (ex_csr_stvec),
+        .mideleg         (ex_csr_mideleg),
+        .medeleg         (ex_csr_medeleg),
         .mcause_out      (trap_mcause),
         .mepc_out        (trap_mepc),
         .mtval_out       (trap_mtval),
         .mip_out         (mip),
         .trap_taken      (trap_taken),
+        .trap_to_s       (trap_to_s),
         .trap_pc         (trap_pc),
         .trap_cause      (trap_kind)
     );
 
     // An exception raised by the EX instruction squashes it (no writeback)
     logic ex_exc_taken;
-    assign ex_exc_taken = trap_taken && (trap_kind == 2'b01) && !page_fault_exception;
+    assign ex_exc_taken = trap_taken && (trap_kind == 2'b01) &&
+                          !page_fault_exception && !pmp_access_fault;
 
     // FP flags / FS and vector configuration commit when the EX instruction completes
     assign ex_fp_flags_valid = id_ex_fp_en && fpu_done && !ex_f_illegal && !trap_taken;
@@ -994,6 +1025,8 @@ module cpu_top #(
     logic ex_redirect;
     assign ex_redirect = (branch_mispredict || id_ex_mret_r || id_ex_sret_r || id_ex_sfence || id_ex_fencei) &&
                          !mem_stall && !mmu_stall && !muldiv_stall && !fpu_stall && !vec_stall;
+    assign icache_invalidate = id_ex_fencei && id_ex_valid &&
+                               !mem_stall && !mmu_stall && !muldiv_stall && !fpu_stall && !vec_stall;
     assign flush_ex    = ex_redirect || trap_taken;
     assign flush_if_id = flush_ex;
 
@@ -1256,13 +1289,9 @@ module cpu_top #(
     assign sfence_exec = id_ex_sfence && !mem_stall && !mmu_stall;
 
     logic [XLEN-1:0] mem_rd_data;
-    logic [XLEN-1:0] data_paddr;
-    logic            data_ready, data_fault;
-    logic            mem_page_fault, mem_page_fault_store;
     logic            ptw_read;
     logic [XLEN-1:0] ptw_addr;
     logic [31:0]     ptw_rdata;
-    logic            data_req;
 
     // ---- Vector load/store sequencer ----
     // Walks the active elements (i < vl, mask bit set) one D-cache access
@@ -1326,6 +1355,7 @@ module cpu_top #(
         .clk        (clk),
         .rst_n      (rst_n),
         .satp       (ex_csr_satp),
+        .mstatus    (ex_csr_mstatus),
         .current_priv(current_priv),
         .sfence     (sfence_exec),
         .inst_vaddr (pc),
@@ -1345,13 +1375,54 @@ module cpu_top #(
         .ptw_rdata  (ptw_rdata)
     );
 
+    logic [3:0] pmp_data_size;
+    always_comb begin
+        if (vmem_stall)
+            pmp_data_size = 4'd1 << ex_mem_veew;
+        else begin
+            case (ex_mem_funct3[1:0])
+                2'b00:   pmp_data_size = 4'd1;
+                2'b01:   pmp_data_size = 4'd2;
+                2'b10:   pmp_data_size = 4'd4;
+                default: pmp_data_size = (XLEN == 64) ? 4'd8 : 4'd4;
+            endcase
+        end
+    end
+
+    pmp_unit #(.XLEN(XLEN)) u_pmp_inst (
+        .addr(inst_paddr), .access_size(4'd4),
+        .access_r(1'b0), .access_w(1'b0), .access_x(1'b1),
+        .current_priv(current_priv), .pmpcfg0(ex_csr_pmpcfg0),
+        .pmpaddr0(ex_csr_pmpaddr0), .pmpaddr1(ex_csr_pmpaddr1),
+        .pmpaddr2(ex_csr_pmpaddr2), .pmpaddr3(ex_csr_pmpaddr3),
+        .allow(pmp_inst_allow)
+    );
+
+    pmp_unit #(.XLEN(XLEN)) u_pmp_data (
+        .addr(data_paddr), .access_size(pmp_data_size),
+        .access_r(data_req && !(vmem_stall ? ex_mem_vmem_st : ex_mem_mem_write)),
+        .access_w(data_req &&  (vmem_stall ? ex_mem_vmem_st : ex_mem_mem_write)),
+        .access_x(1'b0), .current_priv(current_priv), .pmpcfg0(ex_csr_pmpcfg0),
+        .pmpaddr0(ex_csr_pmpaddr0), .pmpaddr1(ex_csr_pmpaddr1),
+        .pmpaddr2(ex_csr_pmpaddr2), .pmpaddr3(ex_csr_pmpaddr3),
+        .allow(pmp_data_allow)
+    );
+
+    assign pmp_inst_fault  = inst_ready && !inst_fault && !pmp_inst_allow;
+    assign pmp_data_fault  = data_req && data_ready && !data_fault && !pmp_data_allow;
+    assign pmp_access_fault = pmp_inst_fault || pmp_data_fault;
+    assign pmp_access_cause = pmp_inst_fault ? {{(XLEN-2){1'b0}}, 2'd1} :
+                              (mem_page_fault_store ? {{(XLEN-3){1'b0}}, 3'd7}
+                                                    : {{(XLEN-3){1'b0}}, 3'd5});
+    assign pmp_access_addr  = pmp_inst_fault ? inst_paddr : data_paddr;
+
     dcache #(.XLEN(XLEN)) u_dcache (
         .clk      (clk),
         .addr     (data_paddr),
         .wr_data  (vmem_stall ? {{(XLEN-32){1'b0}}, vmem_wdata} :
                    ex_mem_fp_store ? {{(XLEN-32){1'b0}}, ex_mem_fp_rs2} : ex_mem_rs2),
-        .mem_read ((vmem_stall ? ex_mem_vmem_ld : ex_mem_mem_read)  && data_ready && !data_fault),
-        .mem_write((vmem_stall ? ex_mem_vmem_st : ex_mem_mem_write) && data_ready && !data_fault),
+        .mem_read ((vmem_stall ? ex_mem_vmem_ld : ex_mem_mem_read)  && data_ready && !data_fault && pmp_data_allow),
+        .mem_write((vmem_stall ? ex_mem_vmem_st : ex_mem_mem_write) && data_ready && !data_fault && pmp_data_allow),
         .funct3   (vmem_stall ? (ex_mem_vmem_ld ? ((ex_mem_veew == 2'd2) ? 3'b010 : {1'b1, 1'b0, ex_mem_veew[0]})
                                                 : {1'b0, ex_mem_veew})
                               : ex_mem_funct3),

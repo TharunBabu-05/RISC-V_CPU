@@ -1,5 +1,5 @@
 // ============================================================
-//  dcache.sv  –  Data cache wrapper (pass-through)
+//  dcache.sv - Direct-mapped write-through L1 data cache
 // ============================================================
 `timescale 1ns/1ps
 
@@ -35,8 +35,12 @@ module dcache #(
     logic [LINES-1:0] valid;
 
     logic [INDEX_BITS-1:0] req_index;
+    logic [INDEX_BITS-1:0] next_index;
     logic [TAG_BITS-1:0]   req_tag;
+    logic [TAG_BITS-1:0]   next_tag;
     logic                 hit;
+    logic                 next_hit;
+    logic [XLEN-1:0]      next_addr;
 
     logic [XLEN-1:0] miss_addr;
     logic [XLEN-1:0] miss_wr_data;
@@ -57,6 +61,7 @@ module dcache #(
     logic            l2_mem_write;
     logic [2:0]      l2_funct3;
     logic [XLEN-1:0] l2_rd_data;
+    logic            unaligned_access;
 
     l2_cache #(.XLEN(XLEN)) u_l2 (
         .clk      (clk),
@@ -71,9 +76,22 @@ module dcache #(
         .ptw_rdata(ptw_rdata)
     );
 
+    always_comb begin
+        case (funct3[1:0])
+            2'b00:   unaligned_access = 1'b0;
+            2'b01:   unaligned_access = addr[0];
+            2'b10:   unaligned_access = |addr[1:0];
+            default: unaligned_access = (XLEN == 64) ? |addr[2:0] : |addr[1:0];
+        endcase
+    end
+
     assign req_index = addr[OFFSET_BITS + INDEX_BITS - 1 : OFFSET_BITS];
     assign req_tag   = addr[XLEN-1 : OFFSET_BITS + INDEX_BITS];
     assign hit       = valid[req_index] && (tags[req_index] == req_tag);
+    assign next_addr = addr + LINE_BYTES;
+    assign next_index = next_addr[OFFSET_BITS + INDEX_BITS - 1 : OFFSET_BITS];
+    assign next_tag   = next_addr[XLEN-1 : OFFSET_BITS + INDEX_BITS];
+    assign next_hit   = valid[next_index] && (tags[next_index] == next_tag);
 
     assign fill_index = miss_addr[OFFSET_BITS + INDEX_BITS - 1 : OFFSET_BITS];
     assign fill_tag   = miss_addr[XLEN-1 : OFFSET_BITS + INDEX_BITS];
@@ -224,12 +242,16 @@ module dcache #(
     // Combinational outputs
     always_comb begin
         rd_data = {XLEN{1'b0}};
-        if (state == DC_IDLE && hit && mem_read)
-            rd_data = load_extract(data[req_index], addr, funct3);
+        if (state == DC_IDLE && mem_read) begin
+            if (unaligned_access)
+                rd_data = l2_rd_data;
+            else if (hit)
+                rd_data = load_extract(data[req_index], addr, funct3);
+        end
     end
 
     // Miss detection and stall
-    assign stall = (state != DC_IDLE) || (mem_read && !hit);
+    assign stall = (state != DC_IDLE) || (mem_read && !unaligned_access && !hit);
 
     // L2 control
     always_comb begin
@@ -240,6 +262,11 @@ module dcache #(
         l2_funct3    = FILL_FUNCT3;
 
         if (state == DC_IDLE) begin
+            if (mem_read && unaligned_access) begin
+                l2_addr      = addr;
+                l2_mem_read  = 1'b1;
+                l2_funct3    = funct3;
+            end
             if (mem_write) begin
                 l2_addr      = addr;
                 l2_wr_data   = wr_data;
@@ -247,7 +274,10 @@ module dcache #(
                 l2_funct3    = funct3;
             end
         end else if (state == DC_FILL) begin
-            l2_addr     = miss_addr;
+            // Fetch the complete aligned cache line. Backing memory returns a
+            // byte-aligned window, so using the original LB/LH address here
+            // would shift the line and then load_extract would shift it again.
+            l2_addr     = {miss_addr[XLEN-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
             l2_mem_read = 1'b1;
             l2_mem_write= miss_mem_write;
             l2_wr_data  = fill_line_update;
@@ -276,7 +306,16 @@ module dcache #(
                 // miss (SB/SH, or SW on RV64) is not allocated, because the
                 // rest of the line is unknown here (L2 read data is not valid
                 // during a write).
-                if (mem_write && hit) begin
+                if (mem_write && unaligned_access) begin
+                    // The write-through path updates all affected backing
+                    // bytes. Invalidate both possible resident lines so a
+                    // following aligned byte/word load cannot observe stale
+                    // data from before the cross-line store.
+                    if (hit)
+                        valid[req_index] <= 1'b0;
+                    if (next_hit)
+                        valid[next_index] <= 1'b0;
+                end else if (mem_write && hit) begin
                     data[req_index] <= store_merge(data[req_index], addr, funct3, wr_data);
                 end else if (mem_write && funct3 == FILL_FUNCT3) begin
                     data[req_index]  <= wr_data;
@@ -284,7 +323,7 @@ module dcache #(
                     valid[req_index] <= 1'b1;
                 end
 
-                if (mem_read && !hit) begin
+                if (mem_read && !unaligned_access && !hit) begin
                     miss_addr      <= addr;
                     miss_wr_data   <= wr_data;
                     miss_mem_read  <= mem_read;

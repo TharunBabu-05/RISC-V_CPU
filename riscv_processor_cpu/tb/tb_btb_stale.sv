@@ -40,6 +40,7 @@ module tb_btb_stale;
         dut.u_imem.mem[3]  = rv_addi(5'd20, 5'd20, 12'd1);     // pass counter
         dut.u_imem.mem[4]  = rv_addi(5'd22, 5'd0, 12'd2);
         dut.u_imem.mem[5]  = rv_beq (5'd20, 5'd22, 13'd24);    // second pass done -> 0x2C
+        dut.u_imem.mem[6]  = 32'h0000_100f;                    // FENCE.I after host rewrite
         // NOPs give the testbench time to rewrite mem[2] before it is fetched again
         dut.u_imem.mem[10] = rv_jal (5'd0, -21'sd32);          // back to 0x8
         dut.u_imem.mem[11] = rv_jal (5'd0, 21'd0);             // spin

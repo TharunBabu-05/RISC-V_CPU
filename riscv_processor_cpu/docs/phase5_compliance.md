@@ -37,19 +37,15 @@ git submodule update --init --recursive riscv-tests
 
 | Configuration | Passed | Not applicable | Failed |
 |---|---|---|---|
-| research | **75 / 75** | 2 | 0 |
-| soc (FPGA design) | **64 / 64** | 2 | 0 |
+| research | **77 / 77** | 0 | 0 |
+| soc (FPGA design) | **66 / 66** | 0 | 0 |
 | soc-fpu | **11 / 11** | 0 | 0 |
 
 Full logs: [research](../phase5/compliance/results/research.txt), [soc](../phase5/compliance/results/soc.txt),
 [soc-fpu](../phase5/compliance/results/soc-fpu.txt).
 
-**Not applicable** (still built, run and reported, but they need optional features this CPU does not have):
-
-| Test | Why |
-|---|---|
-| `rv32ui-p-ma_data` | Requires misaligned loads/stores to complete in hardware. This core raises address-misaligned exceptions instead, which the ISA permits; `rv32mi-p-ma_addr` and the four `rv32mi-p-*-misaligned` tests, which check that behaviour, pass. |
-| `rv32mi-p-pmpaddr` | Requires Physical Memory Protection (PMP), which is not implemented. |
+There are no excluded or N/A tests. `rv32ui-p-ma_data` passes using hardware cross-word accesses, and
+`rv32mi-p-pmpaddr` passes against the four-entry PMP implementation.
 
 ## Bugs found by running the suites
 
@@ -58,9 +54,11 @@ Running riscv-tests for the first time exposed real problems, all fixed:
 - `minstret` counted instructions at WB while CSRs are read and written in EX, so counter reads/writes were off
   by the instructions still in the pipeline (`rv32mi-p-instret_overflow`). It now counts as instructions leave EX,
   and an instruction that writes a counter suppresses its own increment.
-- `mstatus.MPP` accepted the S-mode encoding and `SRET` executed although S-mode does not exist, so software was
-  told S-mode was present (`rv32mi-p-illegal` hung waiting for a supervisor interrupt). `MPP` now holds only M/U
-  and `SRET` is illegal.
+- Supervisor privilege is implemented end to end: `MPP=S`, delegated traps, supervisor CSRs, `SRET`, Sv32
+  permissions, and software interrupt delivery. The vectored software-interrupt path is covered by
+  `rv32mi-p-illegal`.
+- PMP NAPOT decoding saturates correctly for the canonical region covering the complete RV32 address space.
+- Cross-word stores invalidate affected L1/L2 lines, preventing stale byte loads after an unaligned write.
 - The debug-trigger CSRs (`tselect`, `tdata1-3`) trapped; they are now implemented with zero triggers, as the debug
   specification allows (`rv32mi-p-breakpoint`).
 

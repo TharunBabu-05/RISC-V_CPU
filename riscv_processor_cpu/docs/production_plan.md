@@ -4,9 +4,9 @@ Each item is ticked only when there is a result in the repository to back it.
 
 ## Synthesis / FPGA
 - [x] Timing constraints and clock/reset IO for the Arty S7-50 (`phase8/constraints/arty_s7_50.xdc`).
-- [x] Memories mapped to FPGA block RAM (`phase8/rtl/bram.sv`, 16 × RAMB36).
-- [x] Timing closure at the target frequency: 25 MHz, WNS +17.154 ns, 0 failing endpoints
-      (Vivado 2020.2; screenshot in `proof/vivado_implementation_timing_met.png`).
+- [x] Memories mapped to FPGA block RAM (`phase8/rtl/bram.sv`, 32 x RAMB36 for parity-banked unaligned access).
+- [x] Timing closure at the target frequency: 25 MHz, WNS +6.802 ns, WHS +0.028 ns, 0 failing endpoints
+      (Vivado 2020.2; reproducible with `phase8/vivado/verify_implementation.tcl`, with screenshots in `proof/`).
 - [ ] Higher clock frequency (the design has roughly 60 % timing headroom at 25 MHz).
 - [ ] ASIC flow (`phase5/synthesis/dc_synth.tcl` is an untested template).
 
@@ -18,8 +18,8 @@ Each item is ticked only when there is a result in the repository to back it.
 - [ ] Formal checks for the FPU / vector unit (they are verified by simulation against reference models).
 
 ## Compliance
-- [x] riscv-tests rv32ui / rv32um / rv32mi / rv32uf executed on the research core: 75/75 applicable pass.
-- [x] riscv-tests rv32ui / rv32um / rv32mi executed on the FPGA design: 64/64 applicable pass; rv32uf with the
+- [x] riscv-tests rv32ui / rv32um / rv32mi / rv32uf executed on the research core: 77/77 applicable pass.
+- [x] riscv-tests rv32ui / rv32um / rv32mi executed on the FPGA design: 66/66 applicable pass; rv32uf with the
       optional FPU: 11/11. See [phase5_compliance.md](phase5_compliance.md).
 - [ ] riscv-arch-test (RISCOF) signature-based compliance.
 

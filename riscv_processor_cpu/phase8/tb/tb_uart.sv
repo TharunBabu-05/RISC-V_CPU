@@ -140,6 +140,30 @@ module tb_uart;
         end
     end
 
+        // Exact race that previously lost a byte: RX arrival on the same edge
+        // that software reads the holding register.
+        begin : race_test
+            logic [31:0] race_status, race_data;
+            @(negedge clk);
+            addr = 4'h4;
+            rd_en = 1'b1;
+            force dut.rx_data_raw = 8'hA5;
+            force dut.rx_valid_pulse = 1'b1;
+            @(posedge clk); #1;
+            release dut.rx_valid_pulse;
+            release dut.rx_data_raw;
+            rd_en = 1'b0;
+            cpu_read(4'h8, race_status);
+            cpu_read(4'h4, race_data);
+            if (race_status[1] && race_data[7:0] == 8'hA5) begin
+                pass_count = pass_count + 1;
+                $display("[TB] PASS simultaneous RX/read retains replacement byte");
+            end else begin
+                fail_count = fail_count + 1;
+                $display("ERROR: simultaneous RX/read lost byte (status=%h data=%h)", race_status, race_data);
+            end
+        end
+
         // ---- Report ----
         $display("\n=== UART Test Results ===");
         $display("  PASS: %0d / %0d bytes", pass_count, pass_count + fail_count);

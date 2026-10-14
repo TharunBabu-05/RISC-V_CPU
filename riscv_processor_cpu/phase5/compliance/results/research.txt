@@ -1,4 +1,4 @@
-# riscv-tests on core 'research': 75/75 applicable tests passed (2 not applicable), 15 s
+# riscv-tests on core 'research': 77/77 applicable tests passed (0 not applicable), 41 s
 
 PASS         rv32ui-p-simple
 PASS         rv32ui-p-add
@@ -22,7 +22,7 @@ PASS         rv32ui-p-lhu
 PASS         rv32ui-p-lw
 PASS         rv32ui-p-ld_st
 PASS         rv32ui-p-lui
-N/A          rv32ui-p-ma_data              needs hardware misaligned load/store support; this core traps on misaligned accesses instead (allowed by the ISA, see rv32mi-*-misaligned) (fail test 668 (tohost=00000539) after 109 cycles)
+PASS         rv32ui-p-ma_data
 PASS         rv32ui-p-or
 PASS         rv32ui-p-ori
 PASS         rv32ui-p-sb
@@ -65,7 +65,7 @@ PASS         rv32mi-p-sh-misaligned
 PASS         rv32mi-p-sw-misaligned
 PASS         rv32mi-p-zicntr
 PASS         rv32mi-p-instret_overflow
-N/A          rv32mi-p-pmpaddr              needs Physical Memory Protection (PMP), which is not implemented (fail test 1 (tohost=00000003) after 127 cycles)
+PASS         rv32mi-p-pmpaddr
 PASS         rv32uf-p-fadd
 PASS         rv32uf-p-fdiv
 PASS         rv32uf-p-fclass
