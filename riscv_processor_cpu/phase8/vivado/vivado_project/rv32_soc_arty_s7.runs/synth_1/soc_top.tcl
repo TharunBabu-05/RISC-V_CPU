@@ -71,7 +71,6 @@ proc create_report { reportName command } {
 }
 OPTRACE "synth_1" START { ROLLUP_AUTO }
 set_param chipscope.maxJobs 3
-set_param xicom.use_bs_reader 1
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7s50csga324-1
 
@@ -101,6 +100,7 @@ read_verilog -library xil_defaultlib -sv {
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv
+  C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/pmp_unit.sv
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv
   C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv
