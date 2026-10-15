@@ -18,7 +18,7 @@
 //    0x1000_0000 – 0x1000_000B  : UART Registers
 //       +0x0: TX Write (write byte → sends over UART)
 //       +0x4: RX Read  (read byte ← received from PC)
-//       +0x8: Status   (bit0=TX_READY, bit1=RX_VALID)
+//       +0x8: Status   (bit0=TX_READY, bit1=RX_VALID, bit2=RX_OVERFLOW)
 //
 //  ===================================================
 //  On-chip resources used (Arty S7-50, Vivado 2020.2 post-route):
@@ -268,7 +268,7 @@ module soc_top (
     //  LD0 (green) : Solid = CPU is out of reset and running
     //  LD1 (green) : Solid = MMCM/PLL is locked (25 MHz clock stable)
     //  LD2 (green) : ON while UART TX is busy  (FPGA is sending to PC)
-    //  LD3 (green) : ON while UART RX has data (byte waiting in buffer)
+    //  LD3 (green) : ON while the physical UART RX line is active
     //
     //  Diagnostic guide:
     //    LD0+LD1 ON, LD2 blinking on keypress = firmware running OK

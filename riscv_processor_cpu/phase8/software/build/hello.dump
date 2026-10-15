@@ -14,7 +14,7 @@ Disassembly of section .text:
   18:	30529073          	csrrw	x0,mtvec,x5
 
 0000001c <flush_rx>:
-  1c:	00842283          	lw	x5,8(x8) # 10000008 <_stack_top+0xfff000c>
+  1c:	00842283          	lw	x5,8(x8) # 10000008 <_stack_top+0xfff0008>
   20:	0022f293          	andi	x5,x5,2
   24:	00028663          	beq	x5,x0,30 <flush_done>
   28:	00442283          	lw	x5,4(x8)

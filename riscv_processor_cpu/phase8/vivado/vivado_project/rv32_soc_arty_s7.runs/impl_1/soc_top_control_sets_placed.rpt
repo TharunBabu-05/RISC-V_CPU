@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 ------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date         : Wed Oct 14 10:38:06 2026
+| Date         : Wed Oct 14 22:40:28 2026
 | Host         : tharun running 64-bit major release  (build 9200)
 | Command      : report_control_sets -verbose -file soc_top_control_sets_placed.rpt
 | Design       : soc_top
@@ -23,11 +23,11 @@ Table of Contents
 +----------------------------------------------------------+-------+
 |                          Status                          | Count |
 +----------------------------------------------------------+-------+
-| Total control sets                                       |    98 |
-|    Minimum number of control sets                        |    98 |
+| Total control sets                                       |   116 |
+|    Minimum number of control sets                        |   116 |
 |    Addition due to synthesis replication                 |     0 |
 |    Addition due to physical synthesis replication        |     0 |
-| Unused register locations in slices containing registers |   130 |
+| Unused register locations in slices containing registers |   141 |
 +----------------------------------------------------------+-------+
 * Control sets can be merged at opt_design using control_set_merge or merge_equivalent_drivers
 ** Run report_qor_suggestions for automated merging and remapping suggestions
@@ -39,11 +39,11 @@ Table of Contents
 +--------------------+-------+
 |       Fanout       | Count |
 +--------------------+-------+
-| Total control sets |    98 |
+| Total control sets |   116 |
 | >= 0 to < 4        |     1 |
-| >= 4 to < 6        |     6 |
+| >= 4 to < 6        |     9 |
 | >= 6 to < 8        |     5 |
-| >= 8 to < 10       |     4 |
+| >= 8 to < 10       |    19 |
 | >= 10 to < 12      |     0 |
 | >= 12 to < 14      |     0 |
 | >= 14 to < 16      |     0 |
@@ -58,11 +58,11 @@ Table of Contents
 +--------------+-----------------------+------------------------+-----------------+--------------+
 | Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
 +--------------+-----------------------+------------------------+-----------------+--------------+
-| No           | No                    | No                     |               5 |            3 |
-| No           | No                    | Yes                    |             424 |          160 |
+| No           | No                    | No                     |               5 |            5 |
+| No           | No                    | Yes                    |             424 |          179 |
 | No           | Yes                   | No                     |               0 |            0 |
-| Yes          | No                    | No                     |              64 |           23 |
-| Yes          | No                    | Yes                    |            3377 |         1368 |
+| Yes          | No                    | No                     |             192 |           64 |
+| Yes          | No                    | Yes                    |            3382 |         1694 |
 | Yes          | Yes                   | No                     |               0 |            0 |
 +--------------+-----------------------+------------------------+-----------------+--------------+
 
@@ -74,103 +74,121 @@ Table of Contents
 |     Clock Signal     |                  Enable Signal                 |      Set/Reset Signal     | Slice Load Count | Bel Load Count | Bels / Slice |
 +----------------------+------------------------------------------------+---------------------------+------------------+----------------+--------------+
 |  u_pll/inst/clk_out1 |                                                | rst_btn_IBUF              |                1 |              1 |         1.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/vstart[3]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |                1 |              4 |         4.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mstatus[12]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                2 |              4 |         2.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_mem_read_reg[0]           | u_cpu/u_regfile/rst_n_reg |                1 |              4 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/o_valid_reg_0[0]                   | u_cpu/u_regfile/rst_n_reg |                1 |              4 |         4.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/vstart[3]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |                2 |              4 |         2.00 |
 |  u_pll/inst/clk_out1 | rst_sync_cnt[3]_i_1_n_0                        | rst_btn_IBUF              |                1 |              4 |         4.00 |
-|  u_pll/inst/clk_out1 |                                                |                           |                3 |              5 |         1.67 |
-|  u_pll/inst/clk_out1 | u_uart/u_rx/FSM_onehot_state[4]_i_1_n_0        | u_cpu/u_regfile/rst_n_reg |                2 |              5 |         2.50 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/fflags[4]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |                2 |              5 |         2.50 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mstatus[12]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                2 |              4 |         2.00 |
+|  u_pll/inst/clk_out1 |                                                |                           |                5 |              5 |         1.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/E[0]                               | u_cpu/u_regfile/rst_n_reg |                2 |              5 |         2.50 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/FSM_onehot_state[4]_i_1_n_0        | u_cpu/u_regfile/rst_n_reg |                1 |              5 |         5.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/fflags[4]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |                3 |              5 |         1.67 |
 |  u_pll/inst/clk_out1 | u_cpu/u_muldiv/FSM_sequential_state[2]_i_1_n_0 | u_cpu/u_regfile/rst_n_reg |                2 |              6 |         3.00 |
 |  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[15]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                4 |              6 |         1.50 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                1 |              6 |         6.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[7]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |                2 |              6 |         3.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[23]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                2 |              6 |         3.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                2 |              6 |         3.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[7]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |                5 |              6 |         1.20 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpcfg0[23]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                4 |              6 |         1.50 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[3][0]             |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_2[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_3[0]           |                           |                1 |              8 |         8.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[3]_0[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[0]_1[0]           |                           |                3 |              8 |         2.67 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_6[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[0]_0[0]           |                           |                5 |              8 |         1.60 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[0][0]             |                           |                1 |              8 |         8.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/FSM_onehot_state_reg_n_0_[4]       | u_cpu/u_regfile/rst_n_reg |                2 |              8 |         4.00 |
 |  u_pll/inst/clk_out1 | u_cpu/u_muldiv/o_ready_reg[0]                  | u_cpu/u_regfile/rst_n_reg |                2 |              8 |         4.00 |
-|  u_pll/inst/clk_out1 | u_uart/u_rx/E[0]                               | u_cpu/u_regfile/rst_n_reg |                1 |              8 |         8.00 |
-|  u_pll/inst/clk_out1 | u_uart/u_rx/FSM_onehot_state_reg_n_0_[4]       | u_cpu/u_regfile/rst_n_reg |                1 |              8 |         8.00 |
-|  u_pll/inst/clk_out1 | u_uart/u_tx/shift_reg[7]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |                2 |              8 |         4.00 |
-|  u_pll/inst/clk_out1 | u_uart/u_rx/baud_cnt[15]_i_1__0_n_0            | u_cpu/u_regfile/rst_n_reg |                5 |             16 |         3.20 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mstatus[30]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                7 |             22 |         3.14 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mtvec[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               10 |             31 |         3.10 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[11][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/sepc[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/sscratch[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[3]_2[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[3]_1[0]           |                           |                4 |              8 |         2.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_7[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_5[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_0[0]           |                           |                2 |              8 |         4.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_1[0]           |                           |                1 |              8 |         8.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1][0]             |                           |                4 |              8 |         2.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/rx_write_ptr_reg[1]_4[0]           |                           |                5 |              8 |         1.60 |
+|  u_pll/inst/clk_out1 | u_uart/u_tx/shift_reg[7]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |                1 |              8 |         8.00 |
+|  u_pll/inst/clk_out1 | u_uart/u_rx/baud_cnt[15]_i_1__0_n_0            | u_cpu/u_regfile/rst_n_reg |                6 |             16 |         2.67 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mstatus[30]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |                8 |             22 |         2.75 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mtvec[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |                7 |             31 |         4.43 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcycle[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               23 |             32 |         1.39 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcounteren[31]_i_1_n_0             | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr3[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/scause[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/satp[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/scounteren[31]_i_1_n_0             | u_cpu/u_regfile/rst_n_reg |                8 |             32 |         4.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/sepc[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/sscratch[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               22 |             32 |         1.45 |
 |  u_pll/inst/clk_out1 | u_cpu/u_csr/stval[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/stvec[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               10 |             32 |         3.20 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/scounteren[31]_i_1_n_0             | u_cpu/u_regfile/rst_n_reg |               10 |             32 |         3.20 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mideleg[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mie[31]_i_1_n_0                    | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/minstret[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               18 |             32 |         1.78 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mscratch[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               24 |             32 |         1.33 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mtval[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr0[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr1[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr2[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               18 |             32 |         1.78 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr3[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/minstret[63]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               21 |             32 |         1.52 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/satp[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/scause[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mepc[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcause[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |                9 |             32 |         3.56 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcounteren[31]_i_1_n_0             | u_cpu/u_regfile/rst_n_reg |                9 |             32 |         3.56 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcycle[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/stvec[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
 |  u_pll/inst/clk_out1 | u_cpu/u_csr/mcycle[63]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               19 |             32 |         1.68 |
-|  u_pll/inst/clk_out1 | u_cpu/u_csr/medeleg[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[12][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               10 |             32 |         3.20 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[13][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/result[31]_i_1_n_0              | u_cpu/u_regfile/rst_n_reg |                9 |             32 |         3.56 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[14][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |                8 |             32 |         4.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[15][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[10][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[6][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[25][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[20][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[1][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mepc[31]_i_1_n_0                   | u_cpu/u_regfile/rst_n_reg |               18 |             32 |         1.78 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mideleg[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mie[31]_i_1_n_0                    | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/minstret[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               22 |             32 |         1.45 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/minstret[63]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mscratch[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               22 |             32 |         1.45 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mtval[31]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr0[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr1[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/pmpaddr2[31]_i_1_n_0               | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/mcause[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[24][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               10 |             32 |         3.20 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[7][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[13][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
 |  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[9][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               19 |             32 |         1.68 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[23][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[27][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[29][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               21 |             32 |         1.52 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[31][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[4][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[24][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[3][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[2][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[26][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[28][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[5][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[7][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[8][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[21][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[30][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               21 |             32 |         1.52 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[16][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[17][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[18][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[18][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |                8 |             32 |         4.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[16][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[1][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[15][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               19 |             32 |         1.68 |
 |  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[19][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[21][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[23][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               14 |             32 |         2.29 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[26][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[28][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[2][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[14][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[25][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               23 |             32 |         1.39 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[20][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               18 |             32 |         1.78 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[31][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               24 |             32 |         1.33 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[10][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[11][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               18 |             32 |         1.78 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[3][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               19 |             32 |         1.68 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[4][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               17 |             32 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[5][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[6][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               21 |             32 |         1.52 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[8][31]_i_1_n_0            | u_cpu/u_regfile/rst_n_reg |               26 |             32 |         1.23 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[29][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               20 |             32 |         1.60 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[30][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               16 |             32 |         2.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[17][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[12][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               15 |             32 |         2.13 |
+|  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[27][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
+|  u_pll/inst/clk_out1 | u_cpu/u_csr/medeleg[31]_i_1_n_0                | u_cpu/u_regfile/rst_n_reg |               11 |             32 |         2.91 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/result[31]_i_1_n_0              | u_cpu/u_regfile/rst_n_reg |               12 |             32 |         2.67 |
 |  u_pll/inst/clk_out1 | u_cpu/u_regfile/regs[22][31]_i_1_n_0           | u_cpu/u_regfile/rst_n_reg |               13 |             32 |         2.46 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/rem_neg_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |                9 |             34 |         3.78 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/E[0]                            | u_cpu/u_regfile/rst_n_reg |                9 |             35 |         3.89 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[2][0]              | u_cpu/u_regfile/rst_n_reg |               26 |             60 |         2.31 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_2[0]            | u_cpu/u_regfile/rst_n_reg |               26 |             60 |         2.31 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_0[0]            | u_cpu/u_regfile/rst_n_reg |               19 |             60 |         3.16 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_4[0]            | u_cpu/u_regfile/rst_n_reg |               29 |             60 |         2.07 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_11[0]           | u_cpu/u_regfile/rst_n_reg |               16 |             60 |         3.75 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_1[0]            | u_cpu/u_regfile/rst_n_reg |               19 |             60 |         3.16 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_5[0]            | u_cpu/u_regfile/rst_n_reg |               18 |             60 |         3.33 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_3[0]            | u_cpu/u_regfile/rst_n_reg |               24 |             60 |         2.50 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_3[0]            | u_cpu/u_regfile/rst_n_reg |               44 |             60 |         1.36 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_6[0]            | u_cpu/u_regfile/rst_n_reg |               16 |             60 |         3.75 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_7[0]            | u_cpu/u_regfile/rst_n_reg |               16 |             60 |         3.75 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_4[0]            | u_cpu/u_regfile/rst_n_reg |               31 |             60 |         1.94 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_12[0]           | u_cpu/u_regfile/rst_n_reg |               23 |             60 |         2.61 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_5[0]            | u_cpu/u_regfile/rst_n_reg |               21 |             60 |         2.86 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_13[0]           | u_cpu/u_regfile/rst_n_reg |               17 |             60 |         3.53 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3][0]              | u_cpu/u_regfile/rst_n_reg |               22 |             60 |         2.73 |
-|  u_pll/inst/clk_out1 | mem_wb_mem_data_reg[7]_i_9_n_0                 |                           |               23 |             64 |         2.78 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/b_r[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               16 |             67 |         4.19 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/cnt[5]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               21 |             70 |         3.33 |
-|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/pc_write                        | u_cpu/u_regfile/rst_n_reg |               75 |            140 |         1.87 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/rem_neg_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               10 |             34 |         3.40 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/E[0]                            | u_cpu/u_regfile/rst_n_reg |                7 |             35 |         5.00 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_5[0]            | u_cpu/u_regfile/rst_n_reg |               38 |             60 |         1.58 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_5[0]            | u_cpu/u_regfile/rst_n_reg |               35 |             60 |         1.71 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_11[0]           | u_cpu/u_regfile/rst_n_reg |               32 |             60 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_4[0]            | u_cpu/u_regfile/rst_n_reg |               34 |             60 |         1.76 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_3[0]            | u_cpu/u_regfile/rst_n_reg |               47 |             60 |         1.28 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_13[0]           | u_cpu/u_regfile/rst_n_reg |               33 |             60 |         1.82 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[5]_4[0]            | u_cpu/u_regfile/rst_n_reg |               32 |             60 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_6[0]            | u_cpu/u_regfile/rst_n_reg |               35 |             60 |         1.71 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_3[0]            | u_cpu/u_regfile/rst_n_reg |               39 |             60 |         1.54 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_7[0]            | u_cpu/u_regfile/rst_n_reg |               33 |             60 |         1.82 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[4]_12[0]           | u_cpu/u_regfile/rst_n_reg |               43 |             60 |         1.40 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_2[0]            | u_cpu/u_regfile/rst_n_reg |               40 |             60 |         1.50 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_0[0]            | u_cpu/u_regfile/rst_n_reg |               33 |             60 |         1.82 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3][0]              | u_cpu/u_regfile/rst_n_reg |               32 |             60 |         1.88 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[2][0]              | u_cpu/u_regfile/rst_n_reg |               36 |             60 |         1.67 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_pc_reg[3]_1[0]            | u_cpu/u_regfile/rst_n_reg |               36 |             60 |         1.67 |
+|  u_pll/inst/clk_out1 | mem_wb_mem_data_reg[7]_i_9_n_0                 |                           |               24 |             64 |         2.67 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/b_r[31]_i_1_n_0                 | u_cpu/u_regfile/rst_n_reg |               21 |             67 |         3.19 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/cnt[5]_i_1_n_0                  | u_cpu/u_regfile/rst_n_reg |               28 |             70 |         2.50 |
+|  u_pll/inst/clk_out1 | u_cpu/u_muldiv/pc_write                        | u_cpu/u_regfile/rst_n_reg |               73 |            140 |         1.92 |
 |  u_pll/inst/clk_out1 | u_cpu/u_muldiv/id_ex_fencei                    | u_cpu/u_regfile/rst_n_reg |               48 |            158 |         3.29 |
-|  u_pll/inst/clk_out1 |                                                | u_cpu/u_regfile/rst_n_reg |              159 |            423 |         2.66 |
+|  u_pll/inst/clk_out1 |                                                | u_cpu/u_regfile/rst_n_reg |              178 |            423 |         2.38 |
 +----------------------+------------------------------------------------+---------------------------+------------------+----------------+--------------+
 
 

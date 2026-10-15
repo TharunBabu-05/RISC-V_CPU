@@ -4,7 +4,8 @@
 //  Memory Map (relative to UART base address):
 //    Offset 0x00  [W]   : TX Data     — write byte to transmit
 //    Offset 0x04  [R]   : RX Data     — read received byte
-//    Offset 0x08  [R]   : Status      — bit[0]=TX_READY, bit[1]=RX_VALID
+//    Offset 0x08  [R]   : Status      — bit[0]=TX_READY, bit[1]=RX_VALID,
+//                                      bit[2]=RX_OVERFLOW
 //
 //  The CPU reads Status before reading RX or writing TX to avoid
 //  data loss. This is the standard "polled UART" pattern used
@@ -20,11 +21,9 @@
 //        return UART_RX;
 //    }
 //
-//  RX holding register:
-//    rx_valid_flag is SET  when uart_rx signals o_valid.
-//    rx_valid_flag is CLEAR when the CPU reads offset 0x04 (RX Data).
-//    Arrival has priority over read-clear. If both occur together, the old
-//    byte is consumed and the replacement byte remains marked valid.
+//  RX FIFO:
+//    A 16-byte queue absorbs USB-UART bursts. Reading offset 0x04 removes
+//    one byte. Simultaneous arrival and read preserve both operations.
 // ============================================================
 `timescale 1ns/1ps
 
@@ -67,7 +66,7 @@ module uart #(
     );
 
     // -------------------------------------------------------
-    //  RX path — with 1-byte FIFO (holding register)
+    //  RX path — serial receiver plus 16-byte queue
     // -------------------------------------------------------
     logic [7:0] rx_data_raw;
     logic       rx_valid_pulse;
@@ -83,24 +82,47 @@ module uart #(
         .o_valid(rx_valid_pulse)
     );
 
-    // RX holding register + valid flag
-    //
-    // Arrival wins over read-clear. The current combinational read still sees
-    // the old holding register, and the new byte is retained for the next poll.
-    logic [7:0] rx_hold;
-    logic       rx_valid_flag;
+    // A real FIFO absorbs host/FTDI bursts while firmware services the bus.
+    localparam int RX_FIFO_DEPTH = 16;
+    localparam int RX_PTR_W = $clog2(RX_FIFO_DEPTH);
+
+    logic [7:0] rx_fifo [0:RX_FIFO_DEPTH-1];
+    logic [RX_PTR_W-1:0] rx_write_ptr;
+    logic [RX_PTR_W-1:0] rx_read_ptr;
+    logic [RX_PTR_W:0]   rx_count;
+    logic                rx_overflow;
+    logic                rx_pop;
+    logic                rx_push;
+    logic                rx_valid_flag;
+
+    assign rx_valid_flag = (rx_count != 0);
+    assign rx_pop = rd_en && (addr == 4'h4) && rx_valid_flag;
+    assign rx_push = rx_valid_pulse &&
+                     ((rx_count < RX_FIFO_DEPTH) || rx_pop);
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rx_hold       <= '0;
-            rx_valid_flag <= 1'b0;
+            rx_write_ptr <= '0;
+            rx_read_ptr  <= '0;
+            rx_count     <= '0;
+            rx_overflow  <= 1'b0;
         end else begin
-            if (rx_valid_pulse) begin
-                rx_valid_flag <= 1'b1;
-                rx_hold <= rx_data_raw;
-            end else if (rd_en && addr == 4'h4) begin
-                rx_valid_flag <= 1'b0;
+            if (rx_push) begin
+                rx_fifo[rx_write_ptr] <= rx_data_raw;
+                rx_write_ptr <= rx_write_ptr + 1'b1;
             end
+
+            if (rx_pop)
+                rx_read_ptr <= rx_read_ptr + 1'b1;
+
+            case ({rx_push, rx_pop})
+                2'b10: rx_count <= rx_count + 1'b1;
+                2'b01: rx_count <= rx_count - 1'b1;
+                default: rx_count <= rx_count;
+            endcase
+
+            if (rx_valid_pulse && !rx_push)
+                rx_overflow <= 1'b1;
         end
     end
 
@@ -128,8 +150,12 @@ module uart #(
         rd_data = 32'b0;
         if (rd_en) begin
             case (addr)
-                4'h4: rd_data = {24'b0, rx_hold};               // RX Data
-                4'h8: rd_data = {30'b0, rx_valid_flag, tx_ready}; // Status: [1]=RX_VALID, [0]=TX_READY
+                4'h4: rd_data = rx_valid_flag
+                              ? {24'b0, rx_fifo[rx_read_ptr]}
+                              : 32'b0;
+                // Status: [2]=RX_OVERFLOW, [1]=RX_VALID, [0]=TX_READY
+                4'h8: rd_data = {29'b0, rx_overflow,
+                                 rx_valid_flag, tx_ready};
                 default: rd_data = 32'b0;
             endcase
         end

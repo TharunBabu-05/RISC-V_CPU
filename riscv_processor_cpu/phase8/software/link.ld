@@ -27,6 +27,8 @@ SECTIONS {
         . = ALIGN(4);
     } > BRAM
 
+    PROVIDE(__global_pointer$ = . + 0x800);
+
     /* ---- Initialized Global/Static Variables ---- */
     .data : {
         _data_start = .;

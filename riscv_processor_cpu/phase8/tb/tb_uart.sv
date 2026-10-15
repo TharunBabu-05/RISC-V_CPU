@@ -164,6 +164,45 @@ module tb_uart;
             end
         end
 
+        // Queue a burst without CPU reads, then verify FIFO order. This is the
+        // condition exercised when a desktop serial driver releases a packet.
+        begin : fifo_burst_test
+            integer burst_index;
+            logic [31:0] burst_status, burst_data;
+            logic burst_ok;
+            burst_ok = 1'b1;
+
+            for (burst_index = 0; burst_index < 8; burst_index = burst_index + 1) begin
+                @(negedge clk);
+                force dut.rx_data_raw = 8'hC0 + burst_index;
+                force dut.rx_valid_pulse = 1'b1;
+                @(posedge clk); #1;
+                release dut.rx_valid_pulse;
+                release dut.rx_data_raw;
+            end
+
+            cpu_read(4'h8, burst_status);
+            if (!burst_status[1])
+                burst_ok = 1'b0;
+            for (burst_index = 0; burst_index < 8; burst_index = burst_index + 1) begin
+                cpu_read(4'h4, burst_data);
+                if (burst_data[7:0] != (8'hC0 + burst_index))
+                    burst_ok = 1'b0;
+            end
+            cpu_read(4'h8, burst_status);
+            if (burst_status[1])
+                burst_ok = 1'b0;
+
+            if (burst_ok) begin
+                pass_count = pass_count + 1;
+                $display("[TB] PASS 8-byte RX FIFO burst preserves order");
+            end else begin
+                fail_count = fail_count + 1;
+                $display("ERROR: RX FIFO burst failed (status=%h data=%h)",
+                         burst_status, burst_data);
+            end
+        end
+
         // ---- Report ----
         $display("\n=== UART Test Results ===");
         $display("  PASS: %0d / %0d bytes", pass_count, pass_count + fail_count);

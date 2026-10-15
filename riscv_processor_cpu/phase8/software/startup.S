@@ -26,6 +26,12 @@ _start:
     csrw    mie,   zero        /* Clear machine interrupt enable */
     csrw    mstatus, zero      /* Disable global interrupts */
 
+    /* Initialize the ABI global pointer without linker relaxation. */
+    .option push
+    .option norelax
+    la      gp, __global_pointer$
+    .option pop
+
     /* ---- Install the trap vector (direct mode) ---- */
     la      t0, _trap_handler
     csrw    mtvec, t0

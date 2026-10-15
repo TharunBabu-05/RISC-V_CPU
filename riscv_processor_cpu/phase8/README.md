@@ -86,7 +86,67 @@ During physical bring-up on the Arty S7 FPGA, three critical hardware issues wer
 
 ## 🔄 Step-by-Step: How to Switch Firmware
 
-Whenever you want to load a firmware onto the RISC-V CPU, run the appropriate PowerShell / Makefile command in the `phase8/software` folder:
+### Preferred: Resident UART Bootloader
+
+The resident bootloader occupies the first 16 KiB of BRAM. Applications are
+linked at `0x0000_4000`, leaving 48 KiB for application code, data, BSS and
+stack. Uploads carry an image length and CRC-32, and are rejected if either is
+invalid.
+
+Install the bootloader into the FPGA bitstream once:
+
+```powershell
+cd riscv_processor_cpu\phase8\software
+make bootloader_program
+```
+
+Reset synthesis, generate the bitstream and program the FPGA using the Vivado
+procedure below. On reset, the terminal displays:
+
+```text
+RV32 UART Bootloader v2
+U=upload  A=upload+run  G=run  I=info
+RVBL:IDLE
+```
+
+For later Snake updates, close PuTTY because only one application can own the
+serial port, then run:
+
+```powershell
+make app
+make upload PORT=COM4
+```
+
+After `RVBL:OK`, reopen PuTTY and press `G`. Snake starts without another
+Vivado synthesis or bitstream build. `make upload PORT=COM4 RUN=1` can start it
+immediately, but its initial terminal output may be missed while the uploader
+still owns the port.
+
+Bootloader v2 uses a 16-byte hardware RX FIFO and transfers the image in
+32-byte flow-controlled blocks. After each block, the CPU returns
+`RVBL:NEXT <received-bytes>`; the uploader waits for that acknowledgement
+before continuing. A broken transfer therefore stops at a known offset instead
+of allowing later binary bytes to become commands. The default remains a
+hardware-verified 2 ms inter-byte gap. It can be overridden with
+`UPLOAD_DELAY=<milliseconds>` when testing another USB-UART adapter.
+
+| Key | Bootloader action |
+| :---: | :--- |
+| `U` | Upload and verify an application, then remain in the loader |
+| `A` | Upload, verify and immediately run an application |
+| `G` | Jump to the application at `0x0000_4000` |
+| `I` | Print the application address, capacity and uploaded size |
+
+BTN0 returns to the loader while preserving the uploaded image. Power loss or
+FPGA reprogramming clears the uploaded application, but the resident loader
+remains in the bitstream. `tb/tb_bootloader.sv` verifies serial upload, CRC-32,
+`FENCE.I`, handoff and execution of a real RV32 test application.
+
+### Legacy Direct-BRAM Firmware Installation
+
+The original workflow remains available for recovery and diagnostics. It
+replaces the bootloader and requires FPGA synthesis. Run the appropriate
+PowerShell / Makefile command in the `phase8/software` folder:
 
 ```powershell
 cd riscv_processor_cpu\phase8\software
@@ -117,7 +177,11 @@ cd riscv_processor_cpu\phase8\software
 > In Xilinx Vivado, memory initialization files specified via `$readmemh("firmware.vmem", mem)` are baked into the synthesized BRAM netlist during **Synthesis (`synth_1`)**, **NOT** during bitstream generation!  
 > Because `firmware.vmem` is an external data file, Vivado **does not automatically know** that you replaced it. If you only click "Generate Bitstream", Vivado will say *"Synthesis is up to date"* and simply reuse the previous bitstream with the OLD firmware!
 
-### The Required 4-Step Vivado Procedure Every Time You Change Firmware:
+### Required When Replacing `firmware.vmem`
+
+These steps are not needed for normal `make upload` application updates. They
+are required after `make hello_program`, `make program`, or
+`make bootloader_program` because those commands replace `firmware.vmem`.
 
 1. **Reset Synthesis Runs in Vivado:**
    - Look at the **Design Runs** window at the bottom of the Vivado GUI.

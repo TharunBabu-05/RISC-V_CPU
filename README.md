@@ -73,6 +73,7 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
 | FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, LEDs |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
+| UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, aligned and cross-word byte/halfword/word accesses |
 | Cache hierarchy | ✅ | Direct-mapped L1 I/D and L2 caches with refill, invalidation, write-through stores, and counters |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
@@ -286,6 +287,41 @@ RISC-V_CPU/
 
 ## 🚀 Run It On The Arty S7-50
 
+### Fast UART Bootloader Flow
+
+The FPGA SoC now has a resident UART bootloader. Install it into the bitstream
+once:
+
+```powershell
+cd riscv_processor_cpu\phase8\software
+make bootloader_program
+```
+
+Reset `synth_1`, generate the bitstream and program the FPGA. For later Snake
+updates, close PuTTY and run:
+
+```powershell
+make app
+make upload PORT=COM4
+```
+
+After the uploader reports `RVBL:OK`, reopen PuTTY and press `G`. The loader
+receives the relocated image at `0x0000_4000`, checks its size and CRC-32,
+executes `FENCE.I`, and transfers control to the application. Application-only
+updates no longer require a Vivado rebuild.
+
+Bootloader v2 combines a 16-byte hardware RX FIFO with 32-byte acknowledged
+blocks. The PC does not send the next block until the CPU confirms the previous
+one was stored, and any loss of synchronization reports the exact byte offset.
+The uploader uses the hardware-verified 2 ms inter-byte gap by default. The
+delay can still be overridden with `UPLOAD_DELAY=<milliseconds>` when testing
+another USB-UART adapter.
+
+The uploaded image survives BTN0 reset but is volatile across power loss or
+FPGA reprogramming. See the
+[Phase 8 deployment guide](riscv_processor_cpu/phase8/README.md) for commands,
+protocol details and the direct-BRAM recovery workflow.
+
 ### 1. Open The Firmware Folder
 
 ```powershell
@@ -320,7 +356,7 @@ riscv_processor_cpu/phase8/rtl/firmware.vmem
 
 Vivado embeds `firmware.vmem` into BRAM during **synthesis**, not at the final bitstream step.
 
-Every time the firmware changes:
+When directly replacing `firmware.vmem` or installing a new bootloader:
 
 1. Open the Vivado project:
 
@@ -357,6 +393,7 @@ Every time the firmware changes:
 | :--- | :--- | :--- | :--- |
 | Hello + Echo | [`hello_asm.S`](riscv_processor_cpu/phase8/software/hello_asm.S) | `make hello_program` | Hardware bring-up and UART proof |
 | Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make program` | Interactive game on the custom CPU |
+| UART-loaded Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make app`, then `make upload PORT=COM4` | CRC-checked update without re-synthesis |
 
 Snake controls:
 
@@ -377,6 +414,7 @@ Snake controls:
 | :--- | :--- | :--- |
 | Directed + unit testbenches | `make regress` | 26/26 pass (incl. PMP, S-mode delegation, unaligned BRAM, 43,013 FPU and 12,200 vector vectors) |
 | UART loopback + collision | UART testbench | 20/20 bytes pass, including simultaneous receive/read |
+| UART bootloader | `tb_bootloader.sv` | Upload, CRC-32 verification, `FENCE.I`, jump and `APP:OK` pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
 | Timing closure (Vivado, 25 MHz) | — | WNS +6.802 ns, WHS +0.028 ns, 0 failing endpoints |

@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Wed Oct 14 22:38:58 2026
+# Process ID: 15796
+# Current directory: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado
+# Command line: vivado.exe -mode batch -source verify_implementation.tcl -notrace
+# Log file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado.log
+# Journal file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado\vivado.jou
+#-----------------------------------------------------------
+source verify_implementation.tcl -notrace
