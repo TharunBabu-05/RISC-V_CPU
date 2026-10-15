@@ -1,7 +1,7 @@
 # 🚀 RISC-V RV32IM SoC on Arty S7-50 FPGA — Complete Implementation & Deployment Guide
 
 > **Target Board:** Digilent Arty S7-50 (`XC7S50-CSGA324-1`)  
-> **Core Architecture:** 5-Stage Pipelined RV32IM with Unified 64KB BRAM & Memory-Mapped UART  
+> **Core Architecture:** 5-Stage Pipelined RV32IM with Unified 64KB BRAM, UART, CLINT & PLIC
 > **System Clock:** 25 MHz (MMCM synthesis from 12 MHz on-board oscillator)  
 > **Serial Baud Rate:** 115,200 baud (8N1)
 
@@ -34,8 +34,10 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 3. **Verification:** the FPGA core passes all applicable official riscv-tests (66/66) and 52/52 riscv-formal checks (every RV32IM instruction proven against the ISA model). See `docs/phase5_compliance.md` and `docs/phase5_formal_verification.md`.
 4. **On-Chip Memory:** 64KB logical dual-port Block RAM with parity banking for single-cycle cross-word loads/stores (Port A: instruction fetch, Port B: data load/store).
 5. **Memory-Mapped UART:** TX/RX peripheral at physical address `0x1000_0000` with 115200 baud support.
-6. **Hardware Debug Indicators:** Status LEDs tied to CPU run state, PLL lock, and serial communication.
-7. **Two Bare-Metal Firmwares:**
+6. **Core-Local Interrupts:** CLINT-style 64-bit `mtime`/`mtimecmp` timer and machine software interrupt.
+7. **Platform Interrupts:** Four-source, single-context PLIC with priorities, enables, threshold, and claim/complete.
+8. **Hardware Debug Indicators:** Status LEDs tied to CPU run state, PLL lock, and serial communication.
+9. **Two Bare-Metal Firmwares:**
    - Diagnostic `hello_asm.S`: Hardware bring-up and interactive keyboard echo.
    - Interactive `snake.c`: Full ANSI terminal Snake game with real-time controls.
 
@@ -44,6 +46,50 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 ## 🛠 Hardware Architecture & Key Bug Fixes
 
 During physical bring-up on the Arty S7 FPGA, three critical hardware issues were discovered and solved:
+
+### Interrupt Architecture
+
+The Phase 8 SoC now delivers all three RISC-V machine interrupt classes to the
+CPU CSR/trap unit:
+
+| Cause | `mip`/`mie` bit | Hardware source |
+| :--- | :---: | :--- |
+| Machine software interrupt | 3 (`MSIP`) | CLINT `msip` register |
+| Machine timer interrupt | 7 (`MTIP`) | `mtime >= mtimecmp` |
+| Machine external interrupt | 11 (`MEIP`) | PLIC claimable source |
+
+The PLIC reserves source IDs 1 through 4 for UART RX, GPIO, SPI, and an
+external/platform input. UART RX is connected in the current board SoC. The
+GPIO, SPI, and external source slots are implemented in the controller and are
+ready to connect when those peripheral blocks are added.
+
+#### Interrupt Register Map
+
+| Address | Register | Description |
+| :--- | :--- | :--- |
+| `0x0200_0000` | CLINT `msip` | Bit 0 asserts/clears the software interrupt |
+| `0x0200_4000` / `0x0200_4004` | CLINT `mtimecmp` low/high | 64-bit timer deadline |
+| `0x0200_BFF8` / `0x0200_BFFC` | CLINT `mtime` low/high | 64-bit free-running cycle counter |
+| `0x0C00_0004` ... `0x0C00_0010` | PLIC priority | Source priorities 1..7; zero disables |
+| `0x0C00_1000` | PLIC pending | Pending source bits `[4:1]` |
+| `0x0C00_2000` | PLIC enable | Machine-context enable bits `[4:1]` |
+| `0x0C20_0000` | PLIC threshold | Minimum accepted priority |
+| `0x0C20_0004` | PLIC claim/complete | Read source ID to claim; write it to complete |
+
+Firmware definitions and safe RV32 helpers live in
+[`software/soc.h`](software/soc.h) and
+[`software/interrupts.h`](software/interrupts.h). Existing Snake and bootloader
+firmware remain polling-based and unchanged; interrupt-driven firmware must set
+`mtvec`, enable the desired `mie` bits, and set global `mstatus.MIE`.
+
+Run `make -C riscv_processor_cpu/phase8/tb` from the repository root to execute
+the CLINT unit test, PLIC arbitration test, CPU interrupt-cause test, and full
+SoC address-map integration test.
+
+Vivado 2020.2 synthesis, placement, routing, and bitstream generation complete
+for this interrupt-enabled build. At 25 MHz, final timing is WNS `+7.673 ns`,
+WHS `+0.030 ns`, with zero failing endpoints. Post-route use is 6,687 LUTs,
+4,195 registers, 32 BRAM tiles, and 4 DSP slices.
 
 ### 1. Clock Generation (MMCM 25 MHz)
 * **On-board oscillator:** 12 MHz oscillator on pin `F14` (`clk_12mhz` in the XDC).

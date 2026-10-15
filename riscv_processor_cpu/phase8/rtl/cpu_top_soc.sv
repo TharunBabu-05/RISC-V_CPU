@@ -18,6 +18,8 @@ module cpu_top_soc #(
     input  logic        clk,
     input  logic        rst_n,
     input  logic        ext_interrupt,
+    input  logic        timer_interrupt,
+    input  logic        software_interrupt,
 
     // ---- Instruction Memory Bus (→ SoC BRAM Port A) ----
     output logic [31:0] imem_addr,    // Byte address of fetch
@@ -1073,6 +1075,8 @@ module cpu_top_soc #(
         .access_fault_cause(pmp_access_cause),
         .access_fault_addr(pmp_access_addr),
         .ext_interrupt   (ext_interrupt),
+        .timer_interrupt (timer_interrupt),
+        .software_interrupt(software_interrupt),
         .irq_enable      (irq_enable),
         .mstatus         (ex_csr_mstatus),
         .mie             (ex_csr_mie),

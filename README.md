@@ -68,10 +68,11 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | 5-stage pipeline | ✅ | IF, ID, EX, MEM, WB |
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
 | M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
-| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+6.802 ns**, WHS **+0.028 ns**, 0 failing endpoints |
+| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+7.673 ns**, WHS **+0.030 ns**, 0 failing endpoints |
 | CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
-| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, LEDs |
+| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs |
+| Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 4-source priority/claim controller |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
 | UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, aligned and cross-word byte/halfword/word accesses |
@@ -95,8 +96,8 @@ Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7
 
 | Resource | Used | Available | Utilization |
 | :--- | ---: | ---: | ---: |
-| Slice LUTs | 6,475 | 32,600 | 19.9 % |
-| Flip-flops | 3,869 | 65,200 | 5.9 % |
+| Slice LUTs | 6,793 | 32,600 | 20.8 % |
+| Flip-flops | 4,194 | 65,200 | 6.4 % |
 | Block RAM tiles | 32 | 75 | 42.7 % |
 | DSP slices | 4 | 120 | 3.3 % |
 
@@ -108,16 +109,16 @@ Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7
 
 | Check | Worst slack | Total negative slack | Failing endpoints |
 | :--- | ---: | ---: | ---: |
-| Setup | **+6.802 ns** | 0.000 ns | 0 / 12,261 |
-| Hold | **+0.028 ns** | 0.000 ns | 0 / 12,261 |
-| Pulse width | +16.667 ns | 0.000 ns | 0 / 3,942 |
+| Setup | **+7.673 ns** | 0.000 ns | 0 / 12,984 |
+| Hold | **+0.030 ns** | 0.000 ns | 0 / 12,984 |
+| Pulse width | +16.667 ns | 0.000 ns | 0 / 4,267 |
 
 ### Before vs after the timing fix
 
 | | Before | After |
 | :--- | :---: | :---: |
-| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+6.802 ns** (0 failing) |
-| Slice LUTs | 9,683 | 6,367 after implementation |
+| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+7.673 ns** (0 failing) |
+| Slice LUTs | 9,683 | 6,687 after implementation |
 | Timing status | Constraints **not** met | All constraints met |
 
 ---
@@ -165,6 +166,8 @@ This is the first game running on the processor.
 | Address Range | Device | Description |
 | :--- | :--- | :--- |
 | `0x0000_0000` - `0x0000_FFFF` | Unified BRAM | Firmware, data, `.bss`, stack |
+| `0x0200_0000` - `0x0200_FFFF` | CLINT | `msip`, 64-bit `mtimecmp`, 64-bit `mtime` |
+| `0x0C00_0000` - `0x0C3F_FFFF` | PLIC | Priority, pending, enable, threshold, claim/complete |
 | `0x1000_0000` - `0x1000_000F` | UART | TX, RX, status registers |
 
 ### FPGA Top Level
@@ -175,6 +178,8 @@ The active board deployment lives in:
 - [`riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv`](riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv)
 - [`riscv_processor_cpu/phase8/rtl/bram.sv`](riscv_processor_cpu/phase8/rtl/bram.sv)
 - [`riscv_processor_cpu/phase8/rtl/uart.sv`](riscv_processor_cpu/phase8/rtl/uart.sv)
+- [`riscv_processor_cpu/phase8/rtl/clint.sv`](riscv_processor_cpu/phase8/rtl/clint.sv)
+- [`riscv_processor_cpu/phase8/rtl/plic.sv`](riscv_processor_cpu/phase8/rtl/plic.sv)
 - [`riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc`](riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc)
 
 ---
@@ -226,7 +231,7 @@ The fix:
 - `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
 - The FPU stub's divider was removed from the board build (the FPU now uses its own iterative FDIV/FSQRT and is not part of the FPGA SoC by default).
 
-Result: the current hardened design closes timing with **+6.802 ns setup slack** and **+0.028 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+Result: the current hardened design closes timing with **+7.673 ns setup slack** and **+0.030 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
 
 ### 5. UART RX Read/Arrival Collision
 
@@ -415,9 +420,10 @@ Snake controls:
 | Directed + unit testbenches | `make regress` | 26/26 pass (incl. PMP, S-mode delegation, unaligned BRAM, 43,013 FPU and 12,200 vector vectors) |
 | UART loopback + collision | UART testbench | 20/20 bytes pass, including simultaneous receive/read |
 | UART bootloader | `tb_bootloader.sv` | Upload, CRC-32 verification, `FENCE.I`, jump and `APP:OK` pass |
+| CLINT + PLIC | Directed unit and SoC-map testbenches | `msip`, `mtimecmp`, priority, threshold, claim/complete, and CPU `mip` delivery pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
-| Timing closure (Vivado, 25 MHz) | — | WNS +6.802 ns, WHS +0.028 ns, 0 failing endpoints |
+| Timing closure (Vivado, 25 MHz) | — | WNS +7.673 ns, WHS +0.030 ns, 0 failing endpoints |
 | FPGA bitstream | Vivado 2020.2 | Synthesis, placement, routing and `write_bitstream` complete with 0 errors |
 | On the board | — | Hello/echo and Snake running on the Arty S7-50 |
 
@@ -429,6 +435,9 @@ cross-word memory accesses, and M/S/U privilege transitions. Details:
 [FPU / vector](riscv_processor_cpu/docs/fp_extension.md).
 
 Useful references:
+
+Run the complete Phase 8 interrupt-controller suite with
+`make -C riscv_processor_cpu/phase8/tb`.
 
 - [`riscv_processor_cpu/docs/architecture_overview.md`](riscv_processor_cpu/docs/architecture_overview.md)
 - [`riscv_processor_cpu/docs/isa_coverage.md`](riscv_processor_cpu/docs/isa_coverage.md)

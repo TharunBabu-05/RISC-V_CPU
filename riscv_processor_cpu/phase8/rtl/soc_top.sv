@@ -5,7 +5,9 @@
 //    1. cpu_top_soc — RV32IM + Zicsr 5-stage pipelined processor
 //    2. bram        — 64KB unified BRAM (instruction + data)
 //    3. uart        — Memory-mapped UART peripheral (115200 baud)
-//    4. address decoder routing CPU data accesses to BRAM / UART
+//    4. clint       — mtime/mtimecmp and machine software interrupt
+//    5. plic        — prioritized platform interrupt aggregation
+//    6. address decoder routing CPU data accesses to peripherals
 //
 //  ===================================================
 //  Memory Map (Physical Address Space)
@@ -19,10 +21,12 @@
 //       +0x0: TX Write (write byte → sends over UART)
 //       +0x4: RX Read  (read byte ← received from PC)
 //       +0x8: Status   (bit0=TX_READY, bit1=RX_VALID, bit2=RX_OVERFLOW)
+//    0x0200_0000 – 0x0200_FFFF  : CLINT (msip, mtimecmp, mtime)
+//    0x0C00_0000 – 0x0C3F_FFFF  : PLIC (4 sources, 1 M-mode context)
 //
 //  ===================================================
 //  On-chip resources used (Arty S7-50, Vivado 2020.2 post-route):
-//    6,367 LUTs, 3,870 FFs, 4 DSP48E1, 32 RAMB36 tiles
+//    6,687 LUTs, 4,195 FFs, 4 DSP48E1, 32 RAMB36 tiles
 //    (64KB logical memory, duplicated parity banks for unaligned accesses)
 //  ===================================================
 //
@@ -45,6 +49,15 @@ module soc_top (
 
     // ---- Status LEDs ----
     output logic [3:0]  led           // LED[0]=run, LED[1]=PLL locked
+`ifdef SIMULATION
+    ,input logic        sim_bus_override
+    ,input logic [31:0] sim_bus_addr
+    ,input logic [31:0] sim_bus_wdata
+    ,input logic        sim_bus_rd_en
+    ,input logic        sim_bus_wr_en
+    ,input logic [2:0]  sim_bus_funct3
+    ,input logic [3:0]  sim_irq_sources
+`endif
 );
 
     // -------------------------------------------------------
@@ -123,6 +136,25 @@ module soc_top (
     logic        dmem_wr_en;
     logic [3:0]  dmem_we;      // Byte enables for store instructions
     logic [2:0]  dmem_funct3;  // From CPU MEM stage
+    logic [31:0] cpu_dmem_addr;
+    logic [31:0] cpu_dmem_wdata;
+    logic        cpu_dmem_rd_en;
+    logic        cpu_dmem_wr_en;
+    logic [2:0]  cpu_dmem_funct3;
+
+`ifdef SIMULATION
+    assign dmem_addr   = (sim_bus_override === 1'b1) ? sim_bus_addr   : cpu_dmem_addr;
+    assign dmem_wdata  = (sim_bus_override === 1'b1) ? sim_bus_wdata  : cpu_dmem_wdata;
+    assign dmem_rd_en  = (sim_bus_override === 1'b1) ? sim_bus_rd_en  : cpu_dmem_rd_en;
+    assign dmem_wr_en  = (sim_bus_override === 1'b1) ? sim_bus_wr_en  : cpu_dmem_wr_en;
+    assign dmem_funct3 = (sim_bus_override === 1'b1) ? sim_bus_funct3 : cpu_dmem_funct3;
+`else
+    assign dmem_addr   = cpu_dmem_addr;
+    assign dmem_wdata  = cpu_dmem_wdata;
+    assign dmem_rd_en  = cpu_dmem_rd_en;
+    assign dmem_wr_en  = cpu_dmem_wr_en;
+    assign dmem_funct3 = cpu_dmem_funct3;
+`endif
 
     // -------------------------------------------------------
     //  Address Decoder (Bus Fabric)
@@ -136,10 +168,16 @@ module soc_top (
     localparam logic [31:0] BRAM_MASK  = 32'h0000_FFFF;  // 64KB window
     localparam logic [31:0] UART_BASE  = 32'h1000_0000;
     localparam logic [31:0] UART_MASK  = 32'h0000_000F;  // 16 bytes
+    localparam logic [31:0] CLINT_BASE = 32'h0200_0000;
+    localparam logic [31:0] CLINT_MASK = 32'h0000_FFFF;  // 64KB
+    localparam logic [31:0] PLIC_BASE  = 32'h0C00_0000;
+    localparam logic [31:0] PLIC_MASK  = 32'h003F_FFFF;  // 4MB
 
-    logic sel_bram, sel_uart;
+    logic sel_bram, sel_uart, sel_clint, sel_plic;
     assign sel_bram = ((dmem_addr & ~BRAM_MASK) == BRAM_BASE);
     assign sel_uart = ((dmem_addr & ~UART_MASK) == UART_BASE);
+    assign sel_clint = ((dmem_addr & ~CLINT_MASK) == CLINT_BASE);
+    assign sel_plic = ((dmem_addr & ~PLIC_MASK) == PLIC_BASE);
 
     // -------------------------------------------------------
     //  Read data mux back to CPU
@@ -147,6 +185,8 @@ module soc_top (
     logic [31:0] bram_rdata;
     logic [31:0] bram_wdata;
     logic [31:0] uart_rdata;
+    logic [31:0] clint_rdata;
+    logic [31:0] plic_rdata;
 
     // Align UART read path and selects with BRAM's 1-cycle read latency:
     // Cycle N   (EX stage):  dmem_addr/sel valid. BRAM latches addr; UART outputs rdata.
@@ -154,24 +194,40 @@ module soc_top (
     //                        Mux selects based on registered sel_*_mem.
     //                        mem_wb_mem_data latches dmem_rdata at posedge N+1.
     logic [31:0] uart_rdata_latched;
+    logic [31:0] clint_rdata_latched;
+    logic [31:0] plic_rdata_latched;
     logic        sel_bram_mem;
     logic        sel_uart_mem;
+    logic        sel_clint_mem;
+    logic        sel_plic_mem;
 
     always_ff @(posedge clk_sys or negedge rst_n) begin
         if (!rst_n) begin
             uart_rdata_latched <= 32'h0;
+            clint_rdata_latched <= 32'h0;
+            plic_rdata_latched <= 32'h0;
             sel_bram_mem       <= 1'b0;
             sel_uart_mem       <= 1'b0;
+            sel_clint_mem      <= 1'b0;
+            sel_plic_mem       <= 1'b0;
         end else begin
             uart_rdata_latched <= uart_rdata;
+            clint_rdata_latched <= clint_rdata;
+            plic_rdata_latched <= plic_rdata;
             sel_bram_mem       <= sel_bram;
             sel_uart_mem       <= sel_uart;
+            sel_clint_mem      <= sel_clint;
+            sel_plic_mem       <= sel_plic;
         end
     end
 
     always_comb begin
         dmem_rdata = 32'h0;
-        if (sel_uart_mem)
+        if (sel_plic_mem)
+            dmem_rdata = plic_rdata_latched;
+        else if (sel_clint_mem)
+            dmem_rdata = clint_rdata_latched;
+        else if (sel_uart_mem)
             dmem_rdata = uart_rdata_latched;
         else if (sel_bram_mem)
             dmem_rdata = bram_rdata;
@@ -216,8 +272,28 @@ module soc_top (
     );
 
     // -------------------------------------------------------
-    //  UART Peripheral
+    //  UART, CLINT and PLIC peripherals
     // -------------------------------------------------------
+    logic uart_irq;
+    logic timer_irq;
+    logic software_irq;
+    logic plic_irq;
+    logic [3:0] plic_sources;
+
+    // UART is live today. GPIO, SPI and external slots are ready for their
+    // peripheral blocks and remain inactive until those blocks are connected.
+`ifdef SIMULATION
+    assign plic_sources[0] = uart_irq | (sim_irq_sources[0] === 1'b1);
+    assign plic_sources[1] = (sim_irq_sources[1] === 1'b1);
+    assign plic_sources[2] = (sim_irq_sources[2] === 1'b1);
+    assign plic_sources[3] = (sim_irq_sources[3] === 1'b1);
+`else
+    assign plic_sources[0] = uart_irq; // source ID 1
+    assign plic_sources[1] = 1'b0;     // source ID 2: GPIO
+    assign plic_sources[2] = 1'b0;     // source ID 3: SPI
+    assign plic_sources[3] = 1'b0;     // source ID 4: external/platform
+`endif
+
     uart #(
         .CLK_FREQ (25_000_000),    // 25 MHz — MMCM output: 12MHz × 62.5 / 30 = 25 MHz (verified)
         .BAUD_RATE(115_200)
@@ -229,8 +305,33 @@ module soc_top (
         .wr_en      (sel_uart & dmem_wr_en),
         .rd_en      (sel_uart & dmem_rd_en),
         .rd_data    (uart_rdata),
+        .irq        (uart_irq),
         .uart_tx_pin(uart_tx),
         .uart_rx_pin(uart_rx)
+    );
+
+    clint u_clint (
+        .clk         (clk_sys),
+        .rst_n       (rst_n),
+        .addr        (dmem_addr[15:0]),
+        .wr_data     (dmem_wdata),
+        .wr_en       (sel_clint & dmem_wr_en),
+        .rd_en       (sel_clint & dmem_rd_en),
+        .rd_data     (clint_rdata),
+        .software_irq(software_irq),
+        .timer_irq   (timer_irq)
+    );
+
+    plic #(.NUM_SOURCES(4)) u_plic (
+        .clk         (clk_sys),
+        .rst_n       (rst_n),
+        .addr        (dmem_addr[21:0]),
+        .wr_data     (dmem_wdata),
+        .wr_en       (sel_plic & dmem_wr_en),
+        .rd_en       (sel_plic & dmem_rd_en),
+        .source_irq  (plic_sources),
+        .rd_data     (plic_rdata),
+        .external_irq(plic_irq)
     );
 
     // -------------------------------------------------------
@@ -241,19 +342,21 @@ module soc_top (
     ) u_cpu (
         .clk            (clk_sys),
         .rst_n          (rst_n),
-        .ext_interrupt  (1'b0),
+        .ext_interrupt  (plic_irq),
+        .timer_interrupt(timer_irq),
+        .software_interrupt(software_irq),
 
         // Instruction bus (→ BRAM Port A)
         .imem_addr      (imem_addr),
         .imem_rdata     (imem_rdata),
 
         // Data bus (→ Address decoder → BRAM/UART)
-        .dmem_addr      (dmem_addr),
-        .dmem_wdata     (dmem_wdata),
+        .dmem_addr      (cpu_dmem_addr),
+        .dmem_wdata     (cpu_dmem_wdata),
         .dmem_rdata     (dmem_rdata),
-        .dmem_rd_en     (dmem_rd_en),
-        .dmem_wr_en     (dmem_wr_en),
-        .dmem_funct3    (dmem_funct3),
+        .dmem_rd_en     (cpu_dmem_rd_en),
+        .dmem_wr_en     (cpu_dmem_wr_en),
+        .dmem_funct3    (cpu_dmem_funct3),
 
         // Debug
         .dbg_pc         (dbg_pc),

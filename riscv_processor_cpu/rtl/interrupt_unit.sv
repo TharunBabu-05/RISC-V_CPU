@@ -27,6 +27,8 @@ module interrupt_unit #(
     input  logic [XLEN-1:0] access_fault_cause,
     input  logic [XLEN-1:0] access_fault_addr,
     input  logic            ext_interrupt,
+    input  logic            timer_interrupt,
+    input  logic            software_interrupt,
     input  logic            irq_enable,
     input  logic [XLEN-1:0] mstatus,
     input  logic [XLEN-1:0] mie,
@@ -180,7 +182,9 @@ module interrupt_unit #(
             mip_reg <= {XLEN{1'b0}};
         else begin
             mip_reg <= {XLEN{1'b0}};
-            mip_reg[11] <= ext_interrupt;
+            mip_reg[11] <= (ext_interrupt === 1'b1);
+            mip_reg[7]  <= (timer_interrupt === 1'b1);
+            mip_reg[3]  <= (software_interrupt === 1'b1);
         end
     end
 endmodule
