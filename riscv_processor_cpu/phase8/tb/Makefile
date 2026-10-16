@@ -18,6 +18,7 @@ CPU_SRCS := \
 
 SOC_SRCS := \
 	$(SOC_RTL)/soc_top.sv \
+	$(SOC_RTL)/generic_fpga_top.sv \
 	$(SOC_RTL)/bram.sv \
 	$(SOC_RTL)/uart.sv \
 	$(SOC_RTL)/uart_tx.sv \
@@ -29,9 +30,9 @@ SOC_SRCS := \
 	$(SOC_RTL)/cpu_top_soc.sv \
 	$(CPU_SRCS)
 
-.PHONY: all boot_regress clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map clean
+.PHONY: all boot_regress clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map portable clean
 
-all: clint plic dma dma_soc qspi interrupt_sources interrupt_map
+all: clint plic dma dma_soc qspi interrupt_sources interrupt_map portable
 
 boot_regress: qspi_boot qspi_corrupt uart_recovery
 
@@ -88,6 +89,13 @@ interrupt_map: | $(BUILD)
 	$(IVERILOG) -g2012 -DSIMULATION -s tb_interrupt_map \
 		-o $(BUILD)/tb_interrupt_map tb_interrupt_map.sv $(SOC_SRCS)
 	cd $(SOC_RTL) && $(VVP) ../tb/$(BUILD)/tb_interrupt_map
+
+portable: | $(BUILD)
+	$(IVERILOG) -g2012 -DPORTABLE_BUILD -s generic_fpga_top \
+		-o $(BUILD)/portable_elaboration $(SOC_SRCS)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_portable_soc \
+		-o $(BUILD)/tb_portable_soc tb_portable_soc.sv $(SOC_SRCS)
+	cd $(SOC_RTL) && $(VVP) ../tb/$(BUILD)/tb_portable_soc
 
 clean:
 	rm -rf $(BUILD)

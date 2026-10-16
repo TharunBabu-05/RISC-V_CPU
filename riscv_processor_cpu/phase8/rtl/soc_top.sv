@@ -1,5 +1,5 @@
 // ============================================================
-//  soc_top.sv  —  RV32 SoC Top-Level for Arty S7-50 (Snake build)
+//  soc_top.sv - Portable RV32 SoC core plus Arty S7-50 wrapper
 // ============================================================
 //  This module integrates:
 //    1. cpu_top_soc — RV32IM + Zicsr 5-stage pipelined processor
@@ -40,31 +40,31 @@
 //    (64KB logical memory, duplicated parity banks for unaligned accesses)
 //  ===================================================
 //
-//  Board: Xilinx Arty S7-50 (XC7S50-CSGA324)
-//  Clock: 12 MHz on-board oscillator -> clk_wiz_0 MMCM -> 25 MHz clk_sys
+//  soc_core is vendor-neutral. soc_top preserves the proven Arty S7 build.
 // ============================================================
 `timescale 1ns/1ps
 
-module soc_top #(
-    parameter FIRMWARE_FILE = "firmware.vmem"
+module soc_core #(
+    parameter FIRMWARE_FILE = "firmware.vmem",
+    parameter integer CLK_FREQ_HZ = 25_000_000,
+    parameter integer UART_BAUD = 115_200,
+    parameter integer BRAM_SIZE_BYTES = 65_536
 ) (
-    // ---- Board Pins ----
-    input  logic        clk_12mhz,    // Arty S7 on-board 12 MHz oscillator
-    input  logic        rst_btn,      // Active-high reset button (BTN0)
+    input  logic        clk_sys,
+    input  logic        rst_n,
 
-    // ---- UART Pins (USB-UART via onboard FTDI FT2232) ----
-    // On the Arty S7 board:
-    //   Pin R12 connects to FTDI RXD input  ==> FPGA UART TX (output to PC)
-    //   Pin V12 connects to FTDI TXD output ==> FPGA UART RX (input from PC)
-    output logic        uart_tx,      // FPGA TX → PC RX (Pin R12)
-    input  logic        uart_rx,      // PC TX → FPGA RX (Pin V12)
+    // ---- UART pins ----
+    output logic        uart_tx,
+    input  logic        uart_rx,
 
-    // ---- On-board configuration flash ----
+    // ---- SPI/QSPI flash pins (current reader uses DQ0/DQ1) ----
     output logic        qspi_cs,
-    inout  wire [3:0]   qspi_dq,
+    output logic        qspi_sck,
+    output logic        qspi_dq0_o,
+    output logic        qspi_dq0_oe,
+    input  logic        qspi_dq1_i,
 
-    // ---- Status LEDs ----
-    output logic [3:0]  led           // LED[0]=run, LED[1]=PLL locked
+    output logic [3:0]  status
 `ifdef SIMULATION
     ,input logic        sim_bus_override
     ,input logic [31:0] sim_bus_addr
@@ -75,55 +75,6 @@ module soc_top #(
     ,input logic [3:0]  sim_irq_sources
 `endif
 );
-
-    // -------------------------------------------------------
-    //  PLL / MMCM: Generate 25 MHz from 12 MHz board clock
-    //  MMCM config (verified from clk_wiz_0 IP):
-    //    CLKFBOUT_MULT_F = 62.5, DIVCLK_DIVIDE = 1, CLKOUT0_DIVIDE_F = 30
-    //    => 12 MHz × 62.5 / 30 = 25 MHz
-    // -------------------------------------------------------
-    logic clk_sys;      // 25 MHz system clock
-    logic pll_locked;
-
-`ifndef SIMULATION
-    // Xilinx MMCM (Clocking Wizard IP)
-    clk_wiz_0 u_pll (
-        .clk_in1 (clk_12mhz),
-        .clk_out1(clk_sys),
-        .locked  (pll_locked)
-        // No reset port — IP was created with USE_RESET=false
-    );
-`else
-    // Simulation bypass
-    assign clk_sys = clk_12mhz;
-    assign pll_locked = 1'b1;
-`endif
-
-    // -------------------------------------------------------
-    //  Reset synchronizer
-    //  The Arty S7 buttons are Active-High (1 when pressed).
-    //  We invert it here to get an active-low reset signal.
-    // -------------------------------------------------------
-    logic [3:0] rst_sync_cnt;
-    logic       rst_n;
-    logic       rst_btn_n;
-
-    assign rst_btn_n = !rst_btn;
-
-    always_ff @(posedge clk_sys or negedge rst_btn_n) begin
-        if (!rst_btn_n) begin
-            rst_sync_cnt <= '0;
-            rst_n        <= 1'b0;
-        end else if (!pll_locked) begin
-            rst_sync_cnt <= '0;
-            rst_n        <= 1'b0;
-        end else if (!rst_n) begin
-            if (rst_sync_cnt == 4'hF)
-                rst_n <= 1'b1;
-            else
-                rst_sync_cnt <= rst_sync_cnt + 1;
-        end
-    end
 
     // -------------------------------------------------------
     //  CPU signals
@@ -197,7 +148,7 @@ module soc_top #(
     // and the stack/data also live at 0x0000_xxxx, so Port B must decode the
     // same range. Do NOT use 0x2000_0000 here — that would drop all stack accesses.
     localparam logic [31:0] BRAM_BASE  = 32'h0000_0000;
-    localparam logic [31:0] BRAM_MASK  = 32'h0000_FFFF;  // 64KB window
+    localparam logic [31:0] BRAM_MASK  = BRAM_SIZE_BYTES - 1;
     localparam logic [31:0] UART_BASE  = 32'h1000_0000;
     localparam logic [31:0] UART_MASK  = 32'h0000_000F;  // 16 bytes
     localparam logic [31:0] QSPI_BASE  = 32'h1000_1000;
@@ -384,7 +335,7 @@ module soc_top #(
     //  Port B: CPU data load/store
     // -------------------------------------------------------
     bram #(
-        .SIZE_BYTES(65536),
+        .SIZE_BYTES(BRAM_SIZE_BYTES),
         // phase8/rtl/firmware.vmem. It is a source of the Vivado project
         // (create_project.tcl), so synthesis finds it by name; reset synth_1
         // after changing it. Simulations run from phase8/rtl or override it.
@@ -429,8 +380,8 @@ module soc_top #(
 `endif
 
     uart #(
-        .CLK_FREQ (25_000_000),    // 25 MHz — MMCM output: 12MHz × 62.5 / 30 = 25 MHz (verified)
-        .BAUD_RATE(115_200)
+        .CLK_FREQ (CLK_FREQ_HZ),
+        .BAUD_RATE(UART_BAUD)
     ) u_uart (
         .clk        (clk_sys),
         .rst_n      (rst_n),
@@ -466,17 +417,6 @@ module soc_top #(
         .irq       (dma_irq)
     );
 
-    // The configuration flash data pins become ordinary user I/O after FPGA
-    // startup. Its dedicated CCLK pin is only reachable through STARTUPE2.
-    logic qspi_sck;
-    logic qspi_dq0_o;
-    logic qspi_dq0_oe;
-
-    assign qspi_dq[0] = qspi_dq0_oe ? qspi_dq0_o : 1'bz;
-    assign qspi_dq[1] = 1'bz;
-    assign qspi_dq[2] = 1'bz;
-    assign qspi_dq[3] = 1'bz;
-
     qspi_reader u_qspi (
         .clk         (clk_sys),
         .rst_n       (rst_n),
@@ -489,18 +429,8 @@ module soc_top #(
         .flash_sck   (qspi_sck),
         .flash_dq0_o (qspi_dq0_o),
         .flash_dq0_oe(qspi_dq0_oe),
-        .flash_dq1_i (qspi_dq[1])
+        .flash_dq1_i (qspi_dq1_i)
     );
-
-`ifndef SIMULATION
-    STARTUPE2 u_startup_qspi (
-        .CFGCLK(), .CFGMCLK(), .EOS(), .PREQ(),
-        .CLK(1'b0), .GSR(1'b0), .GTS(1'b0),
-        .KEYCLEARB(1'b1), .PACK(1'b0),
-        .USRCCLKO(qspi_sck), .USRCCLKTS(1'b0),
-        .USRDONEO(1'b1), .USRDONETS(1'b1)
-    );
-`endif
 
     clint u_clint (
         .clk         (clk_sys),
@@ -557,22 +487,119 @@ module soc_top #(
         .dbg_reg_rd_data(dbg_reg_rd_data)
     );
 
-    // -------------------------------------------------------
-    //  Status LEDs
-    // -------------------------------------------------------
-    //  LD0 (green) : Solid = CPU is out of reset and running
-    //  LD1 (green) : Solid = MMCM/PLL is locked (25 MHz clock stable)
-    //  LD2 (green) : ON while UART TX is busy  (FPGA is sending to PC)
-    //  LD3 (green) : ON while the physical UART RX line is active
-    //
-    //  Diagnostic guide:
-    //    LD0+LD1 ON, LD2 blinking on keypress = firmware running OK
-    //    LD3 briefly ON when you type = UART RX received the byte
-    //    LD2 always ON = CPU stuck in banner or echo TX loop
-    //    LD3 always ON = UART RX stuck valid (glitch / wiring issue)
-    assign led[0] = rst_n;              // CPU running (LD0)
-    assign led[1] = pll_locked;         // PLL locked (LD1)
-    assign led[2] = ~uart_tx;           // TX active: pulses ON when transmitting (LD2)
-    assign led[3] = ~uart_rx;           // RX active: pulses ON when receiving (LD3)
+    // Board wrappers may route these generic status signals to LEDs.
+    assign status[0] = rst_n;
+    assign status[1] = 1'b1;
+    assign status[2] = ~uart_tx;
+    assign status[3] = ~uart_rx;
 
 endmodule
+
+// Arty S7-50 compatibility wrapper. Defining PORTABLE_BUILD omits this module,
+// so non-Xilinx tools never have to resolve clk_wiz_0 or STARTUPE2. The Arty
+// wrapper remains enabled by default for existing Vivado projects.
+`ifndef PORTABLE_BUILD
+module soc_top #(
+    parameter FIRMWARE_FILE = "firmware.vmem",
+    parameter integer CLK_FREQ_HZ = 25_000_000,
+    parameter integer UART_BAUD = 115_200
+) (
+    input  logic        clk_12mhz,
+    input  logic        rst_btn,
+    output logic        uart_tx,
+    input  logic        uart_rx,
+    output logic        qspi_cs,
+    inout  wire [3:0]   qspi_dq,
+    output logic [3:0]  led
+`ifdef SIMULATION
+    ,input logic        sim_bus_override
+    ,input logic [31:0] sim_bus_addr
+    ,input logic [31:0] sim_bus_wdata
+    ,input logic        sim_bus_rd_en
+    ,input logic        sim_bus_wr_en
+    ,input logic [2:0]  sim_bus_funct3
+    ,input logic [3:0]  sim_irq_sources
+`endif
+);
+    logic clk_sys;
+    logic pll_locked;
+    logic rst_n;
+    logic [3:0] rst_sync_cnt;
+    logic [3:0] core_status;
+    logic qspi_sck;
+    logic qspi_dq0_o;
+    logic qspi_dq0_oe;
+
+`ifndef SIMULATION
+    clk_wiz_0 u_pll (
+        .clk_in1 (clk_12mhz),
+        .clk_out1(clk_sys),
+        .locked  (pll_locked)
+    );
+`else
+    assign clk_sys = clk_12mhz;
+    assign pll_locked = 1'b1;
+`endif
+
+    always_ff @(posedge clk_sys or posedge rst_btn) begin
+        if (rst_btn) begin
+            rst_sync_cnt <= '0;
+            rst_n        <= 1'b0;
+        end else if (!pll_locked) begin
+            rst_sync_cnt <= '0;
+            rst_n        <= 1'b0;
+        end else if (!rst_n) begin
+            if (rst_sync_cnt == 4'hF)
+                rst_n <= 1'b1;
+            else
+                rst_sync_cnt <= rst_sync_cnt + 1'b1;
+        end
+    end
+
+    assign qspi_dq[0] = qspi_dq0_oe ? qspi_dq0_o : 1'bz;
+    assign qspi_dq[1] = 1'bz;
+    assign qspi_dq[2] = 1'bz;
+    assign qspi_dq[3] = 1'bz;
+
+`ifndef SIMULATION
+    STARTUPE2 u_startup_qspi (
+        .CFGCLK(), .CFGMCLK(), .EOS(), .PREQ(),
+        .CLK(1'b0), .GSR(1'b0), .GTS(1'b0),
+        .KEYCLEARB(1'b1), .PACK(1'b0),
+        .USRCCLKO(qspi_sck), .USRCCLKTS(1'b0),
+        .USRDONEO(1'b1), .USRDONETS(1'b1)
+    );
+`endif
+
+    soc_core #(
+        .FIRMWARE_FILE(FIRMWARE_FILE),
+        .CLK_FREQ_HZ(CLK_FREQ_HZ),
+        .UART_BAUD(UART_BAUD)
+    ) u_soc (
+        .clk_sys     (clk_sys),
+        .rst_n       (rst_n),
+        .uart_tx     (uart_tx),
+        .uart_rx     (uart_rx),
+        .qspi_cs     (qspi_cs),
+        .qspi_sck    (qspi_sck),
+        .qspi_dq0_o  (qspi_dq0_o),
+        .qspi_dq0_oe (qspi_dq0_oe),
+        .qspi_dq1_i  (qspi_dq[1]),
+        .status      (core_status)
+`ifdef SIMULATION
+        ,.sim_bus_override(sim_bus_override)
+        ,.sim_bus_addr    (sim_bus_addr)
+        ,.sim_bus_wdata   (sim_bus_wdata)
+        ,.sim_bus_rd_en   (sim_bus_rd_en)
+        ,.sim_bus_wr_en   (sim_bus_wr_en)
+        ,.sim_bus_funct3  (sim_bus_funct3)
+        ,.sim_irq_sources (sim_irq_sources)
+`endif
+    );
+
+    assign led[0] = core_status[0];
+    assign led[1] = pll_locked;
+    assign led[2] = core_status[2];
+    assign led[3] = core_status[3];
+endmodule
+`endif

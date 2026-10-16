@@ -1,15 +1,17 @@
 # 🚀 RISC-V RV32IM SoC on Arty S7-50 FPGA — Complete Implementation & Deployment Guide
 
-> **Target Board:** Digilent Arty S7-50 (`XC7S50-CSGA324-1`)  
+> **Verified Board:** Digilent Arty S7-50 (`XC7S50-CSGA324-1`)<br>
 > **Core Architecture:** 5-Stage Pipelined RV32IM with 64KB BRAM, UART, DMA, QSPI Boot ROM, CLINT & PLIC
 > **System Clock:** 25 MHz (MMCM synthesis from 12 MHz on-board oscillator)  
 > **Serial Baud Rate:** 115,200 baud (8N1)
+> **Portable Target:** `soc_core` + `generic_fpga_top` for other FPGA families
 
 ---
 
 ## 📋 Table of Contents
 1. [Overview & Project Milestones](#-overview--project-milestones)
 2. [Hardware Architecture & Key Bug Fixes](#-hardware-architecture--key-bug-fixes)
+   - [FPGA Portability](#fpga-portability)
    - [Clock Generation (MMCM 25 MHz)](#1-clock-generation-mmcm-25-mhz)
    - [UART RX Pull-Up Resistor Fix](#2-uart-rx-pull-up-resistor-fix)
    - [Byte-Level Load & Store Alignment Fix](#3-byte-level-load--store-alignment-fix)
@@ -42,10 +44,34 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
    - Interactive `snake.c`: Full ANSI terminal Snake game with real-time controls.
 10. **Persistent Boot:** The BRAM-resident Boot ROM validates Snake in the board's QSPI flash, copies it to RAM, and falls back to UART recovery when the image is absent or damaged.
 11. **Bus-Master DMA:** Independent 8/16/32-bit transfers with source/destination increment controls, UART backpressure, progress/error registers, and PLIC completion interrupts.
+12. **FPGA Portability:** Vendor-neutral `soc_core`, generic board wrapper, configurable clock/UART/BRAM parameters, inferred multi-vendor memory, and a portable source manifest.
 
 ---
 
 ## 🛠 Hardware Architecture & Key Bug Fixes
+
+### FPGA Portability
+
+The Arty S7-50 remains the hardware-proven board, but the CPU/SoC is no longer
+coupled to it. [`rtl/soc_top.sv`](rtl/soc_top.sv) now contains the portable
+`soc_core` and the backward-compatible Arty `soc_top` wrapper. The portable
+[`rtl/generic_fpga_top.sv`](rtl/generic_fpga_top.sv) accepts an already-stable
+clock and exposes ordinary UART/QSPI/status pins, making it suitable for a new
+board wrapper in Vivado, Quartus, Radiant or an open-source flow.
+
+Use [`rtl/portable_soc.f`](rtl/portable_soc.f) as the source manifest, define
+`PORTABLE_BUILD`, select `generic_fpga_top`, set `CLK_FREQ_HZ` to the real SoC
+clock and provide board-specific pin/timing constraints. The UART divider is
+derived from that parameter. Full instructions and vendor notes are in
+[`PORTING.md`](PORTING.md).
+
+```powershell
+make -C riscv_processor_cpu/phase8/tb portable
+```
+
+This regression first elaborates a build with the Xilinx wrapper excluded,
+then runs the generic wrapper at 20 MHz and verifies reset synchronization,
+UART timing parameter propagation and CPU execution from inferred BRAM.
 
 During physical bring-up on the Arty S7 FPGA, three critical hardware issues were discovered and solved:
 

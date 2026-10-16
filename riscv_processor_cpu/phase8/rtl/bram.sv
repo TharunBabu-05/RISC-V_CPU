@@ -26,8 +26,12 @@ module bram #(
 
     // Both banks use the original word address so the existing firmware.vmem
     // can initialize them directly. Only the parity-matching copy is used.
-    (* ram_style = "block" *) logic [31:0] even_mem [0:WORDS-1];
-    (* ram_style = "block" *) logic [31:0] odd_mem  [0:WORDS-1];
+    // Xilinx, Intel/Altera and Lattice/Synplify hints. Unknown attributes are
+    // ignored, while the RTL remains ordinary inferred synchronous memory.
+    (* ram_style = "block", ramstyle = "no_rw_check", syn_ramstyle = "block_ram" *)
+    logic [31:0] even_mem [0:WORDS-1];
+    (* ram_style = "block", ramstyle = "no_rw_check", syn_ramstyle = "block_ram" *)
+    logic [31:0] odd_mem  [0:WORDS-1];
 
     generate
         if (INIT_FILE != "") begin : gen_init

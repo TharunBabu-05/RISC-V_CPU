@@ -46,7 +46,7 @@ module tb_interrupt_map;
             sim_bus_rd_en = 1'b1;
             sim_bus_wr_en = 1'b0;
             @(posedge clk_12mhz); #1;
-            data = dut.dmem_rdata;
+            data = dut.u_soc.dmem_rdata;
             sim_bus_override = 1'b0;
             sim_bus_rd_en = 1'b0;
         end
@@ -67,9 +67,9 @@ module tb_interrupt_map;
         repeat (2) @(posedge clk_12mhz);
 
         bus_write(32'h0200_0000, 32'h1);
-        check("CLINT MSIP reaches the CPU", dut.software_irq);
+        check("CLINT MSIP reaches the CPU", dut.u_soc.software_irq);
         @(posedge clk_12mhz); #1;
-        check("CPU mip.MSIP reflects CLINT", dut.u_cpu.u_int.mip_reg[3]);
+        check("CPU mip.MSIP reflects CLINT", dut.u_soc.u_cpu.u_int.mip_reg[3]);
         bus_write(32'h0200_0000, 32'h0);
 
         // Put mtime near zero and safely program a short timer deadline.
@@ -78,10 +78,10 @@ module tb_interrupt_map;
         bus_write(32'h0200_BFF8, 32'h0);
         bus_write(32'h0200_4000, 32'd20);
         bus_write(32'h0200_4004, 32'h0);
-        wait (dut.timer_irq);
-        check("CLINT timer reaches the CPU", dut.timer_irq);
+        wait (dut.u_soc.timer_irq);
+        check("CLINT timer reaches the CPU", dut.u_soc.timer_irq);
         @(posedge clk_12mhz); #1;
-        check("CPU mip.MTIP reflects CLINT", dut.u_cpu.u_int.mip_reg[7]);
+        check("CPU mip.MTIP reflects CLINT", dut.u_soc.u_cpu.u_int.mip_reg[7]);
         bus_write(32'h0200_4004, 32'hFFFF_FFFF);
 
         // Configure source 2 (GPIO slot), inject one pulse, claim and complete.
@@ -91,14 +91,14 @@ module tb_interrupt_map;
         sim_irq_sources[1] = 1'b1;
         @(posedge clk_12mhz); #1;
         sim_irq_sources[1] = 1'b0;
-        check("PLIC pending source raises MEIP", dut.plic_irq);
+        check("PLIC pending source raises MEIP", dut.u_soc.plic_irq);
         @(posedge clk_12mhz); #1;
-        check("CPU mip.MEIP reflects PLIC", dut.u_cpu.u_int.mip_reg[11]);
+        check("CPU mip.MEIP reflects PLIC", dut.u_soc.u_cpu.u_int.mip_reg[11]);
 
         bus_read(32'h0C20_0004, value);
         check("PLIC claim returns GPIO source ID", value == 32'd2);
         bus_write(32'h0C20_0004, 32'd2);
-        check("PLIC completion leaves source inactive", !dut.plic_irq);
+        check("PLIC completion leaves source inactive", !dut.u_soc.plic_irq);
 
         if (errors == 0)
             $display("PASS: SoC CLINT/PLIC address-map integration tests");

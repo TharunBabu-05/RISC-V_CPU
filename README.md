@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+Persistent+QSPI+Boot;Snake+Running+On+My+Own+Processor" alt="Animated project title" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+Multi-FPGA+Portable;One+CPU+Core+%7C+Many+FPGA+Families;Snake+Running+On+My+Own+Processor" alt="Animated project title" />
 
 <br>
 
@@ -11,11 +11,12 @@
 ![Firmware](https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge)
 ![Boot](https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge)
 ![DMA](https://img.shields.io/badge/DMA-Memory%20%2B%20UART-00c853?style=for-the-badge)
+![Portable](https://img.shields.io/badge/RTL-Multi--FPGA%20Portable-7c3aed?style=for-the-badge&logo=verilog&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
 
-<h3>Custom 32-bit RISC-V processor, synthesized onto FPGA and booting Snake permanently from flash.</h3>
+<h3>Custom 32-bit RISC-V processor, built as a portable FPGA architecture and proven on real hardware.</h3>
 
-<b>Power on. Validate flash. Copy to RAM. Run the game.</b>
+<b>One RV32IM core. One clean SoC boundary. Multiple FPGA ecosystems.</b>
 
 <br><br>
 
@@ -29,6 +30,18 @@
 
 ---
 
+<div align="center">
+
+[![CPU Architecture](https://img.shields.io/badge/EXPLORE-CPU_ARCHITECTURE-00D9FF?style=flat-square)](#-core-architecture)
+[![FPGA Portability](https://img.shields.io/badge/EXPLORE-MULTI--FPGA_PORTABILITY-8B5CF6?style=flat-square)](#-multi-fpga-portability)
+[![Hardware Proof](https://img.shields.io/badge/VIEW-HARDWARE_PROOF-31FF70?style=flat-square)](#-persistent-boot-hardware-proof)
+[![Run Snake](https://img.shields.io/badge/PLAY-RISC--V_SNAKE-FF2BD6?style=flat-square)](#-run-it-on-the-arty-s7-50)
+[![Porting Guide](https://img.shields.io/badge/GUIDE-PORT_A_NEW_BOARD-FFB000?style=flat-square)](riscv_processor_cpu/phase8/PORTING.md)
+
+</div>
+
+---
+
 ## ✨ Project Snapshot
 
 For a source-derived visual explanation of the CPU pipeline, FPGA SoC, firmware build,
@@ -36,7 +49,7 @@ verification flow, and UART runtime path, open
 [`riscv_processor_cpu/docs/architecture_workflow.html`](riscv_processor_cpu/docs/architecture_workflow.html)
 in a browser.
 
-This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with persistent firmware and a live UART application.
+This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with persistent firmware and a live UART application. The SoC logic is now separated from its board wrapper, so the same CPU can target other AMD/Xilinx, Intel/Altera, or Lattice FPGAs without carrying Arty-specific clock and startup primitives into the portable core.
 
 The current hardware milestone is fully physical: the FPGA configures from the board's QSPI flash, the resident Boot ROM validates an `RVF1` image with CRC-32, copies Snake into BRAM, executes `FENCE.I`, and starts the playable game over PuTTY. If flash is absent or damaged, the same loader enters UART recovery instead of executing an unsafe image.
 
@@ -72,6 +85,135 @@ The current hardware milestone is fully physical: the FPGA configures from the b
   <img src="architecture_animated.svg" alt="Animated architecture diagram" width="96%">
 </div>
 
+## 🌐 Multi-FPGA Portability
+
+<div align="center">
+
+<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=700&size=27&pause=1000&color=8B5CF6&center=true&vCenter=true&width=980&height=70&lines=THE+CPU+IS+THE+PRODUCT.;THE+FPGA+IS+A+TARGET.;CHANGE+THE+WRAPPER.+KEEP+THE+CORE." alt="Multi-FPGA portability statement" />
+
+<br>
+
+<a href="https://www.amd.com/en/products/adaptive-socs-and-fpgas.html"><img src="https://img.shields.io/badge/AMD_Xilinx-Vivado-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="AMD Xilinx FPGA"></a>
+<a href="https://www.intel.com/content/www/us/en/products/details/fpga.html"><img src="https://img.shields.io/badge/Intel_FPGA-Quartus-0071C5?style=for-the-badge&logo=intel&logoColor=white" alt="Intel FPGA"></a>
+<a href="https://www.latticesemi.com/"><img src="https://img.shields.io/badge/Lattice-Radiant_%7C_Diamond-F5B800?style=for-the-badge&logoColor=111111" alt="Lattice Semiconductor FPGA"></a>
+<a href="https://www.microchip.com/en-us/products/fpgas-and-plds"><img src="https://img.shields.io/badge/Microchip-Libero-EE0000?style=for-the-badge&logo=microchip&logoColor=white" alt="Microchip FPGA"></a>
+<a href="https://yosyshq.net/yosys/"><img src="https://img.shields.io/badge/Open_Source-Yosys_%2B_nextpnr-22C55E?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Yosys and nextpnr"></a>
+
+<br><br>
+
+<img src="https://edge.sitecorecloud.io/latticesemi9e32-latticesemi06bb-prod9ecc-d341/media/Project/Lattice/LatticeSemi/Images/ImageLibrary/Logos/Lattice_Logo_Color_TransparentBG.png?sc_lang=en" alt="Lattice Semiconductor logo" height="34">
+
+<br>
+
+<b>The Arty S7-50 is the first proven home, not the permanent boundary.</b>
+
+</div>
+
+The five-stage RV32IM pipeline is now treated as reusable silicon IP. CPU
+behavior, firmware-visible addresses, interrupts, DMA, UART, boot flow and bus
+logic live below a clean portability boundary. Moving to another FPGA should
+change the clock/reset adapter, physical pins and vendor constraints, not the
+processor architecture.
+
+> [!IMPORTANT]
+> **Hardware-proven target:** Digilent Arty S7-50 / AMD Spartan-7.
+> **Portable RTL targets:** other AMD/Xilinx, Intel, Lattice and Microchip
+> families through a board-specific wrapper. These targets still require
+> synthesis, timing closure and physical validation on the selected board.
+
+### One Architecture, Three Layers
+
+```mermaid
+flowchart TB
+    CPU["RV32IM 5-Stage CPU<br/>IF · ID · EX · MEM · WB"]
+    SOC["Portable soc_core<br/>BRAM · UART · CLINT · PLIC · DMA · QSPI"]
+    API["Board Portability Boundary<br/>clock · reset · UART · QSPI · status"]
+    AMD["AMD / Xilinx<br/>Vivado + XDC"]
+    INTEL["Intel FPGA<br/>Quartus + QSF"]
+    LATTICE["Lattice<br/>Radiant / Diamond + LPF"]
+    MICROCHIP["Microchip<br/>Libero + PDC"]
+    OSS["Open FPGA Flow<br/>Yosys + nextpnr"]
+
+    CPU --> SOC --> API
+    API --> AMD
+    API --> INTEL
+    API --> LATTICE
+    API --> MICROCHIP
+    API --> OSS
+
+    classDef core fill:#00d9ff,color:#06131a,stroke:#ffffff,stroke-width:2px
+    classDef soc fill:#8b5cf6,color:#ffffff,stroke:#ffffff,stroke-width:2px
+    classDef boundary fill:#ff2bd6,color:#ffffff,stroke:#ffffff,stroke-width:2px
+    classDef vendor fill:#111827,color:#ffffff,stroke:#31ff70,stroke-width:2px
+    class CPU core
+    class SOC soc
+    class API boundary
+    class AMD,INTEL,LATTICE,MICROCHIP,OSS vendor
+```
+
+| Layer | Source | Responsibility | Changes between boards? |
+| :--- | :--- | :--- | :---: |
+| **CPU architecture** | [`cpu_top_soc.sv`](riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv) | RV32IM pipeline, hazards, forwarding, CSR/traps and memory buses | **No** |
+| **Portable SoC** | [`soc_core`](riscv_processor_cpu/phase8/rtl/soc_top.sv) | BRAM, UART, CLINT, PLIC, DMA, QSPI reader and address decoder | **No** |
+| **Generic FPGA shell** | [`generic_fpga_top.sv`](riscv_processor_cpu/phase8/rtl/generic_fpga_top.sv) | Stable clock input, synchronized reset, ordinary QSPI pins and status outputs | Usually no |
+| **Board adapter** | Board-specific top + constraints | PLL/MMCM, startup primitive, pinout, I/O voltage and configuration flash access | **Yes** |
+| **Reference adapter** | [`soc_top`](riscv_processor_cpu/phase8/rtl/soc_top.sv) | Arty S7 Clocking Wizard, `STARTUPE2`, reset polarity and LEDs | Arty only |
+
+### FPGA Ecosystem Matrix
+
+| FPGA ecosystem | Example families | Build flow | Required board layer | Project status |
+| :--- | :--- | :--- | :--- | :---: |
+| **AMD / Xilinx** | Spartan-7, Artix-7, Kintex-7, Zynq PL, UltraScale | Vivado + XDC | Clocking Wizard/MMCM, optional `STARTUPE2`, pin constraints | **Arty S7 verified** |
+| **Intel FPGA** | Cyclone, MAX 10, Arria | Quartus Prime + QSF | Intel PLL, reset synchronizer, pin assignments | RTL ready |
+| **Lattice Semiconductor** | iCE40, ECP5, Certus-NX, CrossLink-NX | Radiant/Diamond or Yosys + nextpnr | Family PLL and LPF/PCF constraints | RTL ready |
+| **Microchip FPGA** | PolarFire, IGLOO2, SmartFusion2 | Libero SoC + PDC | CCC clock block, reset and pin constraints | Integration path |
+| **Other FPGA families** | Any device with sufficient LUTs, registers and RAM | Vendor or open-source tools | Thin wrapper matching that device's primitives | Architecture ready |
+
+“RTL ready” means the vendor-neutral design boundary is available. It does not
+claim timing closure or board execution until that family has been synthesized
+and tested.
+
+### Portable Build Contract
+
+| Parameter | Default | What it controls |
+| :--- | ---: | :--- |
+| `CLK_FREQ_HZ` | `25_000_000` | Real SoC clock and UART timing calculation |
+| `UART_BAUD` | `115_200` | Serial-console baud rate |
+| `BRAM_SIZE_BYTES` | `65_536` | Inferred unified instruction/data memory size |
+| `FIRMWARE_FILE` | `firmware.vmem` | Power-on BRAM initialization image |
+| `PORTABLE_BUILD` | Defined by the new project | Removes Xilinx-only `clk_wiz_0` and `STARTUPE2` dependencies |
+
+The shared source list is maintained in
+[`portable_soc.f`](riscv_processor_cpu/phase8/rtl/portable_soc.f). Inferred RAM
+carries AMD/Xilinx, Intel and Synplify/Lattice-compatible block-memory hints.
+
+### Port The CPU In Seven Steps
+
+1. Add every source from [`portable_soc.f`](riscv_processor_cpu/phase8/rtl/portable_soc.f).
+2. Define `PORTABLE_BUILD` so vendor-specific Arty logic is excluded.
+3. Select `generic_fpga_top` or wrap `soc_core` directly.
+4. Supply a stable clock and set `CLK_FREQ_HZ` to its actual frequency.
+5. Add the target board's PLL, reset logic and QSPI startup primitive when required.
+6. Add pin, I/O-standard and timing constraints for that exact board.
+7. Simulate, inspect inferred RAM, synthesize, close timing and validate UART on hardware.
+
+```powershell
+cd riscv_processor_cpu\phase8\tb
+make portable
+```
+
+```text
+PASS portable wrapper holds reset
+PASS portable reset deasserts synchronously
+PASS 20 MHz UART divisor is propagated
+PASS CPU executes from inferred BRAM
+PASS UART idle level is high
+PASS: vendor-neutral SoC wrapper at 20 MHz
+```
+
+The full board checklist, QSPI caveats and vendor notes are in the
+**[FPGA Porting Guide](riscv_processor_cpu/phase8/PORTING.md)**.
+
 ---
 
 ## 🏆 What Is Working Now
@@ -86,6 +228,7 @@ The current hardware milestone is fully physical: the FPGA configures from the b
 | CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
 | FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs; DMA integrated and awaiting the next Vivado run |
+| FPGA portability | ✅ RTL | Vendor-neutral `soc_core`, generic wrapper, parameterized clock/UART/memory, multi-vendor BRAM hints, source manifest and 20 MHz portability regression |
 | Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 5-source priority/claim controller |
 | DMA controller | ✅ RTL | CPU-priority bus mastering, 8/16/32-bit memory copies, UART flow control, progress/error status, and PLIC completion IRQ; FPGA timing run pending |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
@@ -349,10 +492,14 @@ RISC-V_CPU/
     ├── phase5/compliance/            # riscv-tests runner and results
     ├── phase5/                       # Synthesis templates and Phase 5 report
     └── phase8/                       # FPGA SoC deployment
-        ├── rtl/                      # Arty S7 SoC RTL
+        ├── PORTING.md                # Multi-vendor board-porting guide
+        ├── rtl/                      # Portable SoC + FPGA board wrappers
+        │   ├── soc_top.sv            # Vendor-neutral soc_core + Arty wrapper
+        │   ├── generic_fpga_top.sv   # Generic FPGA top level
+        │   └── portable_soc.f        # Tool-independent RTL source manifest
         ├── software/                 # Bare-metal firmware
         ├── constraints/              # Arty S7 pin constraints
-        ├── tb/                       # SoC and UART tests
+        ├── tb/                       # SoC, peripheral and portability tests
         └── vivado/                   # Vivado project
 ```
 
@@ -521,6 +668,7 @@ Snake controls:
 | QSPI Boot ROM | `tb_qspi_boot.sv` | Valid copy/boot, corrupt-image rejection, blocked unsafe jump, and UART recovery pass |
 | CLINT + PLIC | Directed unit and SoC-map testbenches | `msip`, `mtimecmp`, priority, threshold, claim/complete, and CPU `mip` delivery pass |
 | DMA controller | Unit + full SoC integration testbenches | Tail widths, fixed/incrementing addresses, backpressure, errors, BRAM copy, UART streaming, and PLIC ID 5 pass |
+| Portable FPGA wrapper | `make -C riscv_processor_cpu/phase8/tb portable` | Non-Xilinx elaboration plus 20 MHz reset, UART-divider and CPU-execution checks pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
 | Timing closure (Vivado, 25 MHz) | — | QSPI build: WNS +6.753 ns, WHS +0.021 ns, 0 failing endpoints |
@@ -552,8 +700,12 @@ Run the complete Phase 8 interrupt-controller suite with
 | Tool | Role |
 | :--- | :--- |
 | SystemVerilog | CPU, SoC, UART, BRAM RTL |
-| Vivado 2020.2 | FPGA synthesis, implementation, bitstream |
-| Arty S7-50 | Physical FPGA target |
+| Vivado 2020.2 | Verified AMD Spartan-7 synthesis, implementation and bitstream flow |
+| Quartus Prime | Intel FPGA porting target |
+| Radiant / Diamond | Lattice FPGA porting target |
+| Libero SoC | Microchip FPGA integration path |
+| Yosys + nextpnr | Open-source synthesis and place-and-route path |
+| Arty S7-50 | Hardware-verified reference board |
 | `riscv-none-elf-gcc` | Bare-metal firmware build |
 | Icarus Verilog / VVP | Simulation |
 | PuTTY | UART terminal |
@@ -581,9 +733,13 @@ timeline
     FPGA SoC : Arty S7-50 top level
              : 64KB BRAM
              : Memory-mapped UART
+    Portability : Vendor-neutral soc_core
+                : Generic FPGA wrapper
+                : AMD, Intel, Lattice, Microchip paths
     Firmware : Hello World + Echo
              : Snake game in bare-metal C
     Milestone : First game running on the custom CPU
+              : One CPU architecture, multiple FPGA targets
 ```
 
 ---

@@ -26,8 +26,8 @@ module tb_dma_soc;
     soc_top dut (.*);
 
     always @(posedge clk_12mhz) begin
-        if (dut.u_uart.tx_valid && tx_count < 2) begin
-            tx_bytes[tx_count] = dut.u_uart.tx_data;
+        if (dut.u_soc.u_uart.tx_valid && tx_count < 2) begin
+            tx_bytes[tx_count] = dut.u_soc.u_uart.tx_data;
             tx_count = tx_count + 1;
         end
     end
@@ -59,7 +59,7 @@ module tb_dma_soc;
             sim_bus_rd_en = 1'b1;
             sim_bus_wr_en = 1'b0;
             @(posedge clk_12mhz); #1;
-            data = dut.dmem_rdata;
+            data = dut.u_soc.dmem_rdata;
             sim_bus_rd_en = 1'b0;
         end
     endtask
@@ -67,7 +67,7 @@ module tb_dma_soc;
     task automatic wait_dma_idle;
         begin
             timeout = 0;
-            while (dut.u_dma.busy && timeout < 20000) begin
+            while (dut.u_soc.u_dma.busy && timeout < 20000) begin
                 @(posedge clk_12mhz);
                 timeout = timeout + 1;
             end
@@ -114,7 +114,7 @@ module tb_dma_soc;
         check("DMA copied first BRAM word", value == 32'h4433_2211);
         bus_read(32'h0000_0304, value);
         check("DMA copied second BRAM word", value == 32'h8877_6655);
-        check("DMA completion reaches PLIC", dut.plic_irq);
+        check("DMA completion reaches PLIC", dut.u_soc.plic_irq);
         bus_read(32'h0C20_0004, value);
         check("PLIC claims DMA source ID 5", value == 32'd5);
 
@@ -122,7 +122,7 @@ module tb_dma_soc;
         bus_write(32'h1000_2010, 32'h0000_000A);
         bus_write(32'h0C20_0004, 32'd5);
         repeat (2) @(posedge clk_12mhz);
-        check("DMA interrupt clears cleanly", !dut.dma_irq && !dut.plic_irq);
+        check("DMA interrupt clears cleanly", !dut.u_soc.dma_irq && !dut.u_soc.plic_irq);
 
         // Fixed UART destination: the DMA must wait for TX ready between bytes.
         bus_write_width(32'h0000_0220, 32'h0000_004F, 3'b000); // O

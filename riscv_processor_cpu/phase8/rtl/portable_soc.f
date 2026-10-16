@@ -1,0 +1,22 @@
+# Portable Phase 8 SoC source manifest (paths are relative to repository root)
+riscv_processor_cpu/rtl/alu.sv
+riscv_processor_cpu/rtl/branch_predictor.sv
+riscv_processor_cpu/rtl/control_unit.sv
+riscv_processor_cpu/rtl/hazard.sv
+riscv_processor_cpu/rtl/imm_gen.sv
+riscv_processor_cpu/rtl/interrupt_unit.sv
+riscv_processor_cpu/rtl/regfile.sv
+riscv_processor_cpu/rtl/pmp_unit.sv
+riscv_processor_cpu/rtl/muldiv.sv
+riscv_processor_cpu/rtl/csr_file.sv
+riscv_processor_cpu/phase8/rtl/bram.sv
+riscv_processor_cpu/phase8/rtl/uart_tx.sv
+riscv_processor_cpu/phase8/rtl/uart_rx.sv
+riscv_processor_cpu/phase8/rtl/uart.sv
+riscv_processor_cpu/phase8/rtl/clint.sv
+riscv_processor_cpu/phase8/rtl/plic.sv
+riscv_processor_cpu/phase8/rtl/dma_controller.sv
+riscv_processor_cpu/phase8/rtl/qspi_reader.sv
+riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv
+riscv_processor_cpu/phase8/rtl/soc_top.sv
+riscv_processor_cpu/phase8/rtl/generic_fpga_top.sv
