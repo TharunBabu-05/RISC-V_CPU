@@ -57,7 +57,7 @@ OBJS    = $(addprefix $(BUILD)/, $(addsuffix .o, $(basename $(SRCS))))
 #  Default Target: Build firmware
 # ============================================================
 .PHONY: all clean program disasm size hello hello_program bootloader \
-	bootloader_program app upload boot_test_app
+	bootloader_program app upload boot_test_app boot_test_flash flash_image qspi_mcs
 
 all: $(BUILD)/$(HEX) $(BUILD)/$(DUMP)
 	@echo ""
@@ -149,15 +149,18 @@ hello_program: $(HELLO_VMM)
 	@echo "Re-run Vivado synthesis to update BRAM init image."
 
 # ============================================================
-#  Resident UART bootloader and relocated application
+#  Resident QSPI Boot ROM, UART recovery, and relocated application
 #
 #  One-time FPGA image:
 #    make bootloader_program
 #
-#  Subsequent firmware updates (no synthesis):
+#  Volatile firmware updates (no synthesis):
 #    make app
 #    make upload PORT=COM4
-#  Then open PuTTY and press G. Add RUN=1 to upload and start immediately.
+#  Permanent QSPI image after Vivado generates the new bitstream:
+#    make flash_image
+#    make qspi_mcs
+#  Add RUN=1 to upload and start a UART image immediately.
 # ============================================================
 
 BOOT_ELF = $(BUILD)/bootloader.elf
@@ -169,13 +172,20 @@ APP_ELF  = $(BUILD)/snake_app.elf
 APP_BIN  = $(BUILD)/snake_app.bin
 APP_DMP  = $(BUILD)/snake_app.dump
 BOOT_TEST_BIN = $(BUILD)/boot_test_app.bin
+BOOT_TEST_FLASH = $(BUILD)/boot_test_flash.bin
+FLASH_BIN = $(BUILD)/snake_flash.bin
+BITSTREAM ?= ../vivado/vivado_project/rv32_soc_arty_s7.runs/impl_1/soc_top.bit
+FLASH_MCS ?= ../vivado/vivado_project/rv32_soc_with_app.mcs
 
 $(BUILD)/bootloader.o: bootloader.c | $(BUILD)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(BOOT_ELF): $(BUILD)/startup.o $(BUILD)/uart.o $(BUILD)/bootloader.o boot_link.ld
+$(BUILD)/qspi.o: qspi.c qspi.h soc.h | $(BUILD)
+	$(CC) $(CFLAGS) -c -o $@ qspi.c
+
+$(BOOT_ELF): $(BUILD)/startup.o $(BUILD)/uart.o $(BUILD)/qspi.o $(BUILD)/bootloader.o boot_link.ld
 	$(CC) $(CFLAGS) -T boot_link.ld -nostdlib -o $@ \
-		$(BUILD)/startup.o $(BUILD)/uart.o $(BUILD)/bootloader.o
+		$(BUILD)/startup.o $(BUILD)/uart.o $(BUILD)/qspi.o $(BUILD)/bootloader.o
 	$(SIZE) $@
 
 $(BOOT_BIN): $(BOOT_ELF)
@@ -192,8 +202,8 @@ bootloader: $(BOOT_BIN) $(BOOT_VMM) $(BOOT_DMP)
 
 bootloader_program: bootloader
 	cp $(BOOT_VMM) ../rtl/firmware.vmem
-	@echo "Installed resident bootloader in ../rtl/firmware.vmem"
-	@echo "Rebuild the FPGA bitstream once. Future application uploads use UART."
+	@echo "Installed resident QSPI/UART Boot ROM in ../rtl/firmware.vmem"
+	@echo "Rebuild the FPGA bitstream once, then use qspi_mcs for persistent firmware."
 
 $(APP_ELF): $(OBJS) app_link.ld
 	$(CC) $(CFLAGS) -T app_link.ld -nostdlib -o $@ $(OBJS)
@@ -207,6 +217,19 @@ $(APP_DMP): $(APP_ELF)
 
 app: $(APP_BIN) $(APP_DMP)
 	@echo "UART-loadable Snake image built: $(APP_BIN)"
+
+$(FLASH_BIN): $(APP_BIN) pack_flash_image.ps1
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File pack_flash_image.ps1 \
+		-InputFile $(APP_BIN) -OutputFile $(FLASH_BIN)
+
+flash_image: $(FLASH_BIN)
+	@echo "QSPI application image built: $(FLASH_BIN)"
+
+qspi_mcs: flash_image
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-source ../vivado/generate_qspi_mcs.tcl \
+		-tclargs $(BITSTREAM) $(FLASH_BIN) $(FLASH_MCS)
+	@echo "Program $(FLASH_MCS) into configuration memory using Vivado Hardware Manager."
 
 PORT ?= COM4
 UPLOAD_DELAY ?= 2
@@ -222,3 +245,9 @@ $(BOOT_TEST_BIN): $(BUILD)/boot_test_app.elf
 	$(OBJCOPY) -O binary $< $@
 
 boot_test_app: $(BOOT_TEST_BIN)
+
+$(BOOT_TEST_FLASH): $(BOOT_TEST_BIN) pack_flash_image.ps1
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File pack_flash_image.ps1 \
+		-InputFile $(BOOT_TEST_BIN) -OutputFile $(BOOT_TEST_FLASH)
+
+boot_test_flash: $(BOOT_TEST_FLASH)

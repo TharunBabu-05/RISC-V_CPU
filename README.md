@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+FPGA+SoC+%7C+UART+Firmware;Snake+Game+Running+On+My+Own+Processor" alt="Animated title" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+Persistent+QSPI+Boot;Snake+Running+On+My+Own+Processor" alt="Animated project title" />
 
 <br>
 
@@ -9,11 +9,20 @@
 ![Board](https://img.shields.io/badge/FPGA-Arty%20S7--50-ffb000?style=for-the-badge&logo=xilinx&logoColor=white)
 ![Clock](https://img.shields.io/badge/Clock-25%20MHz-31ff70?style=for-the-badge)
 ![Firmware](https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Hardware%20Verified-00d26a?style=for-the-badge)
+![Boot](https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
 
-<h3>Custom 32-bit RISC-V processor, synthesized onto FPGA, booting real bare-metal firmware.</h3>
+<h3>Custom 32-bit RISC-V processor, synthesized onto FPGA and booting Snake permanently from flash.</h3>
 
-<b>Final proof:</b> the CPU runs an interactive UART Snake game in PuTTY on the Arty S7-50.
+<b>Power on. Validate flash. Copy to RAM. Run the game.</b>
+
+<br><br>
+
+<img src="proof/snake_qspi_boot_hardware.png" alt="Snake running on the custom RISC-V CPU after QSPI flash boot" width="70%">
+
+<br>
+
+<sub>Real RV32 instructions, real FPGA hardware, real persistent firmware.</sub>
 
 </div>
 
@@ -26,9 +35,13 @@ verification flow, and UART runtime path, open
 [`riscv_processor_cpu/docs/architecture_workflow.html`](riscv_processor_cpu/docs/architecture_workflow.html)
 in a browser.
 
-This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with real firmware over UART.
+This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with persistent firmware and a live UART application.
 
-The current hardware milestone is no longer just simulation: the CPU boots from on-chip BRAM, talks through a memory-mapped UART peripheral, accepts keyboard input from PuTTY, and runs a playable **Snake game** compiled as bare-metal firmware.
+The current hardware milestone is fully physical: the FPGA configures from the board's QSPI flash, the resident Boot ROM validates an `RVF1` image with CRC-32, copies Snake into BRAM, executes `FENCE.I`, and starts the playable game over PuTTY. If flash is absent or damaged, the same loader enters UART recovery instead of executing an unsafe image.
+
+| POWER-ON BOOT | INTEGRITY | RECOVERY | APPLICATION |
+| :---: | :---: | :---: | :---: |
+| QSPI configuration flash | Header + size + entry + CRC-32 | Flow-controlled UART upload | Interactive Snake in PuTTY |
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -68,13 +81,14 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 | 5-stage pipeline | ✅ | IF, ID, EX, MEM, WB |
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
 | M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
-| FPGA timing closure | ✅ | All constraints met at 25 MHz — WNS **+7.673 ns**, WHS **+0.030 ns**, 0 failing endpoints |
+| FPGA timing closure | ✅ | QSPI-enabled build meets 25 MHz timing: WNS **+6.753 ns**, WHS **+0.021 ns**, 0 failing endpoints |
 | CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
 | FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs |
 | Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 4-source priority/claim controller |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
 | UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
+| QSPI flash boot | ✅ | Persistent `RVF1` image, CRC-checked RAM copy, automatic start, and UART recovery verified on FPGA |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, aligned and cross-word byte/halfword/word accesses |
 | Cache hierarchy | ✅ | Direct-mapped L1 I/D and L2 caches with refill, invalidation, write-through stores, and counters |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
@@ -84,9 +98,42 @@ The current hardware milestone is no longer just simulation: the CPU boots from 
 
 ---
 
+## ⚡ Persistent Boot: Hardware Proof
+
+The complete chain is verified on the Arty S7-50: the combined MCS image was
+programmed and verified in the 128-Mbit configuration flash, the Spartan-7
+configured successfully, and Snake ran from the application copied into BRAM
+by the custom Boot ROM.
+
+<table>
+  <tr>
+    <td width="50%" align="center"><b>1. Flash programmed and verified</b></td>
+    <td width="50%" align="center"><b>2. FPGA configured from QSPI</b></td>
+  </tr>
+  <tr>
+    <td><img src="proof/qspi_flash_programmed.png" alt="Vivado reports QSPI flash programming and verification completed successfully"></td>
+    <td><img src="proof/fpga_programmed_qspi.png" alt="Vivado Hardware Manager shows the Spartan-7 and S25FL128S configuration flash programmed"></td>
+  </tr>
+</table>
+
+<div align="center">
+  <b>3. Persistent firmware executed on the custom CPU</b><br><br>
+  <img src="proof/snake_qspi_boot_hardware.png" alt="Snake game running in PuTTY after persistent QSPI boot" width="72%">
+</div>
+
+```text
+QSPI @ 0x0040_0000 -> RVF1 header -> CRC-32 -> BRAM @ 0x0000_4000
+                    -> FENCE.I -> application entry -> RISC-V Snake
+```
+
+---
+
 ## ✅ Synthesis & Implementation Proof
 
-Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7s50csga324-1`). They show the current synthesis, implementation, utilization, and timing results. The generated bitstream is ready for the next physical-board programming pass; the earlier board proof documents Hello/Echo and Snake running on this processor.
+Vivado 2020.2 results for the hardened `rv32_soc_arty_s7` project
+(`xc7s50csga324-1`). The current QSPI-enabled build completes synthesis,
+implementation, bitstream generation, flash programming, and physical-board
+execution successfully.
 
 ### Synthesis — `synth_1` complete
 
@@ -96,8 +143,8 @@ Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7
 
 | Resource | Used | Available | Utilization |
 | :--- | ---: | ---: | ---: |
-| Slice LUTs | 6,793 | 32,600 | 20.8 % |
-| Flip-flops | 4,194 | 65,200 | 6.4 % |
+| Slice LUTs | 6,733 | 32,600 | 20.65 % |
+| Flip-flops | 4,315 | 65,200 | 6.62 % |
 | Block RAM tiles | 32 | 75 | 42.7 % |
 | DSP slices | 4 | 120 | 3.3 % |
 
@@ -109,16 +156,16 @@ Screenshots from Vivado 2020.2 for the hardened `rv32_soc_arty_s7` project (`xc7
 
 | Check | Worst slack | Total negative slack | Failing endpoints |
 | :--- | ---: | ---: | ---: |
-| Setup | **+7.673 ns** | 0.000 ns | 0 / 12,984 |
-| Hold | **+0.030 ns** | 0.000 ns | 0 / 12,984 |
-| Pulse width | +16.667 ns | 0.000 ns | 0 / 4,267 |
+| Setup | **+6.753 ns** | 0.000 ns | 0 / 13,303 |
+| Hold | **+0.021 ns** | 0.000 ns | 0 / 13,303 |
+| Pulse width | +16.667 ns | 0.000 ns | 0 / 4,387 |
 
 ### Before vs after the timing fix
 
 | | Before | After |
 | :--- | :---: | :---: |
-| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+7.673 ns** (0 failing) |
-| Slice LUTs | 9,683 | 6,687 after implementation |
+| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+6.753 ns** (0 failing) |
+| Slice LUTs | 9,683 | 6,733 after implementation |
 | Timing status | Constraints **not** met | All constraints met |
 
 ---
@@ -169,6 +216,7 @@ This is the first game running on the processor.
 | `0x0200_0000` - `0x0200_FFFF` | CLINT | `msip`, 64-bit `mtimecmp`, 64-bit `mtime` |
 | `0x0C00_0000` - `0x0C3F_FFFF` | PLIC | Priority, pending, enable, threshold, claim/complete |
 | `0x1000_0000` - `0x1000_000F` | UART | TX, RX, status registers |
+| `0x1000_1000` - `0x1000_100F` | QSPI reader | Flash address, byte data, control/status, peripheral ID |
 
 ### FPGA Top Level
 
@@ -231,7 +279,7 @@ The fix:
 - `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
 - The FPU stub's divider was removed from the board build (the FPU now uses its own iterative FDIV/FSQRT and is not part of the FPGA SoC by default).
 
-Result: the current hardened design closes timing with **+7.673 ns setup slack** and **+0.030 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+Result: the current QSPI-enabled design closes timing with **+6.753 ns setup slack** and **+0.021 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
 
 ### 5. UART RX Read/Arrival Collision
 
@@ -260,7 +308,7 @@ The research core now has direct-mapped L1 instruction/data caches and a unified
 ```text
 RISC-V_CPU/
 ├── README.md                         # Main showcase and quickstart
-├── proof/                            # Vivado synthesis + implementation screenshots
+├── proof/                            # Timing, flash programming, FPGA, and runtime proof
 ├── riscv-tests/                      # Submodule: official ISA tests (git submodule update --init --recursive)
 └── riscv_processor_cpu/
     ├── rtl/                          # Main advanced CPU architecture modules
@@ -292,10 +340,38 @@ RISC-V_CPU/
 
 ## 🚀 Run It On The Arty S7-50
 
-### Fast UART Bootloader Flow
+### Persistent QSPI Boot Flow
 
-The FPGA SoC now has a resident UART bootloader. Install it into the bitstream
-once:
+The SoC now includes a synthesized Boot ROM and a read-only controller for the
+Arty S7 configuration flash. The Boot ROM validates an `RVF1` image stored at
+flash offset `0x0040_0000`, copies it to BRAM at `0x0000_4000`, checks CRC-32,
+and starts it automatically. Invalid or missing firmware enters UART recovery.
+
+Before your one-time Vivado synthesis, install the Boot ROM:
+
+```powershell
+cd riscv_processor_cpu\phase8\software
+make bootloader_program
+```
+
+After you generate the new `soc_top.bit` in Vivado, build the persistent Snake
+image and MCS file:
+
+```powershell
+make flash_image
+make qspi_mcs
+```
+
+Program `riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_with_app.mcs`
+as the Arty S7 configuration-memory image, verify it, select QSPI boot, and
+power-cycle the board. See the
+[Phase 8 deployment guide](riscv_processor_cpu/phase8/README.md) for image
+format, recovery behavior, and an explicit `BITSTREAM=...` example.
+
+### Fast UART Recovery Flow
+
+The FPGA SoC now has a resident QSPI/UART Boot ROM. Install it into the
+bitstream once:
 
 ```powershell
 cd riscv_processor_cpu\phase8\software
@@ -315,15 +391,16 @@ receives the relocated image at `0x0000_4000`, checks its size and CRC-32,
 executes `FENCE.I`, and transfers control to the application. Application-only
 updates no longer require a Vivado rebuild.
 
-Bootloader v2 combines a 16-byte hardware RX FIFO with 32-byte acknowledged
-blocks. The PC does not send the next block until the CPU confirms the previous
-one was stored, and any loss of synchronization reports the exact byte offset.
+Bootloader v3 combines QSPI auto-boot with the existing 16-byte hardware RX
+FIFO and 32-byte acknowledged UART blocks. The PC does not send the next block
+until the CPU confirms the previous one was stored, and any loss of
+synchronization reports the exact byte offset.
 The uploader uses the hardware-verified 2 ms inter-byte gap by default. The
 delay can still be overridden with `UPLOAD_DELAY=<milliseconds>` when testing
 another USB-UART adapter.
 
-The uploaded image survives BTN0 reset but is volatile across power loss or
-FPGA reprogramming. See the
+The UART image is volatile. BTN0 restarts QSPI validation and a power cycle or
+FPGA reprogramming discards the UART-loaded copy. See the
 [Phase 8 deployment guide](riscv_processor_cpu/phase8/README.md) for commands,
 protocol details and the direct-BRAM recovery workflow.
 
@@ -399,6 +476,7 @@ When directly replacing `firmware.vmem` or installing a new bootloader:
 | Hello + Echo | [`hello_asm.S`](riscv_processor_cpu/phase8/software/hello_asm.S) | `make hello_program` | Hardware bring-up and UART proof |
 | Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make program` | Interactive game on the custom CPU |
 | UART-loaded Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make app`, then `make upload PORT=COM4` | CRC-checked update without re-synthesis |
+| QSPI-persistent Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make flash_image`, then `make qspi_mcs` | Automatic CRC-checked boot after power-on |
 
 Snake controls:
 
@@ -420,12 +498,13 @@ Snake controls:
 | Directed + unit testbenches | `make regress` | 26/26 pass (incl. PMP, S-mode delegation, unaligned BRAM, 43,013 FPU and 12,200 vector vectors) |
 | UART loopback + collision | UART testbench | 20/20 bytes pass, including simultaneous receive/read |
 | UART bootloader | `tb_bootloader.sv` | Upload, CRC-32 verification, `FENCE.I`, jump and `APP:OK` pass |
+| QSPI Boot ROM | `tb_qspi_boot.sv` | Valid copy/boot, corrupt-image rejection, blocked unsafe jump, and UART recovery pass |
 | CLINT + PLIC | Directed unit and SoC-map testbenches | `msip`, `mtimecmp`, priority, threshold, claim/complete, and CPU `mip` delivery pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
-| Timing closure (Vivado, 25 MHz) | — | WNS +7.673 ns, WHS +0.030 ns, 0 failing endpoints |
+| Timing closure (Vivado, 25 MHz) | — | QSPI build: WNS +6.753 ns, WHS +0.021 ns, 0 failing endpoints |
 | FPGA bitstream | Vivado 2020.2 | Synthesis, placement, routing and `write_bitstream` complete with 0 errors |
-| On the board | — | Hello/echo and Snake running on the Arty S7-50 |
+| On the board | — | QSPI flash programmed and verified; FPGA configured; persistent Snake boot running on Arty S7-50 |
 
 The verification flows found and fixed real bugs along the way, including wrong-path fetch from stale branch
 predictions, stale operands behind cache misses, `minstret` timing, UART RX collisions, PMP corner cases,

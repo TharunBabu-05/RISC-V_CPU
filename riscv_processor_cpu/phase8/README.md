@@ -1,7 +1,7 @@
 # 🚀 RISC-V RV32IM SoC on Arty S7-50 FPGA — Complete Implementation & Deployment Guide
 
 > **Target Board:** Digilent Arty S7-50 (`XC7S50-CSGA324-1`)  
-> **Core Architecture:** 5-Stage Pipelined RV32IM with Unified 64KB BRAM, UART, CLINT & PLIC
+> **Core Architecture:** 5-Stage Pipelined RV32IM with 64KB BRAM, UART, QSPI Boot ROM, CLINT & PLIC
 > **System Clock:** 25 MHz (MMCM synthesis from 12 MHz on-board oscillator)  
 > **Serial Baud Rate:** 115,200 baud (8N1)
 
@@ -40,6 +40,7 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 9. **Two Bare-Metal Firmwares:**
    - Diagnostic `hello_asm.S`: Hardware bring-up and interactive keyboard echo.
    - Interactive `snake.c`: Full ANSI terminal Snake game with real-time controls.
+10. **Persistent Boot:** The BRAM-resident Boot ROM validates Snake in the board's QSPI flash, copies it to RAM, and falls back to UART recovery when the image is absent or damaged.
 
 ---
 
@@ -86,10 +87,11 @@ Run `make -C riscv_processor_cpu/phase8/tb` from the repository root to execute
 the CLINT unit test, PLIC arbitration test, CPU interrupt-cause test, and full
 SoC address-map integration test.
 
-Vivado 2020.2 synthesis, placement, routing, and bitstream generation complete
-for this interrupt-enabled build. At 25 MHz, final timing is WNS `+7.673 ns`,
-WHS `+0.030 ns`, with zero failing endpoints. Post-route use is 6,687 LUTs,
-4,195 registers, 32 BRAM tiles, and 4 DSP slices.
+Vivado 2020.2 synthesis, placement, routing, bitstream generation, QSPI flash
+programming, and physical Snake boot are complete. At 25 MHz, the final
+QSPI-enabled build has WNS `+6.753 ns`, WHS `+0.021 ns`, and zero failing
+endpoints. Post-route use is 6,733 LUTs, 4,315 registers, 32 BRAM tiles, and 4
+DSP slices. Hardware proof is in [`../../proof`](../../proof).
 
 ### 1. Clock Generation (MMCM 25 MHz)
 * **On-board oscillator:** 12 MHz oscillator on pin `F14` (`clk_12mhz` in the XDC).
@@ -132,7 +134,69 @@ WHS `+0.030 ns`, with zero failing endpoints. Post-route use is 6,687 LUTs,
 
 ## 🔄 Step-by-Step: How to Switch Firmware
 
-### Preferred: Resident UART Bootloader
+### Persistent QSPI Flash Boot
+
+The preferred power-on path is now:
+
+```text
+Arty S7 configuration flash -> Boot ROM -> CRC-checked copy to BRAM -> Snake
+                                      `-> UART recovery on any failure
+```
+
+The resident loader is synthesized into the first 16 KiB of BRAM and the
+application is linked at `0x0000_4000`. A packaged application is stored at
+flash offset `0x0040_0000`, beyond the FPGA configuration image. Its 16-byte
+`RVF1` header contains payload size, CRC-32, and entry address. On each reset
+the loader validates these fields, copies at most 48 KiB into BRAM, executes
+`FENCE.I`, and jumps only after the CRC passes.
+
+Prepare the Boot ROM before running your new Vivado build:
+
+```powershell
+cd riscv_processor_cpu\phase8\software
+make bootloader_program
+```
+
+Now reset `synth_1`, run synthesis and implementation, and generate
+`soc_top.bit` in Vivado. Those FPGA build steps are intentionally not run by
+the Makefile. After your bitstream exists, package Snake and combine it with
+the bitstream into a 16 MiB configuration-memory image:
+
+```powershell
+make flash_image
+make qspi_mcs
+```
+
+If the bitstream lives elsewhere, specify it explicitly:
+
+```powershell
+make qspi_mcs BITSTREAM=C:/path/to/soc_top.bit
+```
+
+In Vivado Hardware Manager, add the configuration-memory device detected for
+your Arty S7 board, program
+`phase8/vivado/vivado_project/rv32_soc_with_app.mcs`, enable verification, set
+the board boot-mode jumper to QSPI, and power-cycle the board. A valid image
+prints `RVBL:FLASH_OK` and starts automatically. `RVBL:FLASH_INVALID MAGIC`,
+`SIZE`, `ENTRY`, or `CRC` enters UART recovery instead.
+
+This first QSPI controller is deliberately read-only. Updating permanent
+firmware means regenerating and programming the MCS file; UART recovery can
+load and run an image in BRAM but does not erase or rewrite flash.
+
+The RTL and firmware verification commands are:
+
+```powershell
+make -C riscv_processor_cpu/phase8/software bootloader boot_test_flash flash_image
+make -C riscv_processor_cpu/phase8/tb all
+make -C riscv_processor_cpu/phase8/tb boot_regress
+```
+
+`all` runs the peripheral and SoC integration tests. `boot_regress` executes a
+real RV32 test image through valid QSPI boot, corrupt-image rejection, and UART
+recovery. These tests do not run Vivado synthesis or generate a bitstream.
+
+### UART Recovery And Volatile Upload
 
 The resident bootloader occupies the first 16 KiB of BRAM. Applications are
 linked at `0x0000_4000`, leaving 48 KiB for application code, data, BSS and
@@ -147,11 +211,13 @@ make bootloader_program
 ```
 
 Reset synthesis, generate the bitstream and program the FPGA using the Vivado
-procedure below. On reset, the terminal displays:
+procedure below. When QSPI is blank or invalid, the terminal displays:
 
 ```text
-RV32 UART Bootloader v2
-U=upload  A=upload+run  G=run  I=info
+RV32 QSPI Boot ROM v3
+RVBL:FLASH_INVALID MAGIC
+UART recovery mode
+U=upload  A=upload+run  G=run  F=flash retry  I=info
 RVBL:IDLE
 ```
 
@@ -168,7 +234,7 @@ Vivado synthesis or bitstream build. `make upload PORT=COM4 RUN=1` can start it
 immediately, but its initial terminal output may be missed while the uploader
 still owns the port.
 
-Bootloader v2 uses a 16-byte hardware RX FIFO and transfers the image in
+Bootloader v3 retains the 16-byte hardware RX FIFO and transfers UART images in
 32-byte flow-controlled blocks. After each block, the CPU returns
 `RVBL:NEXT <received-bytes>`; the uploader waits for that acknowledgement
 before continuing. A broken transfer therefore stops at a known offset instead
@@ -180,13 +246,15 @@ hardware-verified 2 ms inter-byte gap. It can be overridden with
 | :---: | :--- |
 | `U` | Upload and verify an application, then remain in the loader |
 | `A` | Upload, verify and immediately run an application |
-| `G` | Jump to the application at `0x0000_4000` |
+| `G` | Run a validated flash/UART image at `0x0000_4000`; reject if none exists |
+| `F` | Retry QSPI validation and boot |
 | `I` | Print the application address, capacity and uploaded size |
 
-BTN0 returns to the loader while preserving the uploaded image. Power loss or
-FPGA reprogramming clears the uploaded application, but the resident loader
-remains in the bitstream. `tb/tb_bootloader.sv` verifies serial upload, CRC-32,
-`FENCE.I`, handoff and execution of a real RV32 test application.
+BTN0 returns to the loader and reloads a valid permanent flash image. A UART
+upload remains volatile across power loss or FPGA reprogramming. The QSPI and
+UART testbenches verify valid flash boot, CRC rejection, blocked execution of a
+damaged image, UART recovery, `FENCE.I`, handoff, and execution of a real RV32
+test application.
 
 ### Legacy Direct-BRAM Firmware Installation
 

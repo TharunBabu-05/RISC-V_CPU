@@ -5,6 +5,8 @@ module tb_interrupt_map;
     logic rst_btn = 1'b1;
     logic uart_rx = 1'b1;
     logic uart_tx;
+    logic qspi_cs;
+    tri [3:0] qspi_dq;
     logic [3:0] led;
     logic sim_bus_override = 1'b0;
     logic [31:0] sim_bus_addr = 32'b0;

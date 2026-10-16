@@ -9,6 +9,9 @@ module tb_bootloader;
     logic uart_rx = 1'b1;
     logic uart_tx;
     logic [3:0] led;
+    logic qspi_cs;
+    tri [3:0] qspi_dq;
+    pullup(qspi_dq[1]); // erased/corrupt flash returns 0xFF -> UART recovery
 
     localparam real CLK_HALF_NS = 41.667;
     localparam real BIT_NS = 217.0 * (2.0 * CLK_HALF_NS);
@@ -35,11 +38,15 @@ module tb_bootloader;
 
     always #CLK_HALF_NS clk_12mhz = ~clk_12mhz;
 
-    soc_top dut (
+    soc_top #(
+        .FIRMWARE_FILE("../software/build/bootloader.vmem")
+    ) dut (
         .clk_12mhz(clk_12mhz),
         .rst_btn  (rst_btn),
         .uart_tx  (uart_tx),
         .uart_rx  (uart_rx),
+        .qspi_cs  (qspi_cs),
+        .qspi_dq  (qspi_dq),
         .led      (led)
     );
 

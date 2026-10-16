@@ -1,4 +1,4 @@
-/* Resident UART bootloader for the Phase 8 FPGA SoC.
+/* Resident QSPI/UART recovery bootloader for the Phase 8 FPGA SoC.
  *
  * Protocol, all multi-byte fields little-endian:
  *   Host -> 'U'                         begin upload, remain in loader
@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "soc.h"
+#include "qspi.h"
 #include "uart.h"
 
 #define APP_BASE       0x00004000UL
@@ -23,6 +24,9 @@
 #define APP_MAX_BYTES  (BRAM_END - APP_BASE)
 #define CRC32_POLY     0xEDB88320UL
 #define TRANSFER_BLOCK_BYTES 32U
+#define FLASH_IMAGE_OFFSET   0x00400000UL
+#define FLASH_IMAGE_MAGIC    0x31465652UL /* bytes "RVF1" */
+#define FLASH_HEADER_BYTES   16U
 
 static uint32_t uploaded_size;
 
@@ -48,6 +52,60 @@ static uint32_t crc32_byte(uint32_t crc, uint8_t data) {
         crc = (crc >> 1) ^ (CRC32_POLY & mask);
     }
     return crc;
+}
+
+static const char *load_flash_image(void) {
+    volatile uint8_t *destination = (volatile uint8_t *)APP_BASE;
+    uint32_t size;
+    uint32_t expected_crc;
+    uint32_t entry;
+    uint32_t actual_crc = 0xFFFFFFFFUL;
+    uint32_t offset;
+
+    /* A failed flash attempt must never leave a runnable partial image. */
+    uploaded_size = 0;
+
+    if (qspi_read_u32_le(FLASH_IMAGE_OFFSET) != FLASH_IMAGE_MAGIC)
+        return "MAGIC";
+
+    size = qspi_read_u32_le(FLASH_IMAGE_OFFSET + 4U);
+    expected_crc = qspi_read_u32_le(FLASH_IMAGE_OFFSET + 8U);
+    entry = qspi_read_u32_le(FLASH_IMAGE_OFFSET + 12U);
+    if (size == 0U || size > APP_MAX_BYTES)
+        return "SIZE";
+    if (entry != APP_BASE)
+        return "ENTRY";
+
+    for (offset = 0; offset < size; ++offset) {
+        uint8_t byte = qspi_read_byte(FLASH_IMAGE_OFFSET +
+                                      FLASH_HEADER_BYTES + offset);
+        destination[offset] = byte;
+        actual_crc = crc32_byte(actual_crc, byte);
+    }
+    actual_crc ^= 0xFFFFFFFFUL;
+    if (actual_crc != expected_crc)
+        return "CRC";
+
+    uploaded_size = size;
+    return 0;
+}
+
+static int try_flash_boot(void) {
+    const char *error;
+
+    uart_puts("RVBL:FLASH_CHECK");
+    uart_newline();
+    error = load_flash_image();
+    if (error) {
+        uart_puts("RVBL:FLASH_INVALID ");
+        uart_puts(error);
+        uart_newline();
+        return 0;
+    }
+
+    uart_puts("RVBL:FLASH_OK");
+    uart_newline();
+    return 1;
 }
 
 static void print_info(void) {
@@ -136,9 +194,15 @@ static int receive_image(void) {
 int main(void) {
     uart_init();
     uart_newline();
-    uart_puts("RV32 UART Bootloader v2");
+    uart_puts("RV32 QSPI Boot ROM v3");
     uart_newline();
-    uart_puts("U=upload  A=upload+run  G=run  I=info");
+
+    if (try_flash_boot())
+        run_application();
+
+    uart_puts("UART recovery mode");
+    uart_newline();
+    uart_puts("U=upload  A=upload+run  G=run  F=flash retry  I=info");
     uart_newline();
     uart_puts("RVBL:IDLE");
     uart_newline();
@@ -152,7 +216,15 @@ int main(void) {
             if (receive_image())
                 run_application();
         } else if (command == 'G' || command == 'g') {
-            run_application();
+            if (uploaded_size != 0U) {
+                run_application();
+            } else {
+                uart_puts("RVBL:ERR NO_IMAGE");
+                uart_newline();
+            }
+        } else if (command == 'F' || command == 'f') {
+            if (try_flash_boot())
+                run_application();
         } else if (command == 'I' || command == 'i') {
             print_info();
         } else if (command == '\r' || command == '\n') {

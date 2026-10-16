@@ -49,4 +49,16 @@
 #define MIP_MTIP            (1U << 7)
 #define MIP_MEIP            (1U << 11)
 
+/* ---- Read-only QSPI boot controller ---- */
+#define QSPI_BASE           0x10001000UL
+#define QSPI_ADDRESS        (*(volatile uint32_t *)(QSPI_BASE + 0x00))
+#define QSPI_DATA           (*(volatile uint32_t *)(QSPI_BASE + 0x04))
+#define QSPI_CONTROL        (*(volatile uint32_t *)(QSPI_BASE + 0x08))
+#define QSPI_STATUS         QSPI_CONTROL
+#define QSPI_ID             (*(volatile uint32_t *)(QSPI_BASE + 0x0C))
+
+#define QSPI_CONTROL_START  (1U << 0)
+#define QSPI_STATUS_BUSY    (1U << 0)
+#define QSPI_STATUS_DONE    (1U << 1)
+
 #endif /* SOC_H */

@@ -31,6 +31,13 @@ riscv_processor_cpu/formal/riscv-formal/.riscv-formal/
 __pycache__/
 
 # Simulation outputs (rebuilt by make / tb/run_regression.py)
+riscv_processor_cpu/phase8/tb/build/
+riscv_processor_cpu/phase8/software/build/qspi.o
+riscv_processor_cpu/phase8/software/build/*_flash.bin
+riscv_processor_cpu/phase8/software/vivado.jou
+riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_with_app.mcs
+riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_with_app.prm
+riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/.jobs/
 
 
 # Vivado run logs are part of the kept run output

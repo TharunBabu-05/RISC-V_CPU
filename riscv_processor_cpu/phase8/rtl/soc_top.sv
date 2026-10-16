@@ -7,7 +7,8 @@
 //    3. uart        — Memory-mapped UART peripheral (115200 baud)
 //    4. clint       — mtime/mtimecmp and machine software interrupt
 //    5. plic        — prioritized platform interrupt aggregation
-//    6. address decoder routing CPU data accesses to peripherals
+//    6. qspi_reader - read-only access to the board configuration flash
+//    7. address decoder routing CPU data accesses to peripherals
 //
 //  ===================================================
 //  Memory Map (Physical Address Space)
@@ -21,6 +22,11 @@
 //       +0x0: TX Write (write byte → sends over UART)
 //       +0x4: RX Read  (read byte ← received from PC)
 //       +0x8: Status   (bit0=TX_READY, bit1=RX_VALID, bit2=RX_OVERFLOW)
+//    0x1000_1000 - 0x1000_100F  : QSPI Flash Reader Registers
+//       +0x0: 24-bit flash byte address
+//       +0x4: returned byte (bits 7:0)
+//       +0x8: control/status (write bit0=start; read bit0=busy, bit1=done)
+//       +0xC: peripheral ID (0x51535049, "QSPI")
 //    0x0200_0000 – 0x0200_FFFF  : CLINT (msip, mtimecmp, mtime)
 //    0x0C00_0000 – 0x0C3F_FFFF  : PLIC (4 sources, 1 M-mode context)
 //
@@ -35,7 +41,9 @@
 // ============================================================
 `timescale 1ns/1ps
 
-module soc_top (
+module soc_top #(
+    parameter FIRMWARE_FILE = "firmware.vmem"
+) (
     // ---- Board Pins ----
     input  logic        clk_12mhz,    // Arty S7 on-board 12 MHz oscillator
     input  logic        rst_btn,      // Active-high reset button (BTN0)
@@ -46,6 +54,10 @@ module soc_top (
     //   Pin V12 connects to FTDI TXD output ==> FPGA UART RX (input from PC)
     output logic        uart_tx,      // FPGA TX → PC RX (Pin R12)
     input  logic        uart_rx,      // PC TX → FPGA RX (Pin V12)
+
+    // ---- On-board configuration flash ----
+    output logic        qspi_cs,
+    inout  wire [3:0]   qspi_dq,
 
     // ---- Status LEDs ----
     output logic [3:0]  led           // LED[0]=run, LED[1]=PLL locked
@@ -168,14 +180,17 @@ module soc_top (
     localparam logic [31:0] BRAM_MASK  = 32'h0000_FFFF;  // 64KB window
     localparam logic [31:0] UART_BASE  = 32'h1000_0000;
     localparam logic [31:0] UART_MASK  = 32'h0000_000F;  // 16 bytes
+    localparam logic [31:0] QSPI_BASE  = 32'h1000_1000;
+    localparam logic [31:0] QSPI_MASK  = 32'h0000_000F;  // 16 bytes
     localparam logic [31:0] CLINT_BASE = 32'h0200_0000;
     localparam logic [31:0] CLINT_MASK = 32'h0000_FFFF;  // 64KB
     localparam logic [31:0] PLIC_BASE  = 32'h0C00_0000;
     localparam logic [31:0] PLIC_MASK  = 32'h003F_FFFF;  // 4MB
 
-    logic sel_bram, sel_uart, sel_clint, sel_plic;
+    logic sel_bram, sel_uart, sel_qspi, sel_clint, sel_plic;
     assign sel_bram = ((dmem_addr & ~BRAM_MASK) == BRAM_BASE);
     assign sel_uart = ((dmem_addr & ~UART_MASK) == UART_BASE);
+    assign sel_qspi = ((dmem_addr & ~QSPI_MASK) == QSPI_BASE);
     assign sel_clint = ((dmem_addr & ~CLINT_MASK) == CLINT_BASE);
     assign sel_plic = ((dmem_addr & ~PLIC_MASK) == PLIC_BASE);
 
@@ -185,6 +200,7 @@ module soc_top (
     logic [31:0] bram_rdata;
     logic [31:0] bram_wdata;
     logic [31:0] uart_rdata;
+    logic [31:0] qspi_rdata;
     logic [31:0] clint_rdata;
     logic [31:0] plic_rdata;
 
@@ -194,28 +210,34 @@ module soc_top (
     //                        Mux selects based on registered sel_*_mem.
     //                        mem_wb_mem_data latches dmem_rdata at posedge N+1.
     logic [31:0] uart_rdata_latched;
+    logic [31:0] qspi_rdata_latched;
     logic [31:0] clint_rdata_latched;
     logic [31:0] plic_rdata_latched;
     logic        sel_bram_mem;
     logic        sel_uart_mem;
+    logic        sel_qspi_mem;
     logic        sel_clint_mem;
     logic        sel_plic_mem;
 
     always_ff @(posedge clk_sys or negedge rst_n) begin
         if (!rst_n) begin
             uart_rdata_latched <= 32'h0;
+            qspi_rdata_latched <= 32'h0;
             clint_rdata_latched <= 32'h0;
             plic_rdata_latched <= 32'h0;
             sel_bram_mem       <= 1'b0;
             sel_uart_mem       <= 1'b0;
+            sel_qspi_mem       <= 1'b0;
             sel_clint_mem      <= 1'b0;
             sel_plic_mem       <= 1'b0;
         end else begin
             uart_rdata_latched <= uart_rdata;
+            qspi_rdata_latched <= qspi_rdata;
             clint_rdata_latched <= clint_rdata;
             plic_rdata_latched <= plic_rdata;
             sel_bram_mem       <= sel_bram;
             sel_uart_mem       <= sel_uart;
+            sel_qspi_mem       <= sel_qspi;
             sel_clint_mem      <= sel_clint;
             sel_plic_mem       <= sel_plic;
         end
@@ -227,6 +249,8 @@ module soc_top (
             dmem_rdata = plic_rdata_latched;
         else if (sel_clint_mem)
             dmem_rdata = clint_rdata_latched;
+        else if (sel_qspi_mem)
+            dmem_rdata = qspi_rdata_latched;
         else if (sel_uart_mem)
             dmem_rdata = uart_rdata_latched;
         else if (sel_bram_mem)
@@ -257,7 +281,7 @@ module soc_top (
         // phase8/rtl/firmware.vmem. It is a source of the Vivado project
         // (create_project.tcl), so synthesis finds it by name; reset synth_1
         // after changing it. Simulations run from phase8/rtl or override it.
-        .INIT_FILE ("firmware.vmem")
+        .INIT_FILE (FIRMWARE_FILE)
     ) u_bram (
         .clk    (clk_sys),
         // Port A — instruction fetch
@@ -309,6 +333,42 @@ module soc_top (
         .uart_tx_pin(uart_tx),
         .uart_rx_pin(uart_rx)
     );
+
+    // The configuration flash data pins become ordinary user I/O after FPGA
+    // startup. Its dedicated CCLK pin is only reachable through STARTUPE2.
+    logic qspi_sck;
+    logic qspi_dq0_o;
+    logic qspi_dq0_oe;
+
+    assign qspi_dq[0] = qspi_dq0_oe ? qspi_dq0_o : 1'bz;
+    assign qspi_dq[1] = 1'bz;
+    assign qspi_dq[2] = 1'bz;
+    assign qspi_dq[3] = 1'bz;
+
+    qspi_reader u_qspi (
+        .clk         (clk_sys),
+        .rst_n       (rst_n),
+        .addr        (dmem_addr[3:0]),
+        .wr_data     (dmem_wdata),
+        .wr_en       (sel_qspi & dmem_wr_en),
+        .rd_en       (sel_qspi & dmem_rd_en),
+        .rd_data     (qspi_rdata),
+        .flash_cs_n  (qspi_cs),
+        .flash_sck   (qspi_sck),
+        .flash_dq0_o (qspi_dq0_o),
+        .flash_dq0_oe(qspi_dq0_oe),
+        .flash_dq1_i (qspi_dq[1])
+    );
+
+`ifndef SIMULATION
+    STARTUPE2 u_startup_qspi (
+        .CFGCLK(), .CFGMCLK(), .EOS(), .PREQ(),
+        .CLK(1'b0), .GSR(1'b0), .GTS(1'b0),
+        .KEYCLEARB(1'b1), .PACK(1'b0),
+        .USRCCLKO(qspi_sck), .USRCCLKTS(1'b0),
+        .USRDONEO(1'b1), .USRDONETS(1'b1)
+    );
+`endif
 
     clint u_clint (
         .clk         (clk_sys),

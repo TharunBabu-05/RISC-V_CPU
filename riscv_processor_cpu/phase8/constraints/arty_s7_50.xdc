@@ -21,6 +21,14 @@ set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33  PULLDOWN TRUE } [get
 ## Pin V12 connects to FTDI TXD output ==> FPGA UART RX (input from PC)
 set_property -dict { PACKAGE_PIN R12   IOSTANDARD LVCMOS33 } [get_ports { uart_tx }]
 set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33  PULLUP TRUE } [get_ports { uart_rx }]
+
+## ---- On-board 128-Mbit Quad-SPI configuration flash ----
+## SCK is the dedicated CCLK pin and is driven through STARTUPE2 in soc_top.sv.
+set_property -dict { PACKAGE_PIN M13 IOSTANDARD LVCMOS33 } [get_ports { qspi_cs }]
+set_property -dict { PACKAGE_PIN K17 IOSTANDARD LVCMOS33 } [get_ports { qspi_dq[0] }]
+set_property -dict { PACKAGE_PIN K18 IOSTANDARD LVCMOS33 } [get_ports { qspi_dq[1] }]
+set_property -dict { PACKAGE_PIN L14 IOSTANDARD LVCMOS33 } [get_ports { qspi_dq[2] }]
+set_property -dict { PACKAGE_PIN M15 IOSTANDARD LVCMOS33 } [get_ports { qspi_dq[3] }]
 ## PULLUP TRUE is critical: UART idle state is HIGH (mark = logic 1).
 ## Without it, the RX pin floats LOW when FTDI is not actively driving it,
 ## causing the RX state machine to see infinite start bits → continuous garbage.
@@ -40,6 +48,8 @@ set_property -dict { PACKAGE_PIN H15   IOSTANDARD LVCMOS33 } [get_ports { led[3]
 set_false_path -from [get_ports rst_btn]
 set_false_path -from [get_ports uart_rx]
 set_false_path -to   [get_ports uart_tx]
+set_false_path -from [get_ports {qspi_dq[*]}]
+set_false_path -to   [get_ports {qspi_cs qspi_dq[*]}]
 set_false_path -to   [get_ports {led[*]}]
 
 ## ---- Configuration options ----

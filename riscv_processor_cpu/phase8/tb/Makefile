@@ -24,12 +24,15 @@ SOC_SRCS := \
 	$(SOC_RTL)/uart_rx.sv \
 	$(SOC_RTL)/clint.sv \
 	$(SOC_RTL)/plic.sv \
+	$(SOC_RTL)/qspi_reader.sv \
 	$(SOC_RTL)/cpu_top_soc.sv \
 	$(CPU_SRCS)
 
-.PHONY: all clint plic interrupt_sources interrupt_map clean
+.PHONY: all boot_regress clint plic qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map clean
 
-all: clint plic interrupt_sources interrupt_map
+all: clint plic qspi interrupt_sources interrupt_map
+
+boot_regress: qspi_boot qspi_corrupt uart_recovery
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -41,6 +44,29 @@ clint: | $(BUILD)
 plic: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_plic -o $(BUILD)/tb_plic tb_plic.sv $(SOC_RTL)/plic.sv
 	$(VVP) $(BUILD)/tb_plic
+
+qspi: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_qspi_reader -o $(BUILD)/tb_qspi_reader \
+		tb_qspi_reader.sv $(SOC_RTL)/qspi_reader.sv
+	$(VVP) $(BUILD)/tb_qspi_reader
+
+$(BUILD)/tb_qspi_boot: tb_qspi_boot.sv $(SOC_SRCS) | $(BUILD)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_qspi_boot \
+		-o $(BUILD)/tb_qspi_boot tb_qspi_boot.sv $(SOC_SRCS)
+
+qspi_boot: $(BUILD)/tb_qspi_boot
+	$(VVP) $(BUILD)/tb_qspi_boot \
+		+FLASH_BIN=../software/build/boot_test_flash.bin
+
+qspi_corrupt: $(BUILD)/tb_qspi_boot
+	$(VVP) $(BUILD)/tb_qspi_boot \
+		+FLASH_BIN=../software/build/boot_test_flash.bin +CORRUPT_CRC
+
+uart_recovery: | $(BUILD)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_bootloader \
+		-o $(BUILD)/tb_uart_recovery tb_bootloader.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_uart_recovery \
+		+APP_BIN=../software/build/boot_test_app.bin
 
 interrupt_sources: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_interrupt_sources -o $(BUILD)/tb_interrupt_sources \

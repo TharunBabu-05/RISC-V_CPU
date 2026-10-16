@@ -71,6 +71,7 @@ set soc_files [list \
     "$phase8_rtl/uart.sv"        \
     "$phase8_rtl/clint.sv"       \
     "$phase8_rtl/plic.sv"        \
+    "$phase8_rtl/qspi_reader.sv" \
     "$phase8_rtl/bram.sv"        \
 ]
 foreach f $soc_files {
