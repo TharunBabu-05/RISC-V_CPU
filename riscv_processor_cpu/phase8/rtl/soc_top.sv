@@ -8,7 +8,8 @@
 //    4. clint       — mtime/mtimecmp and machine software interrupt
 //    5. plic        — prioritized platform interrupt aggregation
 //    6. qspi_reader - read-only access to the board configuration flash
-//    7. address decoder routing CPU data accesses to peripherals
+//    7. dma_controller - CPU-independent memory/peripheral transfers
+//    8. address decoder and CPU-priority shared data-bus arbiter
 //
 //  ===================================================
 //  Memory Map (Physical Address Space)
@@ -27,11 +28,14 @@
 //       +0x4: returned byte (bits 7:0)
 //       +0x8: control/status (write bit0=start; read bit0=busy, bit1=done)
 //       +0xC: peripheral ID (0x51535049, "QSPI")
+//    0x1000_2000 - 0x1000_201F  : Single-channel DMA Controller
+//       Source, destination, byte length, width/increment control,
+//       status, progress, peripheral ID, and remaining-byte registers
 //    0x0200_0000 – 0x0200_FFFF  : CLINT (msip, mtimecmp, mtime)
-//    0x0C00_0000 – 0x0C3F_FFFF  : PLIC (4 sources, 1 M-mode context)
+//    0x0C00_0000 – 0x0C3F_FFFF  : PLIC (5 sources, 1 M-mode context)
 //
 //  ===================================================
-//  On-chip resources used (Arty S7-50, Vivado 2020.2 post-route):
+//  Pre-DMA QSPI baseline resources (Arty S7-50, Vivado 2020.2 post-route):
 //    6,687 LUTs, 4,195 FFs, 4 DSP48E1, 32 RAMB36 tiles
 //    (64KB logical memory, duplicated parity banks for unaligned accesses)
 //  ===================================================
@@ -154,18 +158,34 @@ module soc_top #(
     logic        cpu_dmem_wr_en;
     logic [2:0]  cpu_dmem_funct3;
 
+    logic [31:0] host_dmem_addr;
+    logic [31:0] host_dmem_wdata;
+    logic        host_dmem_rd_en;
+    logic        host_dmem_wr_en;
+    logic [2:0]  host_dmem_funct3;
+
+    logic        dma_m_req;
+    logic        dma_m_write;
+    logic [31:0] dma_m_addr;
+    logic [31:0] dma_m_wdata;
+    logic [2:0]  dma_m_funct3;
+    logic        dma_m_grant;
+    logic        dma_m_error;
+    logic        dma_m_rvalid;
+    logic [31:0] dma_m_rdata;
+
 `ifdef SIMULATION
-    assign dmem_addr   = (sim_bus_override === 1'b1) ? sim_bus_addr   : cpu_dmem_addr;
-    assign dmem_wdata  = (sim_bus_override === 1'b1) ? sim_bus_wdata  : cpu_dmem_wdata;
-    assign dmem_rd_en  = (sim_bus_override === 1'b1) ? sim_bus_rd_en  : cpu_dmem_rd_en;
-    assign dmem_wr_en  = (sim_bus_override === 1'b1) ? sim_bus_wr_en  : cpu_dmem_wr_en;
-    assign dmem_funct3 = (sim_bus_override === 1'b1) ? sim_bus_funct3 : cpu_dmem_funct3;
+    assign host_dmem_addr   = (sim_bus_override === 1'b1) ? sim_bus_addr   : cpu_dmem_addr;
+    assign host_dmem_wdata  = (sim_bus_override === 1'b1) ? sim_bus_wdata  : cpu_dmem_wdata;
+    assign host_dmem_rd_en  = (sim_bus_override === 1'b1) ? sim_bus_rd_en  : cpu_dmem_rd_en;
+    assign host_dmem_wr_en  = (sim_bus_override === 1'b1) ? sim_bus_wr_en  : cpu_dmem_wr_en;
+    assign host_dmem_funct3 = (sim_bus_override === 1'b1) ? sim_bus_funct3 : cpu_dmem_funct3;
 `else
-    assign dmem_addr   = cpu_dmem_addr;
-    assign dmem_wdata  = cpu_dmem_wdata;
-    assign dmem_rd_en  = cpu_dmem_rd_en;
-    assign dmem_wr_en  = cpu_dmem_wr_en;
-    assign dmem_funct3 = cpu_dmem_funct3;
+    assign host_dmem_addr   = cpu_dmem_addr;
+    assign host_dmem_wdata  = cpu_dmem_wdata;
+    assign host_dmem_rd_en  = cpu_dmem_rd_en;
+    assign host_dmem_wr_en  = cpu_dmem_wr_en;
+    assign host_dmem_funct3 = cpu_dmem_funct3;
 `endif
 
     // -------------------------------------------------------
@@ -182,17 +202,79 @@ module soc_top #(
     localparam logic [31:0] UART_MASK  = 32'h0000_000F;  // 16 bytes
     localparam logic [31:0] QSPI_BASE  = 32'h1000_1000;
     localparam logic [31:0] QSPI_MASK  = 32'h0000_000F;  // 16 bytes
+    localparam logic [31:0] DMA_BASE   = 32'h1000_2000;
+    localparam logic [31:0] DMA_MASK   = 32'h0000_001F;  // 32 bytes
     localparam logic [31:0] CLINT_BASE = 32'h0200_0000;
     localparam logic [31:0] CLINT_MASK = 32'h0000_FFFF;  // 64KB
     localparam logic [31:0] PLIC_BASE  = 32'h0C00_0000;
     localparam logic [31:0] PLIC_MASK  = 32'h003F_FFFF;  // 4MB
 
-    logic sel_bram, sel_uart, sel_qspi, sel_clint, sel_plic;
+    logic sel_bram, sel_uart, sel_qspi, sel_dma, sel_clint, sel_plic;
     assign sel_bram = ((dmem_addr & ~BRAM_MASK) == BRAM_BASE);
     assign sel_uart = ((dmem_addr & ~UART_MASK) == UART_BASE);
     assign sel_qspi = ((dmem_addr & ~QSPI_MASK) == QSPI_BASE);
+    assign sel_dma = ((dmem_addr & ~DMA_MASK) == DMA_BASE);
     assign sel_clint = ((dmem_addr & ~CLINT_MASK) == CLINT_BASE);
     assign sel_plic = ((dmem_addr & ~PLIC_MASK) == PLIC_BASE);
+
+    logic dma_target_bram;
+    logic dma_target_uart;
+    logic dma_target_qspi;
+    logic dma_target_dma;
+    logic dma_target_clint;
+    logic dma_target_plic;
+    logic dma_target_mapped;
+    logic dma_target_ready;
+    logic uart_tx_ready;
+    logic uart_rx_valid;
+
+    assign dma_target_bram = ((dma_m_addr & ~BRAM_MASK) == BRAM_BASE);
+    assign dma_target_uart = ((dma_m_addr & ~UART_MASK) == UART_BASE);
+    assign dma_target_qspi = ((dma_m_addr & ~QSPI_MASK) == QSPI_BASE);
+    assign dma_target_dma = ((dma_m_addr & ~DMA_MASK) == DMA_BASE);
+    assign dma_target_clint = ((dma_m_addr & ~CLINT_MASK) == CLINT_BASE);
+    assign dma_target_plic = ((dma_m_addr & ~PLIC_MASK) == PLIC_BASE);
+    assign dma_target_mapped = dma_target_bram || dma_target_uart ||
+                               dma_target_qspi || dma_target_clint ||
+                               dma_target_plic;
+
+    // UART data registers are the only current endpoints with backpressure.
+    // Other mapped endpoints complete in one bus cycle. A future SPI/display
+    // FIFO can add its ready condition here without changing the DMA engine.
+    always_comb begin
+        dma_target_ready = 1'b1;
+        if (dma_target_uart && dma_m_write && (dma_m_addr[3:0] == 4'h0))
+            dma_target_ready = uart_tx_ready;
+        else if (dma_target_uart && !dma_m_write &&
+                 (dma_m_addr[3:0] == 4'h4))
+            dma_target_ready = uart_rx_valid;
+    end
+
+    // The CPU (or simulation host) always wins. DMA uses idle data-port
+    // cycles, so the existing CPU pipeline does not require a ready/stall pin.
+    always_comb begin
+        dmem_addr   = host_dmem_addr;
+        dmem_wdata  = host_dmem_wdata;
+        dmem_rd_en  = host_dmem_rd_en;
+        dmem_wr_en  = host_dmem_wr_en;
+        dmem_funct3 = host_dmem_funct3;
+        dma_m_grant = 1'b0;
+        dma_m_error = 1'b0;
+
+        if (!host_dmem_rd_en && !host_dmem_wr_en && dma_m_req) begin
+            if (!dma_target_mapped || dma_target_dma) begin
+                dma_m_grant = 1'b1;
+                dma_m_error = 1'b1;
+            end else if (dma_target_ready) begin
+                dmem_addr   = dma_m_addr;
+                dmem_wdata  = dma_m_wdata;
+                dmem_rd_en  = !dma_m_write;
+                dmem_wr_en  = dma_m_write;
+                dmem_funct3 = dma_m_funct3;
+                dma_m_grant = 1'b1;
+            end
+        end
+    end
 
     // -------------------------------------------------------
     //  Read data mux back to CPU
@@ -201,6 +283,7 @@ module soc_top #(
     logic [31:0] bram_wdata;
     logic [31:0] uart_rdata;
     logic [31:0] qspi_rdata;
+    logic [31:0] dma_s_rdata;
     logic [31:0] clint_rdata;
     logic [31:0] plic_rdata;
 
@@ -211,11 +294,13 @@ module soc_top #(
     //                        mem_wb_mem_data latches dmem_rdata at posedge N+1.
     logic [31:0] uart_rdata_latched;
     logic [31:0] qspi_rdata_latched;
+    logic [31:0] dma_rdata_latched;
     logic [31:0] clint_rdata_latched;
     logic [31:0] plic_rdata_latched;
     logic        sel_bram_mem;
     logic        sel_uart_mem;
     logic        sel_qspi_mem;
+    logic        sel_dma_mem;
     logic        sel_clint_mem;
     logic        sel_plic_mem;
 
@@ -223,21 +308,25 @@ module soc_top #(
         if (!rst_n) begin
             uart_rdata_latched <= 32'h0;
             qspi_rdata_latched <= 32'h0;
+            dma_rdata_latched  <= 32'h0;
             clint_rdata_latched <= 32'h0;
             plic_rdata_latched <= 32'h0;
             sel_bram_mem       <= 1'b0;
             sel_uart_mem       <= 1'b0;
             sel_qspi_mem       <= 1'b0;
+            sel_dma_mem        <= 1'b0;
             sel_clint_mem      <= 1'b0;
             sel_plic_mem       <= 1'b0;
         end else begin
             uart_rdata_latched <= uart_rdata;
             qspi_rdata_latched <= qspi_rdata;
+            dma_rdata_latched  <= dma_s_rdata;
             clint_rdata_latched <= clint_rdata;
             plic_rdata_latched <= plic_rdata;
             sel_bram_mem       <= sel_bram;
             sel_uart_mem       <= sel_uart;
             sel_qspi_mem       <= sel_qspi;
+            sel_dma_mem        <= sel_dma;
             sel_clint_mem      <= sel_clint;
             sel_plic_mem       <= sel_plic;
         end
@@ -251,10 +340,28 @@ module soc_top #(
             dmem_rdata = clint_rdata_latched;
         else if (sel_qspi_mem)
             dmem_rdata = qspi_rdata_latched;
+        else if (sel_dma_mem)
+            dmem_rdata = dma_rdata_latched;
         else if (sel_uart_mem)
             dmem_rdata = uart_rdata_latched;
         else if (sel_bram_mem)
             dmem_rdata = bram_rdata;
+    end
+
+    // Return the fixed-latency shared-bus read response to the DMA. Registering
+    // both valid and data decouples it from any CPU access in the next cycle.
+    logic dma_read_pending;
+    always_ff @(posedge clk_sys or negedge rst_n) begin
+        if (!rst_n) begin
+            dma_read_pending <= 1'b0;
+            dma_m_rvalid     <= 1'b0;
+            dma_m_rdata      <= 32'b0;
+        end else begin
+            dma_m_rvalid <= dma_read_pending;
+            if (dma_read_pending)
+                dma_m_rdata <= dmem_rdata;
+            dma_read_pending <= dma_m_grant && !dma_m_write && !dma_m_error;
+        end
     end
 
     // -------------------------------------------------------
@@ -302,7 +409,8 @@ module soc_top #(
     logic timer_irq;
     logic software_irq;
     logic plic_irq;
-    logic [3:0] plic_sources;
+    logic dma_irq;
+    logic [4:0] plic_sources;
 
     // UART is live today. GPIO, SPI and external slots are ready for their
     // peripheral blocks and remain inactive until those blocks are connected.
@@ -311,11 +419,13 @@ module soc_top #(
     assign plic_sources[1] = (sim_irq_sources[1] === 1'b1);
     assign plic_sources[2] = (sim_irq_sources[2] === 1'b1);
     assign plic_sources[3] = (sim_irq_sources[3] === 1'b1);
+    assign plic_sources[4] = dma_irq;
 `else
     assign plic_sources[0] = uart_irq; // source ID 1
     assign plic_sources[1] = 1'b0;     // source ID 2: GPIO
     assign plic_sources[2] = 1'b0;     // source ID 3: SPI
     assign plic_sources[3] = 1'b0;     // source ID 4: external/platform
+    assign plic_sources[4] = dma_irq;  // source ID 5
 `endif
 
     uart #(
@@ -330,8 +440,30 @@ module soc_top #(
         .rd_en      (sel_uart & dmem_rd_en),
         .rd_data    (uart_rdata),
         .irq        (uart_irq),
+        .tx_ready_o (uart_tx_ready),
+        .rx_valid_o (uart_rx_valid),
         .uart_tx_pin(uart_tx),
         .uart_rx_pin(uart_rx)
+    );
+
+    dma_controller u_dma (
+        .clk       (clk_sys),
+        .rst_n     (rst_n),
+        .s_addr    (dmem_addr[4:0]),
+        .s_wr_data (dmem_wdata),
+        .s_wr_en   (sel_dma & dmem_wr_en),
+        .s_rd_en   (sel_dma & dmem_rd_en),
+        .s_rd_data (dma_s_rdata),
+        .m_req     (dma_m_req),
+        .m_write   (dma_m_write),
+        .m_addr    (dma_m_addr),
+        .m_wdata   (dma_m_wdata),
+        .m_funct3  (dma_m_funct3),
+        .m_grant   (dma_m_grant),
+        .m_error   (dma_m_error),
+        .m_rvalid  (dma_m_rvalid),
+        .m_rdata   (dma_m_rdata),
+        .irq       (dma_irq)
     );
 
     // The configuration flash data pins become ordinary user I/O after FPGA
@@ -382,7 +514,7 @@ module soc_top #(
         .timer_irq   (timer_irq)
     );
 
-    plic #(.NUM_SOURCES(4)) u_plic (
+    plic #(.NUM_SOURCES(5)) u_plic (
         .clk         (clk_sys),
         .rst_n       (rst_n),
         .addr        (dmem_addr[21:0]),

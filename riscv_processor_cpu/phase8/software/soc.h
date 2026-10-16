@@ -43,6 +43,8 @@
 #define PLIC_IRQ_GPIO       2U
 #define PLIC_IRQ_SPI        3U
 #define PLIC_IRQ_EXTERNAL   4U
+#define PLIC_IRQ_DMA        5U
+#define PLIC_IRQ_MAX        PLIC_IRQ_DMA
 
 /* Machine interrupt-enable/pending bit positions. */
 #define MIP_MSIP            (1U << 3)
@@ -60,5 +62,36 @@
 #define QSPI_CONTROL_START  (1U << 0)
 #define QSPI_STATUS_BUSY    (1U << 0)
 #define QSPI_STATUS_DONE    (1U << 1)
+
+/* ---- Single-channel DMA controller ---- */
+#define DMA_BASE            0x10002000UL
+#define DMA_SRC_ADDR        (*(volatile uint32_t *)(DMA_BASE + 0x00))
+#define DMA_DST_ADDR        (*(volatile uint32_t *)(DMA_BASE + 0x04))
+#define DMA_LENGTH          (*(volatile uint32_t *)(DMA_BASE + 0x08))
+#define DMA_CONTROL         (*(volatile uint32_t *)(DMA_BASE + 0x0C))
+#define DMA_STATUS          (*(volatile uint32_t *)(DMA_BASE + 0x10))
+#define DMA_TRANSFERRED     (*(volatile uint32_t *)(DMA_BASE + 0x14))
+#define DMA_ID              (*(volatile uint32_t *)(DMA_BASE + 0x18))
+#define DMA_REMAINING       (*(volatile uint32_t *)(DMA_BASE + 0x1C))
+
+#define DMA_CONTROL_START       (1U << 0)
+#define DMA_CONTROL_SRC_INC     (1U << 1)
+#define DMA_CONTROL_DST_INC     (1U << 2)
+#define DMA_CONTROL_WIDTH_BYTE  (0U << 3)
+#define DMA_CONTROL_WIDTH_HALF  (1U << 3)
+#define DMA_CONTROL_WIDTH_WORD  (2U << 3)
+#define DMA_CONTROL_IRQ_ENABLE  (1U << 5)
+#define DMA_CONTROL_ABORT       (1U << 6)
+
+#define DMA_STATUS_BUSY         (1U << 0)
+#define DMA_STATUS_DONE         (1U << 1)
+#define DMA_STATUS_ERROR        (1U << 2)
+#define DMA_STATUS_IRQ_PENDING  (1U << 3)
+#define DMA_STATUS_ERROR_SHIFT  8U
+
+#define DMA_ERROR_BAD_WIDTH     1U
+#define DMA_ERROR_SELF_ACCESS   2U
+#define DMA_ERROR_BUS           3U
+#define DMA_ERROR_ABORTED       4U
 
 #endif /* SOC_H */

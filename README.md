@@ -10,6 +10,7 @@
 ![Clock](https://img.shields.io/badge/Clock-25%20MHz-31ff70?style=for-the-badge)
 ![Firmware](https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge)
 ![Boot](https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge)
+![DMA](https://img.shields.io/badge/DMA-Memory%20%2B%20UART-00c853?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
 
 <h3>Custom 32-bit RISC-V processor, synthesized onto FPGA and booting Snake permanently from flash.</h3>
@@ -84,8 +85,9 @@ The current hardware milestone is fully physical: the FPGA configures from the b
 | FPGA timing closure | ✅ | QSPI-enabled build meets 25 MHz timing: WNS **+6.753 ns**, WHS **+0.021 ns**, 0 failing endpoints |
 | CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
-| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs |
-| Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 4-source priority/claim controller |
+| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs; DMA integrated and awaiting the next Vivado run |
+| Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 5-source priority/claim controller |
+| DMA controller | ✅ RTL | CPU-priority bus mastering, 8/16/32-bit memory copies, UART flow control, progress/error status, and PLIC completion IRQ; FPGA timing run pending |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
 | UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
 | QSPI flash boot | ✅ | Persistent `RVF1` image, CRC-checked RAM copy, automatic start, and UART recovery verified on FPGA |
@@ -217,6 +219,24 @@ This is the first game running on the processor.
 | `0x0C00_0000` - `0x0C3F_FFFF` | PLIC | Priority, pending, enable, threshold, claim/complete |
 | `0x1000_0000` - `0x1000_000F` | UART | TX, RX, status registers |
 | `0x1000_1000` - `0x1000_100F` | QSPI reader | Flash address, byte data, control/status, peripheral ID |
+| `0x1000_2000` - `0x1000_201F` | DMA | Source, destination, length, control, status, progress, ID, remaining bytes |
+
+### DMA Data Movement
+
+The Phase 8 SoC includes a synthesizable single-channel bus-master DMA engine.
+Firmware programs a source address, destination address, byte length, transfer
+width, and independent source/destination increment controls. The DMA then
+uses data-bus cycles that the CPU is not using, so instruction execution can
+continue without adding a stall/ready signal to the existing pipeline.
+
+Current RTL integration verifies BRAM-to-BRAM copies and flow-controlled
+BRAM-to-UART transmission. Fixed-address endpoints make the same engine usable
+for RX/TX FIFOs in future SPI, display, VGA, or external-memory peripherals;
+their ready signals are added to the SoC arbiter just like UART readiness.
+Completion and errors are sticky, invalid addresses terminate instead of
+hanging, and interrupt-enabled transfers arrive through PLIC source ID 5.
+Bare-metal helpers are provided in
+[`dma.h`](riscv_processor_cpu/phase8/software/dma.h).
 
 ### FPGA Top Level
 
@@ -500,6 +520,7 @@ Snake controls:
 | UART bootloader | `tb_bootloader.sv` | Upload, CRC-32 verification, `FENCE.I`, jump and `APP:OK` pass |
 | QSPI Boot ROM | `tb_qspi_boot.sv` | Valid copy/boot, corrupt-image rejection, blocked unsafe jump, and UART recovery pass |
 | CLINT + PLIC | Directed unit and SoC-map testbenches | `msip`, `mtimecmp`, priority, threshold, claim/complete, and CPU `mip` delivery pass |
+| DMA controller | Unit + full SoC integration testbenches | Tail widths, fixed/incrementing addresses, backpressure, errors, BRAM copy, UART streaming, and PLIC ID 5 pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
 | Timing closure (Vivado, 25 MHz) | — | QSPI build: WNS +6.753 ns, WHS +0.021 ns, 0 failing endpoints |

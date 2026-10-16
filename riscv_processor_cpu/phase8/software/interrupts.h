@@ -52,7 +52,7 @@ static inline void clint_software_interrupt_set(int pending)
 
 static inline void plic_source_enable(uint32_t source, uint32_t priority)
 {
-    if (source >= 1U && source <= PLIC_IRQ_EXTERNAL) {
+    if (source >= 1U && source <= PLIC_IRQ_MAX) {
         PLIC_PRIORITY(source) = priority & 7U;
         PLIC_ENABLE |= 1U << source;
     }

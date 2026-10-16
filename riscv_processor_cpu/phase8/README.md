@@ -1,7 +1,7 @@
 # 🚀 RISC-V RV32IM SoC on Arty S7-50 FPGA — Complete Implementation & Deployment Guide
 
 > **Target Board:** Digilent Arty S7-50 (`XC7S50-CSGA324-1`)  
-> **Core Architecture:** 5-Stage Pipelined RV32IM with 64KB BRAM, UART, QSPI Boot ROM, CLINT & PLIC
+> **Core Architecture:** 5-Stage Pipelined RV32IM with 64KB BRAM, UART, DMA, QSPI Boot ROM, CLINT & PLIC
 > **System Clock:** 25 MHz (MMCM synthesis from 12 MHz on-board oscillator)  
 > **Serial Baud Rate:** 115,200 baud (8N1)
 
@@ -35,12 +35,13 @@ This project integrates our custom **RV32IM pipelined processor** into a standal
 4. **On-Chip Memory:** 64KB logical dual-port Block RAM with parity banking for single-cycle cross-word loads/stores (Port A: instruction fetch, Port B: data load/store).
 5. **Memory-Mapped UART:** TX/RX peripheral at physical address `0x1000_0000` with 115200 baud support.
 6. **Core-Local Interrupts:** CLINT-style 64-bit `mtime`/`mtimecmp` timer and machine software interrupt.
-7. **Platform Interrupts:** Four-source, single-context PLIC with priorities, enables, threshold, and claim/complete.
+7. **Platform Interrupts:** Five-source, single-context PLIC with priorities, enables, threshold, and claim/complete.
 8. **Hardware Debug Indicators:** Status LEDs tied to CPU run state, PLL lock, and serial communication.
 9. **Two Bare-Metal Firmwares:**
    - Diagnostic `hello_asm.S`: Hardware bring-up and interactive keyboard echo.
    - Interactive `snake.c`: Full ANSI terminal Snake game with real-time controls.
 10. **Persistent Boot:** The BRAM-resident Boot ROM validates Snake in the board's QSPI flash, copies it to RAM, and falls back to UART recovery when the image is absent or damaged.
+11. **Bus-Master DMA:** Independent 8/16/32-bit transfers with source/destination increment controls, UART backpressure, progress/error registers, and PLIC completion interrupts.
 
 ---
 
@@ -59,10 +60,10 @@ CPU CSR/trap unit:
 | Machine timer interrupt | 7 (`MTIP`) | `mtime >= mtimecmp` |
 | Machine external interrupt | 11 (`MEIP`) | PLIC claimable source |
 
-The PLIC reserves source IDs 1 through 4 for UART RX, GPIO, SPI, and an
-external/platform input. UART RX is connected in the current board SoC. The
-GPIO, SPI, and external source slots are implemented in the controller and are
-ready to connect when those peripheral blocks are added.
+The PLIC reserves source IDs 1 through 5 for UART RX, GPIO, SPI, an
+external/platform input, and DMA. UART RX and DMA are connected in the current
+board SoC. The GPIO, SPI, and external source slots remain ready for their
+peripheral blocks.
 
 #### Interrupt Register Map
 
@@ -71,9 +72,9 @@ ready to connect when those peripheral blocks are added.
 | `0x0200_0000` | CLINT `msip` | Bit 0 asserts/clears the software interrupt |
 | `0x0200_4000` / `0x0200_4004` | CLINT `mtimecmp` low/high | 64-bit timer deadline |
 | `0x0200_BFF8` / `0x0200_BFFC` | CLINT `mtime` low/high | 64-bit free-running cycle counter |
-| `0x0C00_0004` ... `0x0C00_0010` | PLIC priority | Source priorities 1..7; zero disables |
-| `0x0C00_1000` | PLIC pending | Pending source bits `[4:1]` |
-| `0x0C00_2000` | PLIC enable | Machine-context enable bits `[4:1]` |
+| `0x0C00_0004` ... `0x0C00_0014` | PLIC priority | Source priorities 1..7; zero disables |
+| `0x0C00_1000` | PLIC pending | Pending source bits `[5:1]` |
+| `0x0C00_2000` | PLIC enable | Machine-context enable bits `[5:1]` |
 | `0x0C20_0000` | PLIC threshold | Minimum accepted priority |
 | `0x0C20_0004` | PLIC claim/complete | Read source ID to claim; write it to complete |
 
@@ -84,8 +85,58 @@ firmware remain polling-based and unchanged; interrupt-driven firmware must set
 `mtvec`, enable the desired `mie` bits, and set global `mstatus.MIE`.
 
 Run `make -C riscv_processor_cpu/phase8/tb` from the repository root to execute
-the CLINT unit test, PLIC arbitration test, CPU interrupt-cause test, and full
-SoC address-map integration test.
+the CLINT, PLIC, DMA, QSPI, CPU interrupt-cause, and full SoC integration tests.
+
+### DMA Controller
+
+The DMA controller is mapped at `0x1000_2000` and is a real data-bus master,
+not a firmware copy loop. CPU/host accesses have priority; when the data port
+is idle, DMA issues a read followed by a write while instruction fetch keeps
+using BRAM Port A. UART TX and RX data registers add hardware backpressure, so
+the channel waits for `TX_READY` or `RX_VALID` without CPU polling.
+
+| Offset | Register | Description |
+| :---: | :--- | :--- |
+| `0x00` | `SRC_ADDR` | Source byte address |
+| `0x04` | `DST_ADDR` | Destination byte address |
+| `0x08` | `LENGTH` | Total byte count; arbitrary tails are supported |
+| `0x0C` | `CONTROL` | Start, source/destination increment, 8/16/32-bit width, IRQ enable, abort |
+| `0x10` | `STATUS` | Busy, done, error, IRQ pending, and error code; sticky bits are W1C |
+| `0x14` | `TRANSFERRED` | Successfully written byte count |
+| `0x18` | `ID` | `0x444D4131` (`DMA1`) |
+| `0x1C` | `REMAINING` | Bytes still pending |
+
+The engine rejects its own register window and reports unmapped bus addresses
+as errors. Transfer widths automatically shrink for a final partial beat. A
+completion or error can assert PLIC source ID 5. The header-only firmware API
+in [`software/dma.h`](software/dma.h) provides `dma_copy`,
+`dma_uart_transmit`, `dma_uart_receive`, `dma_wait`, and `dma_abort`.
+
+BRAM-to-BRAM and BRAM-to-UART paths are connected now. Future SPI, VGA/display
+FIFO, or external-memory blocks can use fixed or incrementing addresses; their
+ready condition plugs into the arbiter alongside the existing UART readiness.
+
+```c
+#include "dma.h"
+#include "interrupts.h"
+
+dma_copy(destination, source, byte_count);
+dma_uart_transmit(message, message_length, 1);
+plic_source_enable(PLIC_IRQ_DMA, 3);
+```
+
+Verification is available without Vivado:
+
+```powershell
+make -C riscv_processor_cpu/phase8/tb dma
+make -C riscv_processor_cpu/phase8/tb dma_soc
+make -C riscv_processor_cpu/phase8/tb all
+```
+
+The unit test covers widths, tail beats, fixed addresses, backpressure, abort
+and bus errors. The SoC test proves the shared arbiter, 64KB BRAM copy, UART TX
+flow control, and PLIC claim ID 5. Post-DMA synthesis, implementation, and
+bitstream generation are intentionally left for the board workflow.
 
 Vivado 2020.2 synthesis, placement, routing, bitstream generation, QSPI flash
 programming, and physical Snake boot are complete. At 25 MHz, the final

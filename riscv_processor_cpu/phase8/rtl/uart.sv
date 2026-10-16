@@ -41,6 +41,8 @@ module uart #(
     input  logic        rd_en,       // Read enable
     output logic [31:0] rd_data,     // Read data to CPU
     output logic        irq,         // RX data available
+    output logic        tx_ready_o,  // Flow control for bus masters such as DMA
+    output logic        rx_valid_o,  // At least one byte is queued
 
     // ---- Physical UART pins (connect to board) ----
     output logic        uart_tx_pin, // To FPGA TX pin (goes to PC)
@@ -97,6 +99,8 @@ module uart #(
     logic                rx_valid_flag;
 
     assign rx_valid_flag = (rx_count != 0);
+    assign tx_ready_o = tx_ready;
+    assign rx_valid_o = rx_valid_flag;
     // RX overflow is a sticky diagnostic status bit, not an interrupt source.
     // Keeping it off the IRQ line prevents a historical overflow from holding
     // the PLIC interrupt active forever after the FIFO has been drained.

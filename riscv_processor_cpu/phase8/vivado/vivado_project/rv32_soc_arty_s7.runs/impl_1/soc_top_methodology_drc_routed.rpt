@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date         : Wed Oct 14 22:41:51 2026
+| Date         : Fri Oct 16 11:21:16 2026
 | Host         : tharun running 64-bit major release  (build 9200)
 | Command      : report_methodology -file soc_top_methodology_drc_routed.rpt -pb soc_top_methodology_drc_routed.pb -rpx soc_top_methodology_drc_routed.rpx
 | Design       : soc_top
@@ -23,12 +23,13 @@ Table of Contents
           Floorplan: design_1
       Design limits: <entire design considered>
              Max violations: <unlimited>
-             Violations found: 151
+             Violations found: 152
 +-----------+------------------+------------------------------------------------------------------+------------+
 | Rule      | Severity         | Description                                                      | Violations |
 +-----------+------------------+------------------------------------------------------------------+------------+
 | TIMING-6  | Critical Warning | No common primary clock between related clocks                   | 2          |
 | DPIR-1    | Warning          | Asynchronous driver check                                        | 111        |
+| HPDR-1    | Warning          | Port pin direction inconsistency                                 | 1          |
 | SYNTH-10  | Warning          | Wide multiplier                                                  | 4          |
 | SYNTH-15  | Warning          | Byte wide write enable not inferred                              | 32         |
 | TIMING-56 | Warning          | Missing logically or physically excluded clock groups constraint | 2          |
@@ -599,6 +600,11 @@ Related violations: <none>
 DPIR-1#111 Warning
 Asynchronous driver check  
 DSP u_cpu/u_muldiv/mul_full__2 input pin u_cpu/u_muldiv/mul_full__2/B[9] is connected to registers with an asynchronous reset. This is preventing the possibility of merging these registers in to the DSP Block since the DSP block registers only possess synchronous reset capability.  It is suggested to recode or change these registers to remove the reset or use a synchronous reset to get the best optimization for performance, power and area.
+Related violations: <none>
+
+HPDR-1#1 Warning
+Port pin direction inconsistency  
+Hierarchical port(pin) qspi_dq[0] direction INOUT is not consistent with the directions of the cell pins/ports found at that level of the netlist hierarchy. Please review the design and consider changing the port(pin) direction. Both drivers and loads were expected for the net (qspi_dq[0]) connected to this Port, but both were not found.
 Related violations: <none>
 
 SYNTH-10#1 Warning

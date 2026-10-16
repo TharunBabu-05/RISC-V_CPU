@@ -1,13 +1,13 @@
 // ============================================================
 //  plic.sv - Small single-context Platform-Level Interrupt Controller
 //
-//  Four source IDs are implemented:
-//    1 UART, 2 GPIO, 3 SPI, 4 external/platform
+//  The source count is parameterized. The Phase 8 SoC uses five IDs:
+//    1 UART, 2 GPIO, 3 SPI, 4 external/platform, 5 DMA
 //
 //  Relative register map (PLIC base 0x0C00_0000):
-//    0x000004..010  source priority (0 disables, 1..7)
-//    0x001000       pending bits [4:1] (read-only)
-//    0x002000       machine-context enable bits [4:1]
+//    0x000004..014  source priority (0 disables, 1..7)
+//    0x001000       pending source bits (read-only)
+//    0x002000       machine-context enable source bits
 //    0x200000       machine-context priority threshold
 //    0x200004       claim (read) / complete (write)
 // ============================================================

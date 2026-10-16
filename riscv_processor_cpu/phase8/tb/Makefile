@@ -24,13 +24,14 @@ SOC_SRCS := \
 	$(SOC_RTL)/uart_rx.sv \
 	$(SOC_RTL)/clint.sv \
 	$(SOC_RTL)/plic.sv \
+	$(SOC_RTL)/dma_controller.sv \
 	$(SOC_RTL)/qspi_reader.sv \
 	$(SOC_RTL)/cpu_top_soc.sv \
 	$(CPU_SRCS)
 
-.PHONY: all boot_regress clint plic qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map clean
+.PHONY: all boot_regress clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map clean
 
-all: clint plic qspi interrupt_sources interrupt_map
+all: clint plic dma dma_soc qspi interrupt_sources interrupt_map
 
 boot_regress: qspi_boot qspi_corrupt uart_recovery
 
@@ -44,6 +45,16 @@ clint: | $(BUILD)
 plic: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_plic -o $(BUILD)/tb_plic tb_plic.sv $(SOC_RTL)/plic.sv
 	$(VVP) $(BUILD)/tb_plic
+
+dma: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_dma_controller -o $(BUILD)/tb_dma_controller \
+		tb_dma_controller.sv $(SOC_RTL)/dma_controller.sv
+	$(VVP) $(BUILD)/tb_dma_controller
+
+dma_soc: | $(BUILD)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_dma_soc \
+		-o $(BUILD)/tb_dma_soc tb_dma_soc.sv $(SOC_SRCS)
+	cd $(SOC_RTL) && $(VVP) ../tb/$(BUILD)/tb_dma_soc
 
 qspi: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_qspi_reader -o $(BUILD)/tb_qspi_reader \
