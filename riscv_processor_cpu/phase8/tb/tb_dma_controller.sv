@@ -10,17 +10,18 @@ module tb_dma_controller;
     logic s_wr_en;
     logic s_rd_en;
     logic [31:0] s_rd_data;
-    logic m_req;
-    logic m_write;
-    logic [31:0] m_addr;
-    logic [31:0] m_wdata;
-    logic [2:0] m_funct3;
-    logic m_grant;
-    logic m_error;
-    logic m_rvalid;
-    logic [31:0] m_rdata;
+    logic m_req_valid, m_req_ready, m_req_write;
+    logic [31:0] m_req_addr, m_req_wdata;
+    logic [3:0] m_req_wstrb;
+    logic [1:0] m_req_size;
+    logic m_rsp_valid, m_rsp_ready, m_rsp_err;
+    logic [31:0] m_rsp_rdata;
     logic irq;
-    logic allow_grant = 1'b1;
+    logic allow_ready = 1'b1;
+    logic pending;
+    logic [2:0] response_delay;
+    logic response_error;
+    logic [31:0] response_data;
     logic [7:0] memory [0:255];
     logic [31:0] value;
     integer errors = 0;
@@ -28,26 +29,44 @@ module tb_dma_controller;
 
     dma_controller dut (.*);
 
-    assign m_grant = m_req && allow_grant;
-    assign m_error = m_grant && (m_addr > 32'h0000_00FF);
+    assign m_req_ready = allow_ready && !pending && !m_rsp_valid;
 
+    // Delayed target: both reads and writes receive an explicit response.
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            m_rvalid <= 1'b0;
-            m_rdata <= 32'b0;
+            pending        <= 1'b0;
+            response_delay <= 3'd0;
+            response_error <= 1'b0;
+            response_data  <= 32'b0;
+            m_rsp_valid    <= 1'b0;
+            m_rsp_rdata    <= 32'b0;
+            m_rsp_err      <= 1'b0;
         end else begin
-            m_rvalid <= m_grant && !m_write && !m_error;
-            if (m_grant && !m_write && !m_error)
-                m_rdata <= {memory[m_addr + 3], memory[m_addr + 2],
-                            memory[m_addr + 1], memory[m_addr]};
+            if (m_rsp_valid && m_rsp_ready)
+                m_rsp_valid <= 1'b0;
 
-            if (m_grant && m_write && !m_error) begin
-                memory[m_addr] <= m_wdata[7:0];
-                if (m_funct3 != 3'b000)
-                    memory[m_addr + 1] <= m_wdata[15:8];
-                if (m_funct3 == 3'b010) begin
-                    memory[m_addr + 2] <= m_wdata[23:16];
-                    memory[m_addr + 3] <= m_wdata[31:24];
+            if (m_req_valid && m_req_ready) begin
+                pending        <= 1'b1;
+                response_delay <= 3'd3;
+                response_error <= (m_req_addr > 32'h0000_00FF);
+                response_data  <= {memory[m_req_addr + 3], memory[m_req_addr + 2],
+                                   memory[m_req_addr + 1], memory[m_req_addr]};
+                if (m_req_write && (m_req_addr <= 32'h0000_00FF)) begin
+                    if (m_req_wstrb[0]) memory[m_req_addr]     <= m_req_wdata[7:0];
+                    if (m_req_wstrb[1]) memory[m_req_addr + 1] <= m_req_wdata[15:8];
+                    if (m_req_wstrb[2]) memory[m_req_addr + 2] <= m_req_wdata[23:16];
+                    if (m_req_wstrb[3]) memory[m_req_addr + 3] <= m_req_wdata[31:24];
+                end
+            end
+
+            if (pending) begin
+                if (response_delay != 0)
+                    response_delay <= response_delay - 1'b1;
+                else begin
+                    pending     <= 1'b0;
+                    m_rsp_valid <= 1'b1;
+                    m_rsp_err   <= response_error;
+                    m_rsp_rdata <= response_data;
                 end
             end
         end
@@ -147,20 +166,20 @@ module tb_dma_controller;
         wait_idle();
         check("fixed destination receives final byte", memory[8'hE0] == 8'h33);
 
-        // Backpressure must hold a request without losing progress.
-        allow_grant = 1'b0;
+        // Request-ready backpressure must hold a request without losing progress.
+        allow_ready = 1'b0;
         reg_write(5'h00, 32'h10);
         reg_write(5'h04, 32'hA0);
         reg_write(5'h08, 32'd4);
         reg_write(5'h0C, 32'h0000_0017);
         repeat (8) @(posedge clk);
-        check("grant backpressure keeps DMA busy", dut.busy && (dut.transferred == 0));
-        allow_grant = 1'b1;
+        check("ready backpressure keeps DMA busy", dut.busy && (dut.transferred == 0));
+        allow_ready = 1'b1;
         wait_idle();
         check("transfer resumes after backpressure", memory[8'hA0] == memory[8'h10]);
 
         // Software can terminate a blocked transfer without resetting DMA.
-        allow_grant = 1'b0;
+        allow_ready = 1'b0;
         reg_write(5'h00, 32'h10);
         reg_write(5'h04, 32'hB0);
         reg_write(5'h08, 32'd4);
@@ -170,7 +189,7 @@ module tb_dma_controller;
         reg_read(5'h10, value);
         check("active transfer can be aborted",
               !value[0] && value[2] && value[3] && value[15:8] == 8'h04);
-        allow_grant = 1'b1;
+        allow_ready = 1'b1;
 
         // Unmapped bus access fails and can interrupt the PLIC.
         reg_write(5'h00, 32'h0000_1000);

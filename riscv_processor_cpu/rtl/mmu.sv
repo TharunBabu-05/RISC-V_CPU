@@ -5,7 +5,8 @@
 
 module mmu #(
     parameter int XLEN = 32,
-    parameter int TLB_ENTRIES = 8
+    parameter int TLB_ENTRIES = 8,
+    parameter bit PTW_HANDSHAKE = 1'b0
 ) (
     input  logic            clk,
     input  logic            rst_n,
@@ -32,7 +33,15 @@ module mmu #(
 
     output logic            ptw_read,
     output logic [XLEN-1:0] ptw_addr,
-    input  logic [31:0]     ptw_rdata
+    input  logic [31:0]     ptw_rdata,
+
+    // Optional variable-latency page-table-walker transaction channel.
+    // Legacy cache-model users leave PTW_HANDSHAKE=0 and use ptw_rdata.
+    output logic            ptw_req_valid,
+    input  logic            ptw_req_ready,
+    input  logic            ptw_rsp_valid,
+    input  logic            ptw_rsp_err,
+    input  logic [31:0]     ptw_rsp_rdata
 );
 
     localparam int VPN_BITS = 20;
@@ -158,6 +167,7 @@ module mmu #(
     logic [PPN_BITS-1:0] l1_ppn_base;
     logic fault_pending;
     logic fault_is_inst;
+    logic walk_waiting;
 
     logic [PPN_BITS-1:0] itlb_ppn_hit;
     logic [PPN_BITS-1:0] dtlb_ppn_hit;
@@ -205,6 +215,10 @@ module mmu #(
         if (fault_pending) begin
             inst_fault = fault_is_inst;
             data_fault = !fault_is_inst;
+            if (fault_is_inst)
+                inst_ready = 1'b1;
+            else
+                data_ready = 1'b1;
         end
 
     end
@@ -224,6 +238,8 @@ module mmu #(
         end
     end
 
+    assign ptw_req_valid = PTW_HANDSHAKE && (state != S_IDLE) && !walk_waiting;
+
     int unsigned itlb_wr_ptr;
     int unsigned dtlb_wr_ptr;
     logic [XLEN-1:0] satp_last;
@@ -233,6 +249,7 @@ module mmu #(
             state <= S_IDLE;
             fault_pending <= 1'b0;
             fault_is_inst <= 1'b0;
+            walk_waiting <= 1'b0;
             l1_ppn_base <= {PPN_BITS{1'b0}};
             req_vaddr <= {XLEN{1'b0}};
             req_is_inst <= 1'b0;
@@ -260,6 +277,7 @@ module mmu #(
             if (sfence || satp != satp_last) begin
                 satp_last <= satp;
                 state <= S_IDLE;
+                walk_waiting <= 1'b0;
                 itlb_wr_ptr <= 0;
                 dtlb_wr_ptr <= 0;
                 for (int i = 0; i < TLB_ENTRIES; i = i + 1) begin
@@ -274,11 +292,13 @@ module mmu #(
                             req_is_inst  <= 1'b0;
                             req_is_store <= data_write;
                             state        <= S_L1;
+                            walk_waiting <= 1'b0;
                         end else if (mmu_en && inst_req && !itlb_hit) begin
                             req_vaddr    <= inst_vaddr;
                             req_is_inst  <= 1'b1;
                             req_is_store <= 1'b0;
                             state        <= S_L1;
+                            walk_waiting <= 1'b0;
                         end
                     end
 
@@ -286,58 +306,67 @@ module mmu #(
                         logic pte_v, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d;
                         logic [PPN_BITS-1:0] pte_ppn;
                         logic pte_ok;
+                        logic [31:0] pte_word;
 
-                        pte_v = ptw_rdata[0];
-                        pte_r = ptw_rdata[1];
-                        pte_w = ptw_rdata[2];
-                        pte_x = ptw_rdata[3];
-                        pte_u = ptw_rdata[4];
-                        pte_a = ptw_rdata[6];
-                        pte_d = ptw_rdata[7];
-                        pte_ppn = ptw_rdata[31:10];
+                        if (PTW_HANDSHAKE && !walk_waiting && ptw_req_ready)
+                            walk_waiting <= 1'b1;
 
-                        if (!pte_v || (!pte_r && pte_w) ||
-                            ((pte_r || pte_x) && (pte_ppn[9:0] != 10'b0))) begin   // misaligned megapage
-                            fault_pending <= 1'b1;
-                            fault_is_inst <= req_is_inst;
-                            state <= S_IDLE;
-                        end else if (pte_r || pte_x) begin
-                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
-                            if (!pte_ok) begin
+                        if (!PTW_HANDSHAKE || (walk_waiting && ptw_rsp_valid)) begin
+                            pte_word = PTW_HANDSHAKE ? ptw_rsp_rdata : ptw_rdata;
+                            pte_v = pte_word[0];
+                            pte_r = pte_word[1];
+                            pte_w = pte_word[2];
+                            pte_x = pte_word[3];
+                            pte_u = pte_word[4];
+                            pte_a = pte_word[6];
+                            pte_d = pte_word[7];
+                            pte_ppn = pte_word[31:10];
+                            walk_waiting <= 1'b0;
+
+                            if ((PTW_HANDSHAKE && ptw_rsp_err) || !pte_v || (!pte_r && pte_w) ||
+                                ((pte_r || pte_x) && (pte_ppn[9:0] != 10'b0))) begin
                                 fault_pending <= 1'b1;
                                 fault_is_inst <= req_is_inst;
                                 state <= S_IDLE;
-                            end else if (req_is_inst) begin
-                                itlb_valid[itlb_wr_ptr] <= 1'b1;
-                                itlb_vpn[itlb_wr_ptr]   <= req_vaddr[31:12];
-                                itlb_ppn[itlb_wr_ptr]   <= pte_ppn;
-                                itlb_asid[itlb_wr_ptr]  <= satp_asid;
-                                itlb_r[itlb_wr_ptr]     <= pte_r;
-                                itlb_w[itlb_wr_ptr]     <= pte_w;
-                                itlb_x[itlb_wr_ptr]     <= pte_x;
-                                itlb_u[itlb_wr_ptr]     <= pte_u;
-                                itlb_a[itlb_wr_ptr]     <= pte_a;
-                                itlb_d[itlb_wr_ptr]     <= pte_d;
-                                itlb_super[itlb_wr_ptr] <= 1'b1;
-                                itlb_wr_ptr <= (itlb_wr_ptr + 1) % TLB_ENTRIES;
+                            end else if (pte_r || pte_x) begin
+                                pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
+                                if (!pte_ok) begin
+                                    fault_pending <= 1'b1;
+                                    fault_is_inst <= req_is_inst;
+                                    state <= S_IDLE;
+                                end else if (req_is_inst) begin
+                                    itlb_valid[itlb_wr_ptr] <= 1'b1;
+                                    itlb_vpn[itlb_wr_ptr]   <= req_vaddr[31:12];
+                                    itlb_ppn[itlb_wr_ptr]   <= pte_ppn;
+                                    itlb_asid[itlb_wr_ptr]  <= satp_asid;
+                                    itlb_r[itlb_wr_ptr]     <= pte_r;
+                                    itlb_w[itlb_wr_ptr]     <= pte_w;
+                                    itlb_x[itlb_wr_ptr]     <= pte_x;
+                                    itlb_u[itlb_wr_ptr]     <= pte_u;
+                                    itlb_a[itlb_wr_ptr]     <= pte_a;
+                                    itlb_d[itlb_wr_ptr]     <= pte_d;
+                                    itlb_super[itlb_wr_ptr] <= 1'b1;
+                                    itlb_wr_ptr <= (itlb_wr_ptr + 1) % TLB_ENTRIES;
+                                    state <= S_IDLE;
+                                end else begin
+                                    dtlb_valid[dtlb_wr_ptr] <= 1'b1;
+                                    dtlb_vpn[dtlb_wr_ptr]   <= req_vaddr[31:12];
+                                    dtlb_ppn[dtlb_wr_ptr]   <= pte_ppn;
+                                    dtlb_asid[dtlb_wr_ptr]  <= satp_asid;
+                                    dtlb_r[dtlb_wr_ptr]     <= pte_r;
+                                    dtlb_w[dtlb_wr_ptr]     <= pte_w;
+                                    dtlb_x[dtlb_wr_ptr]     <= pte_x;
+                                    dtlb_u[dtlb_wr_ptr]     <= pte_u;
+                                    dtlb_a[dtlb_wr_ptr]     <= pte_a;
+                                    dtlb_d[dtlb_wr_ptr]     <= pte_d;
+                                    dtlb_super[dtlb_wr_ptr] <= 1'b1;
+                                    dtlb_wr_ptr <= (dtlb_wr_ptr + 1) % TLB_ENTRIES;
+                                    state <= S_IDLE;
+                                end
                             end else begin
-                                dtlb_valid[dtlb_wr_ptr] <= 1'b1;
-                                dtlb_vpn[dtlb_wr_ptr]   <= req_vaddr[31:12];
-                                dtlb_ppn[dtlb_wr_ptr]   <= pte_ppn;
-                                dtlb_asid[dtlb_wr_ptr]  <= satp_asid;
-                                dtlb_r[dtlb_wr_ptr]     <= pte_r;
-                                dtlb_w[dtlb_wr_ptr]     <= pte_w;
-                                dtlb_x[dtlb_wr_ptr]     <= pte_x;
-                                dtlb_u[dtlb_wr_ptr]     <= pte_u;
-                                dtlb_a[dtlb_wr_ptr]     <= pte_a;
-                                dtlb_d[dtlb_wr_ptr]     <= pte_d;
-                                dtlb_super[dtlb_wr_ptr] <= 1'b1;
-                                dtlb_wr_ptr <= (dtlb_wr_ptr + 1) % TLB_ENTRIES;
+                                l1_ppn_base <= pte_ppn;
+                                state <= S_L0;
                             end
-                            state <= S_IDLE;
-                        end else begin
-                            l1_ppn_base <= pte_ppn;
-                            state <= S_L0;
                         end
                     end
 
@@ -345,23 +374,31 @@ module mmu #(
                         logic pte_v, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d;
                         logic [PPN_BITS-1:0] pte_ppn;
                         logic pte_ok;
+                        logic [31:0] pte_word;
 
-                        pte_v = ptw_rdata[0];
-                        pte_r = ptw_rdata[1];
-                        pte_w = ptw_rdata[2];
-                        pte_x = ptw_rdata[3];
-                        pte_u = ptw_rdata[4];
-                        pte_a = ptw_rdata[6];
-                        pte_d = ptw_rdata[7];
-                        pte_ppn = ptw_rdata[31:10];
+                        if (PTW_HANDSHAKE && !walk_waiting && ptw_req_ready)
+                            walk_waiting <= 1'b1;
 
-                        if (!pte_v || (!pte_r && pte_w) || (!pte_r && !pte_x)) begin
-                            fault_pending <= 1'b1;
-                            fault_is_inst <= req_is_inst;
-                            state <= S_IDLE;
-                        end else begin
-                            pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
-                            if (pte_ok) begin
+                        if (!PTW_HANDSHAKE || (walk_waiting && ptw_rsp_valid)) begin
+                            pte_word = PTW_HANDSHAKE ? ptw_rsp_rdata : ptw_rdata;
+                            pte_v = pte_word[0];
+                            pte_r = pte_word[1];
+                            pte_w = pte_word[2];
+                            pte_x = pte_word[3];
+                            pte_u = pte_word[4];
+                            pte_a = pte_word[6];
+                            pte_d = pte_word[7];
+                            pte_ppn = pte_word[31:10];
+                            walk_waiting <= 1'b0;
+
+                            if ((PTW_HANDSHAKE && ptw_rsp_err) || !pte_v ||
+                                (!pte_r && pte_w) || (!pte_r && !pte_x)) begin
+                                fault_pending <= 1'b1;
+                                fault_is_inst <= req_is_inst;
+                                state <= S_IDLE;
+                            end else begin
+                                pte_ok = perm_ok(req_is_inst, req_is_store, pte_r, pte_w, pte_x, pte_u, pte_a, pte_d);
+                                if (pte_ok) begin
                                 if (req_is_inst) begin
                                     itlb_valid[itlb_wr_ptr] <= 1'b1;
                                     itlb_vpn[itlb_wr_ptr]   <= req_vaddr[31:12];
@@ -390,10 +427,11 @@ module mmu #(
                                     dtlb_wr_ptr <= (dtlb_wr_ptr + 1) % TLB_ENTRIES;
                                 end
                                 state <= S_IDLE;
-                            end else begin
-                                fault_pending <= 1'b1;
-                                fault_is_inst <= req_is_inst;
-                                state <= S_IDLE;
+                                end else begin
+                                    fault_pending <= 1'b1;
+                                    fault_is_inst <= req_is_inst;
+                                    state <= S_IDLE;
+                                end
                             end
                         end
                     end

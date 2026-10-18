@@ -11,6 +11,8 @@
 ![Firmware](https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge)
 ![Boot](https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge)
 ![DMA](https://img.shields.io/badge/DMA-Memory%20%2B%20UART-00c853?style=for-the-badge)
+![Bus](https://img.shields.io/badge/Bus-Valid%20%2F%20Ready-ff6b35?style=for-the-badge)
+![TCM](https://img.shields.io/badge/Local%20Memory-I--TCM%20%2B%20D--TCM-31ff70?style=for-the-badge)
 ![Portable](https://img.shields.io/badge/RTL-Multi--FPGA%20Portable-7c3aed?style=for-the-badge&logo=verilog&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
 
@@ -52,6 +54,12 @@ in a browser.
 This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with persistent firmware and a live UART application. The SoC logic is now separated from its board wrapper, so the same CPU can target other AMD/Xilinx, Intel/Altera, or Lattice FPGAs without carrying Arty-specific clock and startup primitives into the portable core.
 
 The current hardware milestone is fully physical: the FPGA configures from the board's QSPI flash, the resident Boot ROM validates an `RVF1` image with CRC-32, copies Snake into BRAM, executes `FENCE.I`, and starts the playable game over PuTTY. If flash is absent or damaged, the same loader enters UART recovery instead of executing an unsafe image.
+
+The current core combines two memory-performance domains: one-cycle
+instruction and data TCM paths keep the five-stage pipeline fast for local
+BRAM, while a `valid`/`ready` transaction fabric safely handles variable
+latency MMIO, DMA, MMU page-table walks and future AXI or external-memory
+bridges. This split is synthesized, timing-closed and verified on hardware.
 
 | POWER-ON BOOT | INTEGRITY | RECOVERY | APPLICATION |
 | :---: | :---: | :---: | :---: |
@@ -154,7 +162,7 @@ flowchart TB
 | Layer | Source | Responsibility | Changes between boards? |
 | :--- | :--- | :--- | :---: |
 | **CPU architecture** | [`cpu_top_soc.sv`](riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv) | RV32IM pipeline, hazards, forwarding, CSR/traps and memory buses | **No** |
-| **Portable SoC** | [`soc_core`](riscv_processor_cpu/phase8/rtl/soc_top.sv) | BRAM, UART, CLINT, PLIC, DMA, QSPI reader and address decoder | **No** |
+| **Portable SoC** | [`soc_core`](riscv_processor_cpu/phase8/rtl/soc_core_txn.sv) | Fast I/D TCM, transaction arbiter, BRAM, UART, CLINT, PLIC, DMA and QSPI | **No** |
 | **Generic FPGA shell** | [`generic_fpga_top.sv`](riscv_processor_cpu/phase8/rtl/generic_fpga_top.sv) | Stable clock input, synchronized reset, ordinary QSPI pins and status outputs | Usually no |
 | **Board adapter** | Board-specific top + constraints | PLL/MMCM, startup primitive, pinout, I/O voltage and configuration flash access | **Yes** |
 | **Reference adapter** | [`soc_top`](riscv_processor_cpu/phase8/rtl/soc_top.sv) | Arty S7 Clocking Wizard, `STARTUPE2`, reset polarity and LEDs | Arty only |
@@ -181,6 +189,8 @@ and tested.
 | `UART_BAUD` | `115_200` | Serial-console baud rate |
 | `BRAM_SIZE_BYTES` | `65_536` | Inferred unified instruction/data memory size |
 | `FIRMWARE_FILE` | `firmware.vmem` | Power-on BRAM initialization image |
+| `FAST_LOCAL_IMEM` | `1` | One-cycle BRAM instruction TCM instead of transactional fetch |
+| `FAST_LOCAL_DMEM` | `1` | One-cycle BRAM data TCM; MMIO/external accesses remain transactional |
 | `PORTABLE_BUILD` | Defined by the new project | Removes Xilinx-only `clk_wiz_0` and `STARTUPE2` dependencies |
 
 The shared source list is maintained in
@@ -224,13 +234,15 @@ The full board checklist, QSPI caveats and vendor notes are in the
 | 5-stage pipeline | ✅ | IF, ID, EX, MEM, WB |
 | Hazard handling | ✅ | Load-use stalls plus forwarding paths |
 | M extension hardware | ✅ | Multi-cycle `mul` (3 cycles) and iterative `div`/`rem` (34 cycles) unit |
-| FPGA timing closure | ✅ | QSPI-enabled build meets 25 MHz timing: WNS **+6.753 ns**, WHS **+0.021 ns**, 0 failing endpoints |
+| FPGA timing closure | ✅ | Transaction-bus + TCM build meets 25 MHz timing: WNS **+2.828 ns**, WHS **+0.021 ns**, 0 failing endpoints |
 | CSR / exception infrastructure | ✅ | M/S/U privilege, delegated traps, `MRET`/`SRET`, vectored trap delivery, 64-bit counters |
 | Physical Memory Protection | ✅ | Four PMP entries with OFF/TOR/NA4/NAPOT matching and lock enforcement |
-| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked BRAM, UART, CLINT, PLIC, LEDs; DMA integrated and awaiting the next Vivado run |
+| FPGA SoC integration | ✅ | Arty S7-50 top level with clocking, parity-banked I/D TCM, transaction fabric, UART, CLINT, PLIC, DMA, QSPI and LEDs |
 | FPGA portability | ✅ RTL | Vendor-neutral `soc_core`, generic wrapper, parameterized clock/UART/memory, multi-vendor BRAM hints, source manifest and 20 MHz portability regression |
 | Hardware interrupts | ✅ | 64-bit `mtime`/`mtimecmp`, machine software IRQ, and 5-source priority/claim controller |
-| DMA controller | ✅ RTL | CPU-priority bus mastering, 8/16/32-bit memory copies, UART flow control, progress/error status, and PLIC completion IRQ; FPGA timing run pending |
+| DMA controller | ✅ FPGA | Bus-mastered 8/16/32-bit memory copies, UART flow control, progress/error status, PLIC completion IRQ and CPU-TCM arbitration |
+| Transaction bus | ✅ FPGA | Four-master `valid`/`ready` fabric for CPU, DMA and MMU PTW with backpressure, errors and AXI-Lite bridge |
+| Fast local memory | ✅ FPGA | Dedicated one-cycle instruction Port A and CPU-priority data Port B restore original five-stage throughput |
 | UART bring-up | ✅ | Hello + keyboard echo verified; simultaneous RX/read collision regression passes |
 | UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
 | QSPI flash boot | ✅ | Persistent `RVF1` image, CRC-checked RAM copy, automatic start, and UART recovery verified on FPGA |
@@ -280,37 +292,51 @@ Vivado 2020.2 results for the hardened `rv32_soc_arty_s7` project
 implementation, bitstream generation, flash programming, and physical-board
 execution successfully.
 
-### Synthesis — `synth_1` complete
+### Synthesis and implementation — final transaction-bus build
 
 <div align="center">
-  <img src="proof/vivado_synthesis_design_runs_2.png" alt="Vivado Design Runs: updated synth_1 and impl_1 resource usage" width="96%">
+  <img src="proof/vivado_synthesis_design_runs_3.png" alt="Vivado Design Runs: final transaction-bus and TCM synth_1 and impl_1 resource usage" width="96%">
 </div>
 
-| Resource | Used | Available | Utilization |
-| :--- | ---: | ---: | ---: |
-| Slice LUTs | 6,733 | 32,600 | 20.65 % |
-| Flip-flops | 4,315 | 65,200 | 6.62 % |
-| Block RAM tiles | 32 | 75 | 42.7 % |
-| DSP slices | 4 | 120 | 3.3 % |
+| Resource | Synthesized | Implemented | Available | Final utilization |
+| :--- | ---: | ---: | ---: | ---: |
+| Slice LUTs | 7,793 | 7,642 | 32,600 | 23.44 % |
+| Flip-flops | 5,197 | 5,198 | 65,200 | 7.97 % |
+| Block RAM tiles | 32 | 32 | 75 | 42.7 % |
+| DSP slices | 4 | 4 | 120 | 3.3 % |
 
 ### Implementation — all timing constraints met
 
 <div align="center">
-  <img src="proof/vivado_implementation_timing_met_2.png" alt="Updated Vivado Design Timing Summary: all user specified timing constraints are met" width="96%">
+  <img src="proof/vivado_implementation_timing_met_3.png" alt="Final Vivado timing summary: transaction-bus and TCM design meets every timing constraint" width="96%">
 </div>
 
 | Check | Worst slack | Total negative slack | Failing endpoints |
 | :--- | ---: | ---: | ---: |
-| Setup | **+6.753 ns** | 0.000 ns | 0 / 13,303 |
-| Hold | **+0.021 ns** | 0.000 ns | 0 / 13,303 |
-| Pulse width | +16.667 ns | 0.000 ns | 0 / 4,387 |
+| Setup | **+2.828 ns** | 0.000 ns | 0 / 16,136 |
+| Hold | **+0.021 ns** | 0.000 ns | 0 / 16,136 |
+| Pulse width | +16.667 ns | 0.000 ns | 0 / 5,270 |
+
+### Implementation power
+
+<div align="center">
+  <img src="proof/vivado_implementation_power_3.png" alt="Vivado implemented-design power report showing 0.215 watts total on-chip power" width="96%">
+</div>
+
+| Measurement | Result |
+| :--- | ---: |
+| Total on-chip power | **0.215 W** |
+| Dynamic power | 0.142 W |
+| Device static power | 0.073 W |
+| Junction temperature | 26.1 C |
+| Thermal margin | 58.9 C |
 
 ### Before vs after the timing fix
 
 | | Before | After |
 | :--- | :---: | :---: |
-| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+6.753 ns** (0 failing) |
-| Slice LUTs | 9,683 | 6,733 after implementation |
+| Worst negative slack @ 25 MHz | **−61.314 ns** (51 failing endpoints) | **+2.828 ns** (0 failing) |
+| Slice LUTs | 9,683 | 7,642 after implementation |
 | Timing status | Constraints **not** met | All constraints met |
 
 ---
@@ -386,6 +412,9 @@ Bare-metal helpers are provided in
 The active board deployment lives in:
 
 - [`riscv_processor_cpu/phase8/rtl/soc_top.sv`](riscv_processor_cpu/phase8/rtl/soc_top.sv)
+- [`riscv_processor_cpu/phase8/rtl/soc_core_txn.sv`](riscv_processor_cpu/phase8/rtl/soc_core_txn.sv)
+- [`riscv_processor_cpu/phase8/rtl/rv_bus_arbiter.sv`](riscv_processor_cpu/phase8/rtl/rv_bus_arbiter.sv)
+- [`riscv_processor_cpu/phase8/rtl/rv_bus_to_axi_lite.sv`](riscv_processor_cpu/phase8/rtl/rv_bus_to_axi_lite.sv)
 - [`riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv`](riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv)
 - [`riscv_processor_cpu/phase8/rtl/bram.sv`](riscv_processor_cpu/phase8/rtl/bram.sv)
 - [`riscv_processor_cpu/phase8/rtl/uart.sv`](riscv_processor_cpu/phase8/rtl/uart.sv)
@@ -442,7 +471,7 @@ The fix:
 - `muldiv.sv` registers its operands, multiplies in 3 cycles with a single 33×33 signed multiplier, and divides with a radix-2 restoring divider that produces one quotient bit per cycle (34 cycles).
 - The FPU stub's divider was removed from the board build (the FPU now uses its own iterative FDIV/FSQRT and is not part of the FPGA SoC by default).
 
-Result: the current QSPI-enabled design closes timing with **+6.753 ns setup slack** and **+0.021 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
+Result: the final transaction-bus + TCM design closes timing with **+2.828 ns setup slack** and **+0.021 ns hold slack**. See [Synthesis & Implementation Proof](#-synthesis--implementation-proof).
 
 ### 5. UART RX Read/Arrival Collision
 
@@ -460,7 +489,16 @@ Scalar byte, halfword and word operations can cross a 32-bit word boundary. The 
 
 The privileged architecture now supports M/S/U modes, trap and interrupt delegation, supervisor CSRs and aliases, `SRET`, Sv32 permission checks, `SUM`, `MXR`, `TVM`, and `TSR` behavior.
 
-### 9. Functional Cache Hierarchy
+### 9. Transaction Bus Without Sacrificing Local Speed
+
+The CPU, DMA engine and MMU page-table walker now use a backpressured
+request/response fabric for variable-latency accesses. Initial integration
+routed every instruction and stack access through that fabric and reduced
+throughput. The final hardware keeps local BRAM on dedicated one-cycle I-TCM
+and D-TCM paths while MMIO, DMA, PTW and future external memory remain fully
+transactional. This restored the original Snake speed on the physical FPGA.
+
+### 10. Functional Cache Hierarchy
 
 The research core now has direct-mapped L1 instruction/data caches and a unified L2 with refill, write-through stores, invalidation and hit/miss counters. The backing DRAM controller is a synthesizable zero-wait model; a physical DDR PHY remains board-specific work.
 
@@ -494,7 +532,10 @@ RISC-V_CPU/
     └── phase8/                       # FPGA SoC deployment
         ├── PORTING.md                # Multi-vendor board-porting guide
         ├── rtl/                      # Portable SoC + FPGA board wrappers
-        │   ├── soc_top.sv            # Vendor-neutral soc_core + Arty wrapper
+        │   ├── soc_top.sv            # Arty wrapper and legacy reference core
+        │   ├── soc_core_txn.sv       # Portable SoC, fast TCM and transaction targets
+        │   ├── rv_bus_arbiter.sv     # CPU/DMA/PTW request-response arbitration
+        │   ├── rv_bus_to_axi_lite.sv # Bridge for AXI-Lite integration
         │   ├── generic_fpga_top.sv   # Generic FPGA top level
         │   └── portable_soc.f        # Tool-independent RTL source manifest
         ├── software/                 # Bare-metal firmware
@@ -668,10 +709,11 @@ Snake controls:
 | QSPI Boot ROM | `tb_qspi_boot.sv` | Valid copy/boot, corrupt-image rejection, blocked unsafe jump, and UART recovery pass |
 | CLINT + PLIC | Directed unit and SoC-map testbenches | `msip`, `mtimecmp`, priority, threshold, claim/complete, and CPU `mip` delivery pass |
 | DMA controller | Unit + full SoC integration testbenches | Tail widths, fixed/incrementing addresses, backpressure, errors, BRAM copy, UART streaming, and PLIC ID 5 pass |
+| Transaction bus + TCM | `make -C riscv_processor_cpu/phase8/tb all` | Variable-latency CPU/DMA/PTW traffic passes; QSPI boot proves fast BRAM copy and coherent execution |
 | Portable FPGA wrapper | `make -C riscv_processor_cpu/phase8/tb portable` | Non-Xilinx elaboration plus 20 MHz reset, UART-divider and CPU-execution checks pass |
 | Official riscv-tests (ISA compliance) | `make compliance` | FPGA 66/66, research 77/77, FPGA + FPU 11/11; **154/154 total, zero N/A** |
 | riscv-formal (formal, FPGA core) | `make formal` | 52/52 checks pass |
-| Timing closure (Vivado, 25 MHz) | — | QSPI build: WNS +6.753 ns, WHS +0.021 ns, 0 failing endpoints |
+| Timing closure (Vivado, 25 MHz) | — | Transaction-bus + TCM build: WNS +2.828 ns, WHS +0.021 ns, 0 failing endpoints |
 | FPGA bitstream | Vivado 2020.2 | Synthesis, placement, routing and `write_bitstream` complete with 0 errors |
 | On the board | — | QSPI flash programmed and verified; FPGA configured; persistent Snake boot running on Arty S7-50 |
 

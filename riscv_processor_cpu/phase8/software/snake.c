@@ -29,8 +29,7 @@
 
 /* Delay between game ticks (busy-loop cycles) */
 /* CPU runs at 25 MHz (MMCM: 12MHz x 62.5 / 30 = 25 MHz).
- *   750_000 cycles @ 25 MHz ≈ 30 ms per tick → comfortable game speed.
- *   Increase for slower snake, decrease for faster. */
+ * Effective time includes the pipeline CPI; increase for slower movement. */
 #define TICK_DELAY  750000
 
 /* ============================================================

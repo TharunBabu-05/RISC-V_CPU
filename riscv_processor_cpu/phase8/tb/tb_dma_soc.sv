@@ -42,8 +42,10 @@ module tb_dma_soc;
             sim_bus_funct3 = width;
             sim_bus_rd_en = 1'b0;
             sim_bus_wr_en = 1'b1;
+            while (!dut.u_soc.host_req_ready) @(posedge clk_12mhz);
             @(posedge clk_12mhz); #1;
             sim_bus_wr_en = 1'b0;
+            while (!dut.u_soc.sim_rsp_valid) @(posedge clk_12mhz);
         end
     endtask
 
@@ -58,9 +60,11 @@ module tb_dma_soc;
             sim_bus_funct3 = 3'b010;
             sim_bus_rd_en = 1'b1;
             sim_bus_wr_en = 1'b0;
+            while (!dut.u_soc.host_req_ready) @(posedge clk_12mhz);
             @(posedge clk_12mhz); #1;
-            data = dut.u_soc.dmem_rdata;
             sim_bus_rd_en = 1'b0;
+            while (!dut.u_soc.sim_rsp_valid) @(posedge clk_12mhz);
+            data = dut.u_soc.sim_rsp_rdata;
         end
     endtask
 

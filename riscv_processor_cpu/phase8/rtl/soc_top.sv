@@ -44,6 +44,7 @@
 // ============================================================
 `timescale 1ns/1ps
 
+`ifdef LEGACY_FIXED_LATENCY_SOC
 module soc_core #(
     parameter FIRMWARE_FILE = "firmware.vmem",
     parameter integer CLK_FREQ_HZ = 25_000_000,
@@ -494,6 +495,7 @@ module soc_core #(
     assign status[3] = ~uart_rx;
 
 endmodule
+`endif
 
 // Arty S7-50 compatibility wrapper. Defining PORTABLE_BUILD omits this module,
 // so non-Xilinx tools never have to resolve clk_wiz_0 or STARTUPE2. The Arty

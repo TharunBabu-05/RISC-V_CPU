@@ -65,6 +65,9 @@ puts "  Project created OK."
 puts "\n--- Adding Phase 8 SoC RTL files ---"
 set soc_files [list \
     "$phase8_rtl/soc_top.sv"     \
+    "$phase8_rtl/soc_core_txn.sv" \
+    "$phase8_rtl/rv_bus_arbiter.sv" \
+    "$phase8_rtl/rv_bus_to_axi_lite.sv" \
     "$phase8_rtl/cpu_top_soc.sv" \
     "$phase8_rtl/uart_tx.sv"     \
     "$phase8_rtl/uart_rx.sv"     \
@@ -96,6 +99,7 @@ set cpu_files [list \
     "$cpu_rtl/hazard.sv"           \
     "$cpu_rtl/imm_gen.sv"          \
     "$cpu_rtl/interrupt_unit.sv"   \
+    "$cpu_rtl/mmu.sv"              \
     "$cpu_rtl/pmp_unit.sv"         \
     "$cpu_rtl/muldiv.sv"           \
     "$cpu_rtl/regfile.sv"          \

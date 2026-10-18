@@ -11,12 +11,15 @@ CPU_SRCS := \
 	$(CPU_RTL)/hazard.sv \
 	$(CPU_RTL)/imm_gen.sv \
 	$(CPU_RTL)/interrupt_unit.sv \
+	$(CPU_RTL)/mmu.sv \
 	$(CPU_RTL)/regfile.sv \
 	$(CPU_RTL)/pmp_unit.sv \
 	$(CPU_RTL)/muldiv.sv \
 	$(CPU_RTL)/csr_file.sv
 
 SOC_SRCS := \
+	$(SOC_RTL)/soc_core_txn.sv \
+	$(SOC_RTL)/rv_bus_arbiter.sv \
 	$(SOC_RTL)/soc_top.sv \
 	$(SOC_RTL)/generic_fpga_top.sv \
 	$(SOC_RTL)/bram.sv \
@@ -30,14 +33,19 @@ SOC_SRCS := \
 	$(SOC_RTL)/cpu_top_soc.sv \
 	$(CPU_SRCS)
 
-.PHONY: all boot_regress clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map portable clean
+.PHONY: all boot_regress boot_banner clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map portable clean
 
 all: clint plic dma dma_soc qspi interrupt_sources interrupt_map portable
 
-boot_regress: qspi_boot qspi_corrupt uart_recovery
+boot_regress: boot_banner qspi_boot qspi_corrupt uart_recovery
 
 $(BUILD):
 	mkdir -p $(BUILD)
+
+boot_banner: | $(BUILD)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_boot_banner \
+		-o $(BUILD)/tb_boot_banner tb_boot_banner.sv $(SOC_SRCS)
+	cd $(SOC_RTL) && $(VVP) ../tb/$(BUILD)/tb_boot_banner
 
 clint: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_clint -o $(BUILD)/tb_clint tb_clint.sv $(SOC_RTL)/clint.sv

@@ -13,7 +13,14 @@
 module cpu_top_soc #(
     parameter int XLEN = 32,
     // The FPU is optional on the FPGA (off by default: no firmware uses it).
-    parameter bit HAS_FPU = 1'b0
+    parameter bit HAS_FPU = 1'b0,
+    parameter bit ENABLE_MMU = 1'b1,
+    // Keep code in the dual-port BRAM instruction TCM at full pipeline speed.
+    // Set to 0 when instruction fetches must traverse an external bus/cache.
+    parameter bit FAST_LOCAL_IMEM = 1'b1,
+    // Local BRAM data uses the synchronous DTCM port. MMIO, translated memory
+    // and external memory continue to use the request/response transaction bus.
+    parameter bit FAST_LOCAL_DMEM = 1'b1
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -21,17 +28,66 @@ module cpu_top_soc #(
     input  logic        timer_interrupt,
     input  logic        software_interrupt,
 
-    // ---- Instruction Memory Bus (→ SoC BRAM Port A) ----
-    output logic [31:0] imem_addr,    // Byte address of fetch
-    input  logic [31:0] imem_rdata,   // Instruction word (1-cycle latency)
+    // ---- One-cycle local instruction-memory port ----
+    output logic [31:0] imem_addr,
+    input  logic [31:0] imem_rdata,
 
-    // ---- Data Memory Bus (→ SoC Address Decoder) ----
+`ifdef RISCV_FORMAL
+    // The formal wrapper retains the original fixed-latency memory boundary.
     output logic [31:0] dmem_addr,    // Effective address
     output logic [31:0] dmem_wdata,   // Store data
     input  logic [31:0] dmem_rdata,   // Load data
     output logic        dmem_rd_en,   // Load request
     output logic        dmem_wr_en,   // Store request
     output logic [2:0]  dmem_funct3,  // Access width for byte-enables
+`else
+    // ---- One-cycle local data-memory port ----
+    output logic [31:0] dtcm_addr,
+    output logic [31:0] dtcm_wdata,
+    output logic [3:0]  dtcm_wstrb,
+    output logic        dtcm_rd_en,
+    output logic        dtcm_wr_en,
+    input  logic [31:0] dtcm_rdata,
+
+    // ---- Variable-latency instruction transaction bus ----
+    output logic        ibus_req_valid,
+    input  logic        ibus_req_ready,
+    output logic [31:0] ibus_req_addr,
+    output logic        ibus_req_write,
+    output logic [3:0]  ibus_req_wstrb,
+    output logic [31:0] ibus_req_wdata,
+    output logic [1:0]  ibus_req_size,
+    input  logic        ibus_rsp_valid,
+    output logic        ibus_rsp_ready,
+    input  logic [31:0] ibus_rsp_rdata,
+    input  logic        ibus_rsp_err,
+
+    // ---- Variable-latency data transaction bus ----
+    output logic        dbus_req_valid,
+    input  logic        dbus_req_ready,
+    output logic [31:0] dbus_req_addr,
+    output logic        dbus_req_write,
+    output logic [3:0]  dbus_req_wstrb,
+    output logic [31:0] dbus_req_wdata,
+    output logic [1:0]  dbus_req_size,
+    input  logic        dbus_rsp_valid,
+    output logic        dbus_rsp_ready,
+    input  logic [31:0] dbus_rsp_rdata,
+    input  logic        dbus_rsp_err,
+
+    // ---- MMU page-table-walker transaction bus ----
+    output logic        ptw_req_valid,
+    input  logic        ptw_req_ready,
+    output logic [31:0] ptw_req_addr,
+    output logic        ptw_req_write,
+    output logic [3:0]  ptw_req_wstrb,
+    output logic [31:0] ptw_req_wdata,
+    output logic [1:0]  ptw_req_size,
+    input  logic        ptw_rsp_valid,
+    output logic        ptw_rsp_ready,
+    input  logic [31:0] ptw_rsp_rdata,
+    input  logic        ptw_rsp_err,
+`endif
 
     // ---- Debug / Observation Ports ----
     output logic [31:0] dbg_pc,
@@ -112,7 +168,8 @@ module cpu_top_soc #(
 
     assign pc_plus4 = pc + {{(XLEN-32){1'b0}}, 32'd4};
 
-    // ---- Instruction Bus: drive BRAM Port A ----
+`ifdef RISCV_FORMAL
+    // ---- Formal fixed-latency instruction memory ----
     // To support synchronous BRAM with 1-cycle latency, we drive the
     // address from the COMBINATORIAL next PC. This way, the BRAM latches
     // the address at the same time the PC register updates, and the 
@@ -122,6 +179,73 @@ module cpu_top_soc #(
     assign imem_addr = !rst_n   ? 32'h0 :
                        pc_write ? pc_next[31:0] : pc[31:0];
     assign if_instr  = imem_rdata;
+`else
+    // Keep the local BRAM address active even in transactional builds. This
+    // is the fast ITCM path used by the FPGA SoC; the transaction interface
+    // remains available for cache/external-memory configurations.
+    assign imem_addr = !rst_n   ? 32'h0 :
+                       pc_write ? pc_next[31:0] : pc[31:0];
+
+    // ---- Transactional instruction fetch ----
+    // One buffered instruction and one outstanding request are sufficient for
+    // correctness with arbitrary memory latency. Redirects invalidate the
+    // buffer and tag an outstanding response as stale.
+    logic        ifetch_pending;
+    logic        ifetch_valid;
+    logic        ifetch_epoch;
+    logic        ifetch_pending_epoch;
+    logic        ifetch_bus_error;
+    logic [31:0] ifetch_pc;
+    logic [31:0] ifetch_data;
+    logic        fetch_consumed;
+
+    assign ibus_req_valid = !FAST_LOCAL_IMEM && rst_n && inst_ready && !inst_fault &&
+                            !ifetch_pending && !ifetch_valid;
+    assign ibus_req_addr  = inst_paddr[31:0];
+    assign ibus_req_write = 1'b0;
+    assign ibus_req_wstrb = 4'b0000;
+    assign ibus_req_wdata = 32'b0;
+    assign ibus_req_size  = 2'd2;
+    assign ibus_rsp_ready = ifetch_pending;
+    assign if_instr       = FAST_LOCAL_IMEM ? imem_rdata : ifetch_data;
+    assign fetch_consumed = if_id_write && !flush_if_id && ifetch_valid;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ifetch_pending       <= 1'b0;
+            ifetch_valid         <= 1'b0;
+            ifetch_epoch         <= 1'b0;
+            ifetch_pending_epoch <= 1'b0;
+            ifetch_bus_error     <= 1'b0;
+            ifetch_pc            <= 32'b0;
+            ifetch_data          <= 32'h0000_0013;
+        end else begin
+            if (flush_if_id) begin
+                ifetch_valid     <= 1'b0;
+                ifetch_bus_error <= 1'b0;
+                ifetch_epoch     <= ~ifetch_epoch;
+            end else if (fetch_consumed) begin
+                ifetch_valid     <= 1'b0;
+                ifetch_bus_error <= 1'b0;
+            end
+
+            if (ibus_req_valid && ibus_req_ready) begin
+                ifetch_pending       <= 1'b1;
+                ifetch_pending_epoch <= ifetch_epoch;
+                ifetch_pc            <= pc[31:0];
+            end
+
+            if (ibus_rsp_valid && ibus_rsp_ready) begin
+                ifetch_pending <= 1'b0;
+                if (!flush_if_id && (ifetch_pending_epoch == ifetch_epoch)) begin
+                    ifetch_valid     <= 1'b1;
+                    ifetch_data      <= ibus_rsp_err ? 32'h0000_0013 : ibus_rsp_rdata;
+                    ifetch_bus_error <= ibus_rsp_err;
+                end
+            end
+        end
+    end
+`endif
 
     branch_predictor #(.XLEN(XLEN)) u_bpred (
         .clk           (clk),
@@ -144,6 +268,8 @@ module cpu_top_soc #(
     logic [31:0] if_id_instr;
     logic        if_id_pred_taken;
     logic        if_id_valid;   // 0 for reset/flush bubbles
+    logic        if_id_bus_error;
+    logic        decode_accept;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -152,6 +278,7 @@ module cpu_top_soc #(
             if_id_pred_taken  <= 1'b0;
             if_id_instr <= 32'h0000_0013; // NOP
             if_id_valid <= 1'b0;
+            if_id_bus_error <= 1'b0;
         end else if (if_id_write) begin
             if (flush_if_id) begin
                 if_id_pc    <= {XLEN{1'b0}};
@@ -159,13 +286,27 @@ module cpu_top_soc #(
                 if_id_pred_taken  <= 1'b0;
                 if_id_instr <= 32'h0000_0013;
                 if_id_valid <= 1'b0;
+                if_id_bus_error <= 1'b0;
             end else begin
+`ifdef RISCV_FORMAL
                 if_id_pc    <= pc;
+                if_id_bus_error <= 1'b0;
+`else
+                if_id_pc    <= FAST_LOCAL_IMEM ? pc : ifetch_pc;
+                if_id_bus_error <= FAST_LOCAL_IMEM ? 1'b0 : ifetch_bus_error;
+`endif
                 if_id_pred_target <= predict_target;
                 if_id_pred_taken  <= predict_valid && predict_taken;
                 if_id_instr <= if_instr;
                 if_id_valid <= 1'b1;
             end
+        end else if (decode_accept) begin
+            // A variable-latency frontend can leave IF/ID unchanged for many
+            // cycles. Retire its valid token after ID/EX accepts it so the
+            // same instruction cannot execute again while the next fetch is
+            // still outstanding.
+            if_id_valid     <= 1'b0;
+            if_id_bus_error <= 1'b0;
         end
     end
 
@@ -368,7 +509,7 @@ module cpu_top_soc #(
     // register-file write-through bypass, so a reader waits in ID while the
     // producer is still in EX or MEM.
     logic fp_pend_rs1, fp_pend_rs2, fp_pend_rs3, vec_pend_rs1, vec_pend_rs2, vec_pend_rd, vec_pend_v0;
-    logic ext_stall, id_stall;
+    logic ext_stall, id_stall, frontend_ready;
     assign fp_pend_rs1  = (id_ex_fp_reg_write  && id_ex_rd == id_rs1_addr) || (ex_mem_fp_reg_write  && ex_mem_rd == id_rs1_addr);
     assign fp_pend_rs2  = (id_ex_fp_reg_write  && id_ex_rd == id_rs2_addr) || (ex_mem_fp_reg_write  && ex_mem_rd == id_rs2_addr);
     assign fp_pend_rs3  = (id_ex_fp_reg_write  && id_ex_rd == if_id_instr[31:27]) ||
@@ -383,8 +524,17 @@ module cpu_top_soc #(
                            (id_v_srcd && vec_pend_rd)  || (id_v_src0 && vec_pend_v0));
     assign id_stall = hazard_control_mux || ext_stall;
 
-    assign pc_write    = (!id_stall || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
-    assign if_id_write = (!id_stall || flush_ex) && !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
+`ifdef RISCV_FORMAL
+    assign frontend_ready = 1'b1;
+`else
+    assign frontend_ready = FAST_LOCAL_IMEM ? 1'b1 : ifetch_valid;
+`endif
+    // A redirect is allowed to update the PC immediately. Normal sequential
+    // progress consumes exactly one buffered transaction response.
+    assign pc_write    = (flush_ex || ((!id_stall) && frontend_ready)) &&
+                         !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
+    assign if_id_write = (flush_ex || ((!id_stall) && frontend_ready)) &&
+                         !muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
     assign control_mux = id_stall;
 
     // ===================================================
@@ -410,13 +560,14 @@ module cpu_top_soc #(
     logic        id_ex_muldiv_en, id_ex_pred_taken;
     logic [2:0]  id_ex_muldiv_op;
     logic        id_ex_write;
-    logic        id_ex_valid, id_ex_illegal, id_ex_fencei;
+    logic        id_ex_valid, id_ex_illegal, id_ex_fencei, id_ex_bus_error;
     logic [31:0] id_ex_instr;
 
     assign id_mret = (if_id_instr == 32'h3020_0073);
     assign id_sret = (if_id_instr == 32'h1020_0073);
 
     assign id_ex_write = ~muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
+    assign decode_accept = id_ex_write && !control_mux && if_id_valid;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -466,11 +617,14 @@ module cpu_top_soc #(
             id_ex_valid      <= 1'b0;
             id_ex_illegal    <= 1'b0;
             id_ex_fencei     <= 1'b0;
+            id_ex_bus_error  <= 1'b0;
             id_ex_instr      <= 32'h0000_0013;
         // Bubble on a redirect, or on an ID stall while EX advances. A stall in
         // ID must never overwrite an instruction still busy in EX (mul/div,
         // FPU, vector unit) or held by a frozen MEM stage.
-        end else if ((flush_ex && !mem_stall && !mmu_stall) || (control_mux && id_ex_write)) begin
+        end else if ((flush_ex && !mem_stall && !mmu_stall) ||
+                     (control_mux && id_ex_write) ||
+                     (id_ex_write && !if_id_valid)) begin
             id_ex_pc         <= {XLEN{1'b0}};
             id_ex_pred_target<= {XLEN{1'b0}};
             id_ex_rs1        <= {XLEN{1'b0}};
@@ -517,6 +671,7 @@ module cpu_top_soc #(
             id_ex_valid      <= 1'b0;
             id_ex_illegal    <= 1'b0;
             id_ex_fencei     <= 1'b0;
+            id_ex_bus_error  <= 1'b0;
             id_ex_instr      <= 32'h0000_0013;
         end else if (id_ex_write) begin
             id_ex_pc         <= if_id_pc;
@@ -565,6 +720,7 @@ module cpu_top_soc #(
             id_ex_valid      <= if_id_valid;
             id_ex_illegal    <= id_illegal && if_id_valid;
             id_ex_fencei     <= id_fencei && id_ok;
+            id_ex_bus_error  <= if_id_bus_error && if_id_valid;
             id_ex_instr      <= if_id_instr;
         end else begin
             // EX is held: capture the forwarded operands so they stay valid
@@ -948,16 +1104,16 @@ module cpu_top_soc #(
             ex_ret_pc = id_ex_pc + {{(XLEN-32){1'b0}}, 32'd4};
     end
 
-    // MMU page-fault signals — tied to 0 in this SoC variant (no MMU)
+    // MMU page-fault signals. The transaction-bus SoC can now run the shared
+    // Sv32 walker; M-mode and satp.MODE=0 remain direct physical addressing.
     logic mem_page_fault;
     logic mem_page_fault_store;
-    assign mem_page_fault       = 1'b0;   // MMU disabled in SoC
-    assign mem_page_fault_store = 1'b0;   // MMU disabled in SoC
 
     logic page_fault_exception;
     logic [XLEN-1:0] page_fault_cause;
     logic [XLEN-1:0] exc_pc;
     logic pmp_inst_allow, pmp_data_allow, pmp_inst_fault, pmp_data_fault, pmp_access_fault;
+    logic bus_inst_fault, bus_data_fault;
     logic [XLEN-1:0] pmp_access_cause, pmp_access_addr;
     logic [3:0] pmp_data_size;
     assign page_fault_exception = inst_fault || mem_page_fault;
@@ -965,9 +1121,11 @@ module cpu_top_soc #(
                               mem_page_fault_store ? EXC_STORE_PAGE : EXC_LOAD_PAGE;
 
     always_comb begin
-        if (inst_fault || pmp_inst_fault)
+        if (bus_inst_fault)
+            exc_pc = id_ex_pc;
+        else if (inst_fault || pmp_inst_fault)
             exc_pc = pc;
-        else if (mem_page_fault || pmp_data_fault)
+        else if (mem_page_fault || pmp_data_fault || bus_data_fault)
             exc_pc = ex_mem_pc;
         else
             exc_pc = id_ex_pc;
@@ -1026,11 +1184,17 @@ module cpu_top_soc #(
 
     assign pmp_inst_fault   = !pmp_inst_allow;
     assign pmp_data_fault   = (id_ex_mem_read || id_ex_mem_write) && !pmp_data_allow;
-    assign pmp_access_fault = pmp_inst_fault || pmp_data_fault;
-    assign pmp_access_cause = pmp_inst_fault ? {{(XLEN-2){1'b0}}, 2'd1} :
-                              (id_ex_mem_write ? {{(XLEN-3){1'b0}}, 3'd7}
-                                               : {{(XLEN-3){1'b0}}, 3'd5});
-    assign pmp_access_addr  = pmp_inst_fault ? pc : ex_alu_result_raw;
+    assign bus_inst_fault   = id_ex_bus_error && id_ex_valid;
+    assign pmp_access_fault = pmp_inst_fault || pmp_data_fault ||
+                              bus_inst_fault || bus_data_fault;
+    assign pmp_access_cause = (pmp_inst_fault || bus_inst_fault) ?
+                              {{(XLEN-2){1'b0}}, 2'd1} :
+                              ((bus_data_fault ? ex_mem_mem_write : id_ex_mem_write) ?
+                               {{(XLEN-3){1'b0}}, 3'd7} :
+                               {{(XLEN-3){1'b0}}, 3'd5});
+    assign pmp_access_addr  = bus_inst_fault ? id_ex_pc :
+                              pmp_inst_fault ? pc :
+                              bus_data_fault ? ex_mem_alu_result : ex_alu_result_raw;
 
     // EX-stage exceptions and interrupts are only taken while MEM is not
     // frozen, otherwise the trap redirect could not update the PC.
@@ -1164,7 +1328,27 @@ module cpu_top_soc #(
     logic        ex_mem_fp_reg_write, ex_mem_fp_load, ex_mem_fp_store;
     logic        ex_mem_vec_reg_write;
     logic [XLEN-1:0] ex_mem_csr_rdata;
-    logic        ex_mem_valid;
+    logic        ex_mem_valid, ex_mem_fast_local_data;
+    logic        ex_fast_local_data;
+
+    // Paging-disabled accesses to the 64 KiB on-chip RAM can use the original
+    // one-cycle data path. Paged accesses stay on the MMU/transaction path.
+    assign ex_fast_local_data = FAST_LOCAL_DMEM && id_ex_valid &&
+                                (id_ex_mem_read || id_ex_mem_write) &&
+                                (ex_result[31:16] == 16'h0000) &&
+                                !ex_csr_satp[31] && pmp_data_allow &&
+                                !ex_f_illegal;
+
+`ifndef RISCV_FORMAL
+    assign dtcm_addr  = ex_result[31:0];
+    assign dtcm_wdata = id_ex_fp_store ? id_ex_fp_rs2 : ex_fwd_b[31:0];
+    assign dtcm_wstrb = (id_ex_funct3[1:0] == 2'b00) ? 4'b0001 :
+                        (id_ex_funct3[1:0] == 2'b01) ? 4'b0011 : 4'b1111;
+    assign dtcm_rd_en = ex_fast_local_data && id_ex_mem_read && id_ex_write &&
+                        !ex_exc_taken;
+    assign dtcm_wr_en = ex_fast_local_data && id_ex_mem_write && id_ex_write &&
+                        !ex_exc_taken;
+`endif
 
     assign ex_mem_fwd_data = ex_mem_csr_en ? ex_mem_csr_rdata :
                              ex_mem_jump   ? ex_mem_pc_plus4  :
@@ -1194,6 +1378,7 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= {XLEN{1'b0}};
             ex_mem_valid      <= 1'b0;
+            ex_mem_fast_local_data <= 1'b0;
         end else if (mem_stall || mmu_stall) begin
             ex_mem_alu_result <= ex_mem_alu_result;
             ex_mem_rs2        <= ex_mem_rs2;
@@ -1217,6 +1402,7 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= ex_mem_vec_reg_write;
             ex_mem_csr_rdata  <= ex_mem_csr_rdata;
             ex_mem_valid      <= ex_mem_valid;
+            ex_mem_fast_local_data <= ex_mem_fast_local_data;
         end else if (muldiv_stall || fpu_stall || vec_stall) begin
             // Hold EX stage and insert a bubble into MEM while mul/div completes
             ex_mem_alu_result <= {XLEN{1'b0}};
@@ -1241,6 +1427,7 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= {XLEN{1'b0}};
             ex_mem_valid      <= 1'b0;
+            ex_mem_fast_local_data <= 1'b0;
         end else if (ex_exc_taken) begin
             // The EX instruction raised an exception: it must not retire
             // Hold EX stage and insert a bubble into MEM while mul/div completes
@@ -1266,6 +1453,7 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= {XLEN{1'b0}};
             ex_mem_valid      <= 1'b0;
+            ex_mem_fast_local_data <= 1'b0;
         end else if (flush_ex_mem) begin
             // When flushing, clear control signals but latch data normally
             // This prevents accidental writes from delayed pipeline instructions
@@ -1291,6 +1479,7 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= 1'b0;
             ex_mem_csr_rdata  <= ex_csr_rdata;
             ex_mem_valid      <= 1'b0;
+            ex_mem_fast_local_data <= 1'b0;
         end else begin
             ex_mem_alu_result <= ex_result;
             ex_mem_rs2        <= ex_fwd_b;
@@ -1314,67 +1503,188 @@ module cpu_top_soc #(
             ex_mem_vec_reg_write <= id_ex_vec_reg_write;
             ex_mem_csr_rdata  <= ex_csr_rdata;
             ex_mem_valid      <= id_ex_valid;
+            ex_mem_fast_local_data <= ex_fast_local_data;
         end
     end
 
     // ===================================================
-    //  MEMORY STAGE  —  SoC External Bus Version (Synchronous Timing)
+    //  MEMORY STAGE - variable-latency transaction bus
     // ===================================================
 
     logic [XLEN-1:0] mem_rd_data;
     logic [XLEN-1:0] data_paddr;
+    logic             mmu_stall_raw;
+    logic [31:0]      load_source;
+    logic [31:0]      load_data32;
+    logic [7:0]       load_byte;
+    logic [15:0]      load_half;
 
-    // We drive the data address from the combinatorial EX result so the
-    // BRAM latches it at the start of MEM, and data is ready in time.
-    assign data_paddr           = ex_result;
-    assign inst_paddr           = pc;
-    assign inst_ready           = 1'b1;
-    assign inst_fault           = 1'b0;
-    assign mmu_stall            = 1'b0;
-    logic  mmu_stall_raw;
-    assign mmu_stall_raw        = 1'b0;
-    assign mem_stall            = 1'b0;
+`ifdef RISCV_FORMAL
+    // Preserve the established fixed-latency formal memory model.
+    assign data_paddr    = ex_result;
+    assign inst_paddr    = pc;
+    assign inst_ready    = 1'b1;
+    assign inst_fault    = 1'b0;
+    assign mem_page_fault = 1'b0;
+    assign mem_page_fault_store = 1'b0;
+    assign mmu_stall     = 1'b0;
+    assign mmu_stall_raw = 1'b0;
+    assign mem_stall     = 1'b0;
+    assign bus_data_fault = 1'b0;
 
-    // ---- Drive external data bus (from EX stage signals) ----
     assign dmem_addr   = data_paddr[31:0];
-    assign dmem_wdata  = id_ex_fp_store ?
-                         {{(XLEN-32){1'b0}}, id_ex_fp_rs2} :
-                         ex_fwd_b[31:0]; // Use forwarded data directly
+    assign dmem_wdata  = id_ex_fp_store ? id_ex_fp_rs2 : ex_fwd_b[31:0];
     assign dmem_rd_en  = id_ex_mem_read  && !ex_f_illegal && pmp_data_allow;
     assign dmem_wr_en  = id_ex_mem_write && !ex_f_illegal && pmp_data_allow;
     assign dmem_funct3 = id_ex_funct3;
+    assign load_source = dmem_rdata;
+`else
+    logic        mem_access;
+    logic        local_mem_access;
+    logic        data_txn_pending;
+    logic        data_rsp_done;
+    logic        data_rsp_error;
+    logic [31:0] data_rsp_value;
+    logic        mmu_data_ready;
+    logic        mmu_data_fault;
+    logic        mmu_inst_ready;
+    logic        mmu_inst_fault;
+    logic        mmu_ptw_read;
+    logic [31:0] mmu_ptw_addr;
+    logic        fetch_translation_req;
 
-    // ---- Receive load data from external bus ----
-    // Extract/sign-extend byte and halfword loads for C firmware.
-    logic [31:0] load_data32;
-    logic [7:0]  load_byte;
-    logic [15:0] load_half;
+    assign mem_access = ex_mem_valid && (ex_mem_mem_read || ex_mem_mem_write);
+    assign local_mem_access = mem_access && ex_mem_fast_local_data;
+    assign fetch_translation_req = !FAST_LOCAL_IMEM && rst_n &&
+                                   !ifetch_pending && !ifetch_valid;
 
+    generate
+        if (ENABLE_MMU) begin : gen_mmu
+            mmu #(.XLEN(XLEN), .PTW_HANDSHAKE(1'b1)) u_mmu (
+                .clk          (clk),
+                .rst_n        (rst_n),
+                .satp         (ex_csr_satp),
+                .mstatus      (ex_csr_mstatus),
+                .current_priv (current_priv),
+                .sfence       (id_ex_sfence && !mem_stall && !mmu_stall),
+                .inst_vaddr   (pc),
+                .inst_req     (fetch_translation_req),
+                .inst_paddr   (inst_paddr),
+                .inst_ready   (mmu_inst_ready),
+                .inst_fault   (mmu_inst_fault),
+                .data_vaddr   (ex_mem_alu_result),
+                .data_req     (mem_access && !local_mem_access && !data_rsp_done),
+                .data_write   (ex_mem_mem_write),
+                .data_paddr   (data_paddr),
+                .data_ready   (mmu_data_ready),
+                .data_fault   (mmu_data_fault),
+                .stall        (),
+                .ptw_read     (mmu_ptw_read),
+                .ptw_addr     (mmu_ptw_addr),
+                .ptw_rdata    (ptw_rsp_rdata),
+                .ptw_req_valid(ptw_req_valid),
+                .ptw_req_ready(ptw_req_ready),
+                .ptw_rsp_valid(ptw_rsp_valid),
+                .ptw_rsp_err  (ptw_rsp_err),
+                .ptw_rsp_rdata(ptw_rsp_rdata)
+            );
+        end else begin : gen_no_mmu
+            assign inst_paddr    = pc;
+            assign data_paddr    = ex_mem_alu_result;
+            assign mmu_inst_ready = 1'b1;
+            assign mmu_inst_fault = 1'b0;
+            assign mmu_data_ready = 1'b1;
+            assign mmu_data_fault = 1'b0;
+            assign mmu_ptw_read   = 1'b0;
+            assign mmu_ptw_addr   = 32'b0;
+            assign ptw_req_valid  = 1'b0;
+        end
+    endgenerate
+
+    assign inst_ready = mmu_inst_ready;
+    assign inst_fault = mmu_inst_fault;
+    assign mem_page_fault = mem_access && !local_mem_access && mmu_data_fault;
+    assign mem_page_fault_store = ex_mem_mem_write;
+    assign mmu_stall_raw = (fetch_translation_req && !mmu_inst_ready && !mmu_inst_fault) ||
+                           (mem_access && !local_mem_access &&
+                            !mmu_data_ready && !mmu_data_fault);
+    assign mmu_stall = mmu_stall_raw && !trap_taken;
+
+    assign ptw_req_addr  = mmu_ptw_addr;
+    assign ptw_req_write = 1'b0;
+    assign ptw_req_wstrb = 4'b0000;
+    assign ptw_req_wdata = 32'b0;
+    assign ptw_req_size  = 2'd2;
+    assign ptw_rsp_ready = 1'b1;
+
+    assign dbus_req_valid = mem_access && !local_mem_access &&
+                            mmu_data_ready && !mmu_data_fault &&
+                            !data_txn_pending && !data_rsp_done;
+    assign dbus_req_addr  = data_paddr[31:0];
+    assign dbus_req_write = ex_mem_mem_write;
+    assign dbus_req_wdata = ex_mem_fp_store ? ex_mem_fp_rs2 : ex_mem_rs2[31:0];
+    assign dbus_req_size  = (ex_mem_funct3[1:0] == 2'b00) ? 2'd0 :
+                            (ex_mem_funct3[1:0] == 2'b01) ? 2'd1 : 2'd2;
+    assign dbus_req_wstrb = !ex_mem_mem_write ? 4'b0000 :
+                            (dbus_req_size == 2'd0) ? 4'b0001 :
+                            (dbus_req_size == 2'd1) ? 4'b0011 : 4'b1111;
+    assign dbus_rsp_ready = data_txn_pending;
+    assign mem_stall = mem_access && !local_mem_access &&
+                       mmu_data_ready && !mmu_data_fault && !data_rsp_done;
+    assign bus_data_fault = data_rsp_done && data_rsp_error &&
+                            mem_access && !local_mem_access;
+    assign load_source = local_mem_access ? dtcm_rdata : data_rsp_value;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            data_txn_pending <= 1'b0;
+            data_rsp_done    <= 1'b0;
+            data_rsp_error   <= 1'b0;
+            data_rsp_value   <= 32'b0;
+        end else begin
+            if (data_rsp_done) begin
+                data_rsp_done  <= 1'b0;
+                data_rsp_error <= 1'b0;
+            end
+            if (dbus_req_valid && dbus_req_ready)
+                data_txn_pending <= 1'b1;
+            if (dbus_rsp_valid && dbus_rsp_ready) begin
+                data_txn_pending <= 1'b0;
+                data_rsp_done    <= 1'b1;
+                data_rsp_error   <= dbus_rsp_err;
+                data_rsp_value   <= dbus_rsp_rdata;
+            end
+            if (flush_ex && !mem_stall && !data_txn_pending && !dbus_rsp_valid) begin
+                data_rsp_done  <= 1'b0;
+                data_rsp_error <= 1'b0;
+            end
+        end
+    end
+`endif
+
+    // Bus read data is right-justified for the exact byte address.
     always_comb begin
 `ifdef RISCV_FORMAL
         case (ex_mem_alu_result[1:0])
-            2'b00: load_byte = dmem_rdata[7:0];
-            2'b01: load_byte = dmem_rdata[15:8];
-            2'b10: load_byte = dmem_rdata[23:16];
-            default: load_byte = dmem_rdata[31:24];
+            2'b00: load_byte = load_source[7:0];
+            2'b01: load_byte = load_source[15:8];
+            2'b10: load_byte = load_source[23:16];
+            default: load_byte = load_source[31:24];
         endcase
-        load_half = ex_mem_alu_result[1] ? dmem_rdata[31:16] : dmem_rdata[15:0];
+        load_half = ex_mem_alu_result[1] ? load_source[31:16] : load_source[15:0];
 `else
-        load_byte = dmem_rdata[7:0];
-        load_half = dmem_rdata[15:0];
+        load_byte = load_source[7:0];
+        load_half = load_source[15:0];
 `endif
-
         case (ex_mem_funct3)
-            3'b000:  load_data32 = {{24{load_byte[7]}}, load_byte};    // LB
-            3'b001:  load_data32 = {{16{load_half[15]}}, load_half};   // LH
-            3'b100:  load_data32 = {24'b0, load_byte};                 // LBU
-            3'b101:  load_data32 = {16'b0, load_half};                 // LHU
-            default: load_data32 = dmem_rdata;                         // LW
+            3'b000:  load_data32 = {{24{load_byte[7]}}, load_byte};
+            3'b001:  load_data32 = {{16{load_half[15]}}, load_half};
+            3'b100:  load_data32 = {24'b0, load_byte};
+            3'b101:  load_data32 = {16'b0, load_half};
+            default: load_data32 = load_source;
         endcase
     end
 
-    // Data is valid during the MEM stage. The MEM/WB register in
-    // cpu_top will latch this value at the end of the MEM stage.
     assign mem_rd_data = {{(XLEN-32){1'b0}}, load_data32};
 
     // ===================================================
@@ -1410,6 +1720,26 @@ module cpu_top_soc #(
             mem_wb_vec_reg_write <= 1'b0;
             mem_wb_valid      <= 1'b0;
         end else if (mem_stall || mmu_stall) begin
+            mem_wb_alu_result <= {XLEN{1'b0}};
+            mem_wb_mem_data   <= {XLEN{1'b0}};
+            mem_wb_pc_plus4   <= {XLEN{1'b0}};
+            wb_rd_addr        <= 5'b0;
+            wb_reg_write      <= 1'b0;
+            mem_wb_mem_to_reg <= 1'b0;
+            mem_wb_jump       <= 1'b0;
+            mem_wb_csr_en     <= 1'b0;
+            mem_wb_csr_rdata  <= {XLEN{1'b0}};
+            mem_wb_fp_result  <= 32'b0;
+            mem_wb_vec_result <= 128'b0;
+            fp_wb_rd          <= 5'b0;
+            fp_wb_write       <= 1'b0;
+            vec_wb_rd         <= 5'b0;
+            vec_wb_write      <= 1'b0;
+            mem_wb_fp_reg_write <= 1'b0;
+            mem_wb_fp_load    <= 1'b0;
+            mem_wb_vec_reg_write <= 1'b0;
+            mem_wb_valid      <= 1'b0;
+        end else if (bus_data_fault || mem_page_fault) begin
             mem_wb_alu_result <= {XLEN{1'b0}};
             mem_wb_mem_data   <= {XLEN{1'b0}};
             mem_wb_pc_plus4   <= {XLEN{1'b0}};

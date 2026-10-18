@@ -16,9 +16,8 @@
 //    0x18 ID                0x444D4131 ("DMA1")
 //    0x1C REMAINING         Bytes not yet transferred
 //
-//  The master side uses request/grant handshaking. Reads complete later with
-//  m_rvalid; writes complete when granted. The SoC arbiter gives the CPU
-//  priority, allowing DMA to use otherwise-idle data-bus cycles.
+//  The master side uses the SoC transaction bus. Requests remain valid until
+//  accepted and both reads and writes wait for an explicit response.
 // ============================================================
 `timescale 1ns/1ps
 
@@ -32,15 +31,17 @@ module dma_controller (
     input  logic        s_rd_en,
     output logic [31:0] s_rd_data,
 
-    output logic        m_req,
-    output logic        m_write,
-    output logic [31:0] m_addr,
-    output logic [31:0] m_wdata,
-    output logic [2:0]  m_funct3,
-    input  logic        m_grant,
-    input  logic        m_error,
-    input  logic        m_rvalid,
-    input  logic [31:0] m_rdata,
+    output logic        m_req_valid,
+    input  logic        m_req_ready,
+    output logic [31:0] m_req_addr,
+    output logic        m_req_write,
+    output logic [3:0]  m_req_wstrb,
+    output logic [31:0] m_req_wdata,
+    output logic [1:0]  m_req_size,
+    input  logic        m_rsp_valid,
+    output logic        m_rsp_ready,
+    input  logic [31:0] m_rsp_rdata,
+    input  logic        m_rsp_err,
 
     output logic        irq
 );
@@ -59,11 +60,12 @@ module dma_controller (
     localparam logic [7:0] ERR_BUS         = 8'h03;
     localparam logic [7:0] ERR_ABORTED     = 8'h04;
 
-    typedef enum logic [1:0] {
+    typedef enum logic [2:0] {
         ST_IDLE,
         ST_READ_REQUEST,
         ST_READ_WAIT,
-        ST_WRITE_REQUEST
+        ST_WRITE_REQUEST,
+        ST_WRITE_WAIT
     } state_t;
 
     state_t state;
@@ -109,24 +111,25 @@ module dma_controller (
     end
 
     always_comb begin
-        m_req    = 1'b0;
-        m_write  = 1'b0;
-        m_addr   = 32'b0;
-        m_wdata  = read_buffer;
+        m_req_valid = 1'b0;
+        m_req_write = 1'b0;
+        m_req_addr  = 32'b0;
+        m_req_wdata = read_buffer;
+        m_rsp_ready = (state == ST_READ_WAIT) || (state == ST_WRITE_WAIT);
 
         case (beat_bytes)
-            3'd1: m_funct3 = 3'b000;
-            3'd2: m_funct3 = 3'b001;
-            default: m_funct3 = 3'b010;
+            3'd1: begin m_req_size = 2'd0; m_req_wstrb = 4'b0001; end
+            3'd2: begin m_req_size = 2'd1; m_req_wstrb = 4'b0011; end
+            default: begin m_req_size = 2'd2; m_req_wstrb = 4'b1111; end
         endcase
 
         if (state == ST_READ_REQUEST) begin
-            m_req   = 1'b1;
-            m_addr  = current_source;
+            m_req_valid = 1'b1;
+            m_req_addr  = current_source;
         end else if (state == ST_WRITE_REQUEST) begin
-            m_req   = 1'b1;
-            m_write = 1'b1;
-            m_addr  = current_destination;
+            m_req_valid = 1'b1;
+            m_req_write = 1'b1;
+            m_req_addr  = current_destination;
         end
     end
 
@@ -223,29 +226,33 @@ module dma_controller (
             end else begin
                 case (state)
                     ST_READ_REQUEST: begin
-                        if (m_grant) begin
-                            if (m_error) begin
+                        if (m_req_valid && m_req_ready)
+                            state <= ST_READ_WAIT;
+                    end
+
+                    ST_READ_WAIT: begin
+                        if (m_rsp_valid && m_rsp_ready) begin
+                            if (m_rsp_err) begin
                                 state       <= ST_IDLE;
                                 busy        <= 1'b0;
                                 error       <= 1'b1;
                                 error_code  <= ERR_BUS;
                                 irq_pending <= irq_enable_latched;
                             end else begin
-                                state <= ST_READ_WAIT;
+                                read_buffer <= m_rsp_rdata;
+                                state <= ST_WRITE_REQUEST;
                             end
                         end
                     end
 
-                    ST_READ_WAIT: begin
-                        if (m_rvalid) begin
-                            read_buffer <= m_rdata;
-                            state <= ST_WRITE_REQUEST;
-                        end
+                    ST_WRITE_REQUEST: begin
+                        if (m_req_valid && m_req_ready)
+                            state <= ST_WRITE_WAIT;
                     end
 
-                    ST_WRITE_REQUEST: begin
-                        if (m_grant) begin
-                            if (m_error) begin
+                    ST_WRITE_WAIT: begin
+                        if (m_rsp_valid && m_rsp_ready) begin
+                            if (m_rsp_err) begin
                                 state       <= ST_IDLE;
                                 busy        <= 1'b0;
                                 error       <= 1'b1;
