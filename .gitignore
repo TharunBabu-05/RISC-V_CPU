@@ -46,3 +46,7 @@ riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/.jobs/
 # Local editor / assistant settings
 .codex/
 .vscode/
+
+# Local upstream checkouts used for the DOOM architecture study
+/reference_doom/
+/reference_retro_computing_2026/
