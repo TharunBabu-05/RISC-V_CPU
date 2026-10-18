@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Fri Oct 16 11:30:08 2026
+# Process ID: 20724
+# Current directory: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/software
+# Command line: vivado.exe -mode batch -source ../vivado/generate_qspi_mcs.tcl -tclargs ../vivado/vivado_project/rv32_soc_arty_s7.runs/impl_1/soc_top.bit build/snake_flash.bin ../vivado/vivado_project/rv32_soc_with_app.mcs
+# Log file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/software/vivado.log
+# Journal file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/software\vivado.jou
+#-----------------------------------------------------------
+source ../vivado/generate_qspi_mcs.tcl

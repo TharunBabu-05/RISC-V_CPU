@@ -17,145 +17,182 @@ INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7s50'
 INFO: [Device 21-403] Loading part xc7s50csga324-1
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 18904
-WARNING: [Synth 8-992] muldiv_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:350]
-WARNING: [Synth 8-992] fpu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:350]
-WARNING: [Synth 8-992] vec_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:350]
-WARNING: [Synth 8-992] mem_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:350]
-WARNING: [Synth 8-992] mmu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:350]
-WARNING: [Synth 8-992] id_ex_pc is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:393]
-WARNING: [Synth 8-992] id_ex_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:396]
-WARNING: [Synth 8-992] id_ex_mem_read is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:398]
-WARNING: [Synth 8-992] id_ex_branch is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:399]
-WARNING: [Synth 8-992] id_ex_jump is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:399]
-WARNING: [Synth 8-992] id_ex_opcode is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:409]
-WARNING: [Synth 8-992] ex_branch_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:884]
-WARNING: [Synth 8-992] ex_jalr_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:888]
-WARNING: [Synth 8-992] branch_taken is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:894]
-WARNING: [Synth 8-992] flush_ex is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1109]
-WARNING: [Synth 8-992] ex_mem_alu_result is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1156]
-WARNING: [Synth 8-992] ex_mem_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1159]
-WARNING: [Synth 8-992] ex_mem_reg_write is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1161]
-WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:110]
-WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:123]
-WARNING: [Synth 8-6901] identifier 'if_id_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:155]
-WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:156]
-WARNING: [Synth 8-6901] identifier 'id_csr_op' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:260]
-WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:372]
-WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:372]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:372]
-WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:373]
-WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:373]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:373]
-WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:374]
-WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:375]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:375]
-WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
-WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:376]
-WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
-WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:377]
-WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:378]
-WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:378]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:378]
-WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:379]
-WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:379]
-WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:379]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:386]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:387]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:473]
-WARNING: [Synth 8-6901] identifier 'ex_fwd_a' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:572]
-WARNING: [Synth 8-6901] identifier 'ex_fwd_b' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:573]
-WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:642]
-WARNING: [Synth 8-6901] identifier 'ex_f_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
-WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
-WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
-WARNING: [Synth 8-6901] identifier 'ex_v_cfg' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:660]
-WARNING: [Synth 8-6901] identifier 'ex_vcfg_vl' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:660]
-WARNING: [Synth 8-6901] identifier 'ex_v_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:661]
-WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:661]
-WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:661]
-WARNING: [Synth 8-6901] identifier 'ex_csr_mstatus' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:681]
-WARNING: [Synth 8-6901] identifier 'ex_mem_pc' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:971]
-WARNING: [Synth 8-6901] identifier 'mmu_stall_raw' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1038]
+INFO: [Synth 8-7075] Helper process launched with PID 7376
+WARNING: [Synth 8-992] muldiv_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:491]
+WARNING: [Synth 8-992] fpu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:491]
+WARNING: [Synth 8-992] vec_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:491]
+WARNING: [Synth 8-992] mem_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:491]
+WARNING: [Synth 8-992] mmu_stall is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:491]
+WARNING: [Synth 8-992] id_ex_pc is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:543]
+WARNING: [Synth 8-992] id_ex_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:546]
+WARNING: [Synth 8-992] id_ex_mem_read is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:548]
+WARNING: [Synth 8-992] id_ex_branch is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:549]
+WARNING: [Synth 8-992] id_ex_jump is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:549]
+WARNING: [Synth 8-992] id_ex_opcode is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:559]
+WARNING: [Synth 8-992] ex_branch_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1040]
+WARNING: [Synth 8-992] ex_jalr_target is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1044]
+WARNING: [Synth 8-992] branch_taken is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1050]
+WARNING: [Synth 8-992] flush_ex is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1273]
+WARNING: [Synth 8-992] ex_mem_alu_result is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1320]
+WARNING: [Synth 8-992] ex_mem_rd is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1323]
+WARNING: [Synth 8-992] ex_mem_reg_write is already implicitly declared earlier [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1325]
+WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:166]
+WARNING: [Synth 8-6901] identifier 'pc_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:187]
+WARNING: [Synth 8-6901] identifier 'if_id_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:211]
+WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:211]
+WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:223]
+WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:240]
+WARNING: [Synth 8-6901] identifier 'if_id_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:282]
+WARNING: [Synth 8-6901] identifier 'flush_if_id' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:283]
+WARNING: [Synth 8-6901] identifier 'id_csr_op' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:401]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:513]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:513]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:513]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:514]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:514]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:514]
+WARNING: [Synth 8-6901] identifier 'id_ex_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:515]
+WARNING: [Synth 8-6901] identifier 'ex_mem_fp_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:516]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:516]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:517]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:517]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:517]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:518]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:518]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:518]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:519]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:519]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:519]
+WARNING: [Synth 8-6901] identifier 'id_ex_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:520]
+WARNING: [Synth 8-6901] identifier 'ex_mem_vec_reg_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:520]
+WARNING: [Synth 8-6901] identifier 'ex_mem_rd' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:520]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:534]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:536]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:625]
+WARNING: [Synth 8-6901] identifier 'ex_fwd_a' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:728]
+WARNING: [Synth 8-6901] identifier 'ex_fwd_b' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:729]
+WARNING: [Synth 8-6901] identifier 'flush_ex' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:798]
+WARNING: [Synth 8-6901] identifier 'ex_f_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:815]
+WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:815]
+WARNING: [Synth 8-6901] identifier 'fpu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:815]
+WARNING: [Synth 8-6901] identifier 'ex_v_cfg' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:816]
+WARNING: [Synth 8-6901] identifier 'ex_vcfg_vl' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:816]
+WARNING: [Synth 8-6901] identifier 'ex_v_wr_int' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:817]
+WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:817]
+WARNING: [Synth 8-6901] identifier 'vec_scalar_out' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:817]
+WARNING: [Synth 8-6901] identifier 'ex_csr_mstatus' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:837]
+WARNING: [Synth 8-6901] identifier 'ex_mem_pc' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1129]
+WARNING: [Synth 8-6901] identifier 'ex_mem_mem_write' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1192]
+WARNING: [Synth 8-6901] identifier 'ex_mem_alu_result' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1197]
+WARNING: [Synth 8-6901] identifier 'mmu_stall_raw' is used before its declaration [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1202]
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 1022.965 ; gain = 0.000
+Starting RTL Elaboration : Time (s): cpu = 00:00:07 ; elapsed = 00:00:08 . Memory (MB): peak = 1026.746 ; gain = 0.000
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-6157] synthesizing module 'soc_top' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:44]
+INFO: [Synth 8-6157] synthesizing module 'soc_top' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:504]
 	Parameter FIRMWARE_FILE bound to: firmware.vmem - type: string 
+	Parameter CLK_FREQ_HZ bound to: 25000000 - type: integer 
+	Parameter UART_BAUD bound to: 115200 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-10748-tharun/realtime/clk_wiz_0_stub.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (1#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-10748-tharun/realtime/clk_wiz_0_stub.v:5]
+WARNING: [Synth 8-4446] all outputs are unconnected for this instance and logic may be removed [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:567]
+INFO: [Synth 8-6157] synthesizing module 'STARTUPE2' [C:/Xilinx/Vivado/2020.2/scripts/rt/data/unisim_comp.v:78204]
+	Parameter PROG_USR bound to: FALSE - type: string 
+	Parameter SIM_CCLK_FREQ bound to: 0.000000 - type: double 
+INFO: [Synth 8-6155] done synthesizing module 'STARTUPE2' (2#1) [C:/Xilinx/Vivado/2020.2/scripts/rt/data/unisim_comp.v:78204]
+INFO: [Synth 8-6157] synthesizing module 'soc_core' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_core_txn.sv:4]
+	Parameter FIRMWARE_FILE bound to: firmware.vmem - type: string 
+	Parameter CLK_FREQ_HZ bound to: 25000000 - type: integer 
+	Parameter UART_BAUD bound to: 115200 - type: integer 
+	Parameter BRAM_SIZE_BYTES bound to: 65536 - type: integer 
+	Parameter FAST_LOCAL_IMEM bound to: 1'b1 
+	Parameter FAST_LOCAL_DMEM bound to: 1'b1 
 	Parameter BRAM_BASE bound to: 0 - type: integer 
-	Parameter BRAM_MASK bound to: 65535 - type: integer 
+	Parameter BRAM_MASK bound to: 32'b00000000000000001111111111111111 
 	Parameter UART_BASE bound to: 268435456 - type: integer 
 	Parameter UART_MASK bound to: 15 - type: integer 
 	Parameter QSPI_BASE bound to: 268439552 - type: integer 
 	Parameter QSPI_MASK bound to: 15 - type: integer 
+	Parameter DMA_BASE bound to: 268443648 - type: integer 
+	Parameter DMA_MASK bound to: 31 - type: integer 
 	Parameter CLINT_BASE bound to: 33554432 - type: integer 
 	Parameter CLINT_MASK bound to: 65535 - type: integer 
 	Parameter PLIC_BASE bound to: 201326592 - type: integer 
 	Parameter PLIC_MASK bound to: 4194303 - type: integer 
-INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-4044-tharun/realtime/clk_wiz_0_stub.v:5]
-INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (1#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/.Xil/Vivado-4044-tharun/realtime/clk_wiz_0_stub.v:5]
+INFO: [Synth 8-6157] synthesizing module 'rv_bus_arbiter' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/rv_bus_arbiter.sv:9]
+INFO: [Synth 8-6155] done synthesizing module 'rv_bus_arbiter' (3#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/rv_bus_arbiter.sv:9]
 INFO: [Synth 8-6157] synthesizing module 'bram' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:10]
 	Parameter SIZE_BYTES bound to: 65536 - type: integer 
 	Parameter INIT_FILE bound to: firmware.vmem - type: string 
 	Parameter WORDS bound to: 16384 - type: integer 
 	Parameter ADDR_W bound to: 14 - type: integer 
-INFO: [Synth 8-3876] $readmem data file 'firmware.vmem' is read successfully [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:35]
-INFO: [Synth 8-3876] $readmem data file 'firmware.vmem' is read successfully [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:36]
-INFO: [Synth 8-6155] done synthesizing module 'bram' (2#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:10]
+INFO: [Synth 8-3876] $readmem data file 'firmware.vmem' is read successfully [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:39]
+INFO: [Synth 8-3876] $readmem data file 'firmware.vmem' is read successfully [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:40]
+INFO: [Synth 8-6155] done synthesizing module 'bram' (4#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/bram.sv:10]
 INFO: [Synth 8-6157] synthesizing module 'uart' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv:30]
-	Parameter CLK_FREQ bound to: 32'sb00000001011111010111100001000000 
-	Parameter BAUD_RATE bound to: 32'sb00000000000000011100001000000000 
+	Parameter CLK_FREQ bound to: 25000000 - type: integer 
+	Parameter BAUD_RATE bound to: 115200 - type: integer 
 	Parameter RX_FIFO_DEPTH bound to: 32'sb00000000000000000000000000010000 
 	Parameter RX_PTR_W bound to: 32'sb00000000000000000000000000000100 
 INFO: [Synth 8-6157] synthesizing module 'uart_tx' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_tx.sv:17]
-	Parameter CLK_FREQ bound to: 32'sb00000001011111010111100001000000 
-	Parameter BAUD_RATE bound to: 32'sb00000000000000011100001000000000 
+	Parameter CLK_FREQ bound to: 25000000 - type: integer 
+	Parameter BAUD_RATE bound to: 115200 - type: integer 
 	Parameter CLKS_PER_BIT bound to: 32'sb00000000000000000000000011011001 
-INFO: [Synth 8-6155] done synthesizing module 'uart_tx' (3#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_tx.sv:17]
+INFO: [Synth 8-6155] done synthesizing module 'uart_tx' (5#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_tx.sv:17]
 INFO: [Synth 8-6157] synthesizing module 'uart_rx' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv:24]
-	Parameter CLK_FREQ bound to: 32'sb00000001011111010111100001000000 
-	Parameter BAUD_RATE bound to: 32'sb00000000000000011100001000000000 
+	Parameter CLK_FREQ bound to: 25000000 - type: integer 
+	Parameter BAUD_RATE bound to: 115200 - type: integer 
 	Parameter CLKS_PER_BIT bound to: 32'sb00000000000000000000000011011001 
 	Parameter HALF_BIT bound to: 32'sb00000000000000000000000001101100 
-INFO: [Synth 8-6155] done synthesizing module 'uart_rx' (4#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv:24]
+INFO: [Synth 8-6155] done synthesizing module 'uart_rx' (6#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart_rx.sv:24]
 Reason is one or more of the following :
 	1: RAM is sensitive to asynchronous reset signal. this RTL style is not supported. 
 RAM "rx_fifo_reg" dissolved into registers
-INFO: [Synth 8-6155] done synthesizing module 'uart' (5#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv:30]
+INFO: [Synth 8-6155] done synthesizing module 'uart' (7#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/uart.sv:30]
+INFO: [Synth 8-6157] synthesizing module 'dma_controller' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/dma_controller.sv:24]
+	Parameter REG_SRC bound to: 5'b00000 
+	Parameter REG_DST bound to: 5'b00100 
+	Parameter REG_LENGTH bound to: 5'b01000 
+	Parameter REG_CONTROL bound to: 5'b01100 
+	Parameter REG_STATUS bound to: 5'b10000 
+	Parameter REG_TRANSFERRED bound to: 5'b10100 
+	Parameter REG_ID bound to: 5'b11000 
+	Parameter REG_REMAINING bound to: 5'b11100 
+	Parameter ERR_NONE bound to: 8'b00000000 
+	Parameter ERR_BAD_WIDTH bound to: 8'b00000001 
+	Parameter ERR_SELF_ACCESS bound to: 8'b00000010 
+	Parameter ERR_BUS bound to: 8'b00000011 
+	Parameter ERR_ABORTED bound to: 8'b00000100 
+INFO: [Synth 8-6155] done synthesizing module 'dma_controller' (8#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/dma_controller.sv:24]
 INFO: [Synth 8-6157] synthesizing module 'qspi_reader' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/qspi_reader.sv:5]
 	Parameter IDLE bound to: 3'b000 
 	Parameter TX_RISE bound to: 3'b001 
 	Parameter TX_FALL bound to: 3'b010 
 	Parameter RX_RISE bound to: 3'b011 
 	Parameter RX_FALL bound to: 3'b100 
-INFO: [Synth 8-6155] done synthesizing module 'qspi_reader' (6#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/qspi_reader.sv:5]
-WARNING: [Synth 8-4446] all outputs are unconnected for this instance and logic may be removed [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:364]
-INFO: [Synth 8-6157] synthesizing module 'STARTUPE2' [C:/Xilinx/Vivado/2020.2/scripts/rt/data/unisim_comp.v:78204]
-	Parameter PROG_USR bound to: FALSE - type: string 
-	Parameter SIM_CCLK_FREQ bound to: 0.000000 - type: double 
-INFO: [Synth 8-6155] done synthesizing module 'STARTUPE2' (7#1) [C:/Xilinx/Vivado/2020.2/scripts/rt/data/unisim_comp.v:78204]
+INFO: [Synth 8-6155] done synthesizing module 'qspi_reader' (9#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/qspi_reader.sv:5]
 INFO: [Synth 8-6157] synthesizing module 'clint' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/clint.sv:13]
 	Parameter MSIP_ADDR bound to: 16'b0000000000000000 
 	Parameter MTIMECMP_LO bound to: 16'b0100000000000000 
 	Parameter MTIMECMP_HI bound to: 16'b0100000000000100 
 	Parameter MTIME_LO bound to: 16'b1011111111111000 
 	Parameter MTIME_HI bound to: 16'b1011111111111100 
-INFO: [Synth 8-6155] done synthesizing module 'clint' (8#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/clint.sv:13]
+INFO: [Synth 8-6155] done synthesizing module 'clint' (10#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/clint.sv:13]
 INFO: [Synth 8-6157] synthesizing module 'plic' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/plic.sv:16]
-	Parameter NUM_SOURCES bound to: 32'sb00000000000000000000000000000100 
+	Parameter NUM_SOURCES bound to: 32'sb00000000000000000000000000000101 
 	Parameter PENDING_ADDR bound to: 22'b0000000001000000000000 
 	Parameter ENABLE_ADDR bound to: 22'b0000000010000000000000 
 	Parameter THRESHOLD_ADDR bound to: 22'b1000000000000000000000 
 	Parameter CLAIM_ADDR bound to: 22'b1000000000000000000100 
-INFO: [Synth 8-6155] done synthesizing module 'plic' (9#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/plic.sv:16]
+INFO: [Synth 8-6155] done synthesizing module 'plic' (11#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/plic.sv:16]
 INFO: [Synth 8-6157] synthesizing module 'cpu_top_soc' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:84]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:85]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:86]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:140]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:141]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:142]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter HAS_FPU bound to: 1'b0 
+	Parameter ENABLE_MMU bound to: 1'b1 
+	Parameter FAST_LOCAL_IMEM bound to: 1'b1 
+	Parameter FAST_LOCAL_DMEM bound to: 1'b1 
 	Parameter HAS_VEC bound to: 1'b0 
 	Parameter OP_LUI bound to: 7'b0110111 
 	Parameter OP_AUIPC bound to: 7'b0010111 
@@ -174,17 +211,30 @@ WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/th
 	Parameter CSR_RWI bound to: 3'b101 
 	Parameter CSR_RSI bound to: 3'b110 
 	Parameter CSR_RCI bound to: 3'b111 
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:113]
+INFO: [Synth 8-6157] synthesizing module 'mmu' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/mmu.sv:6]
+	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
+	Parameter TLB_ENTRIES bound to: 32'sb00000000000000000000000000001000 
+	Parameter PTW_HANDSHAKE bound to: 1'b1 
+	Parameter VPN_BITS bound to: 32'sb00000000000000000000000000010100 
+	Parameter PPN_BITS bound to: 32'sb00000000000000000000000000010110 
+	Parameter PRIV_U bound to: 2'b00 
+	Parameter PRIV_S bound to: 2'b01 
+	Parameter PRIV_M bound to: 2'b11 
+	Parameter S_IDLE bound to: 2'b00 
+	Parameter S_L1 bound to: 2'b01 
+	Parameter S_L0 bound to: 2'b10 
+INFO: [Synth 8-6155] done synthesizing module 'mmu' (12#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/mmu.sv:6]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:169]
 INFO: [Synth 8-6157] synthesizing module 'branch_predictor' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv:6]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter BTB_ENTRIES bound to: 32'sb00000000000000000000000000010000 
 	Parameter IDX_BITS bound to: 32'sb00000000000000000000000000000100 
 	Parameter TAG_BITS bound to: 32'sb00000000000000000000000000011010 
 INFO: [Synth 8-226] default block is never used [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv:64]
-INFO: [Synth 8-6155] done synthesizing module 'branch_predictor' (10#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv:6]
+INFO: [Synth 8-6155] done synthesizing module 'branch_predictor' (13#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/branch_predictor.sv:6]
 INFO: [Synth 8-6157] synthesizing module 'regfile' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv:7]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
-INFO: [Synth 8-6155] done synthesizing module 'regfile' (11#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'regfile' (14#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/regfile.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'imm_gen' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter OP_IMM bound to: 7'b0010011 
@@ -198,7 +248,7 @@ INFO: [Synth 8-6157] synthesizing module 'imm_gen' [C:/Users/tharu/RISC-V_CPU/ri
 	Parameter OP_AUIPC bound to: 7'b0010111 
 	Parameter OP_JAL bound to: 7'b1101111 
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:62]
-INFO: [Synth 8-6155] done synthesizing module 'imm_gen' (12#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'imm_gen' (15#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/imm_gen.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'control_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
 	Parameter OP_R bound to: 7'b0110011 
 	Parameter OP_IMM bound to: 7'b0010011 
@@ -228,7 +278,7 @@ INFO: [Synth 8-6157] synthesizing module 'control_unit' [C:/Users/tharu/RISC-V_C
 	Parameter ALU_SLT bound to: 4'b1000 
 	Parameter ALU_SLTU bound to: 4'b1001 
 INFO: [Synth 8-226] default block is never used [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:158]
-INFO: [Synth 8-6155] done synthesizing module 'control_unit' (13#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'control_unit' (16#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'ext_decode' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:284]
 	Parameter HAS_FPU bound to: 1'b0 
 	Parameter HAS_VEC bound to: 1'b0 
@@ -264,14 +314,14 @@ INFO: [Synth 8-6157] synthesizing module 'ext_decode' [C:/Users/tharu/RISC-V_CPU
 	Parameter FMSUB bound to: 5'b10101 
 	Parameter FNMSUB bound to: 5'b10110 
 	Parameter FNMADD bound to: 5'b10111 
-INFO: [Synth 8-6155] done synthesizing module 'ext_decode' (14#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:284]
+INFO: [Synth 8-6155] done synthesizing module 'ext_decode' (17#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:284]
 INFO: [Synth 8-6157] synthesizing module 'illegal_detect' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:186]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
-INFO: [Synth 8-6155] done synthesizing module 'illegal_detect' (15#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:186]
+INFO: [Synth 8-6155] done synthesizing module 'illegal_detect' (18#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/control_unit.sv:186]
 INFO: [Synth 8-6157] synthesizing module 'hazard_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:7]
-INFO: [Synth 8-6155] done synthesizing module 'hazard_unit' (16#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'hazard_unit' (19#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'forwarding_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:43]
-INFO: [Synth 8-6155] done synthesizing module 'forwarding_unit' (17#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:43]
+INFO: [Synth 8-6155] done synthesizing module 'forwarding_unit' (20#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/hazard.sv:43]
 INFO: [Synth 8-6157] synthesizing module 'alu' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/alu.sv:7]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter ALU_ADD bound to: 4'b0000 
@@ -285,7 +335,7 @@ INFO: [Synth 8-6157] synthesizing module 'alu' [C:/Users/tharu/RISC-V_CPU/riscv_
 	Parameter ALU_SLT bound to: 4'b1000 
 	Parameter ALU_SLTU bound to: 4'b1001 
 	Parameter SHAMT_BITS bound to: 32'sb00000000000000000000000000000101 
-INFO: [Synth 8-6155] done synthesizing module 'alu' (18#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/alu.sv:7]
+INFO: [Synth 8-6155] done synthesizing module 'alu' (21#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/alu.sv:7]
 INFO: [Synth 8-6157] synthesizing module 'muldiv_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:19]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter OP_MUL bound to: 3'b000 
@@ -297,9 +347,9 @@ INFO: [Synth 8-6157] synthesizing module 'muldiv_unit' [C:/Users/tharu/RISC-V_CP
 	Parameter OP_REM bound to: 3'b110 
 	Parameter OP_REMU bound to: 3'b111 
 	Parameter CNT_BITS bound to: 32'sb00000000000000000000000000000110 
-INFO: [Synth 8-6155] done synthesizing module 'muldiv_unit' (19#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:19]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:659]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:661]
+INFO: [Synth 8-6155] done synthesizing module 'muldiv_unit' (22#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/muldiv.sv:19]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:815]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:817]
 INFO: [Synth 8-6157] synthesizing module 'csr_file' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:27]
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:129]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
@@ -316,13 +366,13 @@ WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/th
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:361]
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:362]
 WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:129]
-INFO: [Synth 8-6155] done synthesizing module 'csr_file' (20#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:27]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:918]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:948]
+INFO: [Synth 8-6155] done synthesizing module 'csr_file' (23#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/csr_file.sv:27]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1074]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1104]
 INFO: [Synth 8-6157] synthesizing module 'pmp_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/pmp_unit.sv:10]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter PRIV_M bound to: 2'b11 
-INFO: [Synth 8-6155] done synthesizing module 'pmp_unit' (21#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/pmp_unit.sv:10]
+INFO: [Synth 8-6155] done synthesizing module 'pmp_unit' (24#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/pmp_unit.sv:10]
 INFO: [Synth 8-6157] synthesizing module 'interrupt_unit' [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:6]
 	Parameter XLEN bound to: 32'sb00000000000000000000000000100000 
 	Parameter PRIV_M bound to: 2'b11 
@@ -339,28 +389,28 @@ WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/th
 WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:185]
 WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:186]
 WARNING: [Synth 8-589] replacing case/wildcard equality operator === with logical equality operator == [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:187]
-INFO: [Synth 8-6155] done synthesizing module 'interrupt_unit' (22#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:6]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1151]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1341]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1378]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:84]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:85]
-WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:86]
-INFO: [Synth 8-6155] done synthesizing module 'cpu_top_soc' (23#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
-INFO: [Synth 8-6155] done synthesizing module 'soc_top' (24#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:44]
+INFO: [Synth 8-6155] done synthesizing module 'interrupt_unit' (25#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/rtl/interrupt_unit.sv:6]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1315]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:1688]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:140]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:141]
+WARNING: [Synth 8-693] zero replication count - replication ignored [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:142]
+INFO: [Synth 8-6155] done synthesizing module 'cpu_top_soc' (26#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv:13]
+INFO: [Synth 8-6155] done synthesizing module 'soc_core' (27#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_core_txn.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'soc_top' (28#1) [C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/rtl/soc_top.sv:504]
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:12 ; elapsed = 00:00:14 . Memory (MB): peak = 1084.340 ; gain = 61.375
+Finished RTL Elaboration : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1149.113 ; gain = 122.367
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:14 ; elapsed = 00:00:17 . Memory (MB): peak = 1087.477 ; gain = 64.512
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:19 ; elapsed = 00:00:21 . Memory (MB): peak = 1149.113 ; gain = 122.367
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:14 ; elapsed = 00:00:17 . Memory (MB): peak = 1087.477 ; gain = 64.512
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:19 ; elapsed = 00:00:21 . Memory (MB): peak = 1149.113 ; gain = 122.367
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.396 . Memory (MB): peak = 1099.734 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.345 . Memory (MB): peak = 1149.113 ; gain = 0.000
 INFO: [Netlist 29-17] Analyzing 1 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
@@ -375,20 +425,20 @@ INFO: [Project 1-236] Implementation specific constraints were found while readi
 Resolution: To avoid this warning, move constraints listed in [.Xil/soc_top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.007 . Memory (MB): peak = 1227.590 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.008 . Memory (MB): peak = 1283.516 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.087 . Memory (MB): peak = 1227.590 ; gain = 0.000
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.128 . Memory (MB): peak = 1283.516 ; gain = 0.000
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:28 ; elapsed = 00:00:34 . Memory (MB): peak = 1227.590 ; gain = 204.625
+Finished Constraint Validation : Time (s): cpu = 00:00:37 ; elapsed = 00:00:41 . Memory (MB): peak = 1283.516 ; gain = 256.770
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7s50csga324-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:28 ; elapsed = 00:00:34 . Memory (MB): peak = 1227.590 ; gain = 204.625
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:37 ; elapsed = 00:00:41 . Memory (MB): peak = 1283.516 ; gain = 256.770
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
@@ -397,12 +447,14 @@ Applied set_property IO_BUFFER_TYPE = NONE for clk_12mhz. (constraint file  c:/U
 Applied set_property CLOCK_BUFFER_TYPE = NONE for clk_12mhz. (constraint file  c:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc, line 4).
 Applied set_property KEEP_HIERARCHY = SOFT for u_pll. (constraint file  auto generated constraint).
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:28 ; elapsed = 00:00:34 . Memory (MB): peak = 1227.590 ; gain = 204.625
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:37 ; elapsed = 00:00:41 . Memory (MB): peak = 1283.516 ; gain = 256.770
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart_tx'
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart_rx'
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'qspi_reader'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'mmu'
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'muldiv_unit'
+INFO: [Synth 8-802] inferred FSM for state register 'target_state_reg' in module 'soc_core'
 WARNING: [Synth 8-6841] Block RAM (even_mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
 (address width (14) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
 WARNING: [Synth 8-6841] Block RAM (odd_mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
@@ -439,6 +491,14 @@ INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 
 ---------------------------------------------------------------------------------------------------
                    State |                     New Encoding |                Previous Encoding 
 ---------------------------------------------------------------------------------------------------
+                  S_IDLE |                               00 |                               00
+                    S_L1 |                               01 |                               01
+                    S_L0 |                               10 |                               10
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'mmu'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
                   S_IDLE |                              000 |                              000
                    S_DIV |                              001 |                              011
                S_DIV_FIX |                              010 |                              100
@@ -447,8 +507,16 @@ INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 
                   S_DONE |                              101 |                              101
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'muldiv_unit'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+             TARGET_IDLE |                              001 |                               00
+             TARGET_WAIT |                              010 |                               01
+         TARGET_RESPONSE |                              100 |                               10
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'target_state_reg' using encoding 'one-hot' in module 'soc_core'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:39 ; elapsed = 00:00:48 . Memory (MB): peak = 1227.590 ; gain = 204.625
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:52 ; elapsed = 00:00:58 . Memory (MB): peak = 1283.516 ; gain = 256.770
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
@@ -459,31 +527,34 @@ Detailed RTL Component Info :
 	   3 Input   34 Bit       Adders := 1     
 	   2 Input   33 Bit       Adders := 24    
 	   3 Input   33 Bit       Adders := 2     
-	   2 Input   32 Bit       Adders := 21    
+	   2 Input   32 Bit       Adders := 25    
 	   3 Input   32 Bit       Adders := 1     
 	   2 Input   16 Bit       Adders := 2     
 	   2 Input   14 Bit       Adders := 1     
 	   2 Input    6 Bit       Adders := 2     
 	   2 Input    5 Bit       Adders := 1     
 	   2 Input    4 Bit       Adders := 3     
-	   2 Input    3 Bit       Adders := 6     
+	   2 Input    3 Bit       Adders := 9     
 +---XORs : 
 	   2 Input     32 Bit         XORs := 1     
 	   2 Input      1 Bit         XORs := 1     
 +---Registers : 
 	               64 Bit    Registers := 5     
-	               32 Bit    Registers := 111   
+	               32 Bit    Registers := 124   
 	               26 Bit    Registers := 16    
+	               22 Bit    Registers := 17    
+	               20 Bit    Registers := 16    
 	               16 Bit    Registers := 3     
 	               12 Bit    Registers := 1     
-	                8 Bit    Registers := 22    
+	                9 Bit    Registers := 16    
+	                8 Bit    Registers := 23    
 	                7 Bit    Registers := 1     
 	                6 Bit    Registers := 2     
-	                5 Bit    Registers := 7     
-	                4 Bit    Registers := 7     
-	                3 Bit    Registers := 15    
-	                2 Bit    Registers := 18    
-	                1 Bit    Registers := 59    
+	                5 Bit    Registers := 11    
+	                4 Bit    Registers := 4     
+	                3 Bit    Registers := 17    
+	                2 Bit    Registers := 21    
+	                1 Bit    Registers := 184   
 +---Multipliers : 
 	              33x33  Multipliers := 1     
 +---RAMs : 
@@ -495,13 +566,14 @@ Detailed RTL Component Info :
 	   2 Input   64 Bit        Muxes := 1     
 	   4 Input   33 Bit        Muxes := 16    
 	   2 Input   33 Bit        Muxes := 16    
-	   2 Input   32 Bit        Muxes := 130   
+	   2 Input   32 Bit        Muxes := 165   
+	   3 Input   32 Bit        Muxes := 6     
 	   6 Input   32 Bit        Muxes := 5     
 	  11 Input   32 Bit        Muxes := 1     
 	   5 Input   32 Bit        Muxes := 3     
 	  42 Input   32 Bit        Muxes := 1     
-	   3 Input   32 Bit        Muxes := 4     
-	   9 Input   32 Bit        Muxes := 1     
+	   4 Input   32 Bit        Muxes := 2     
+	  10 Input   32 Bit        Muxes := 1     
 	   2 Input   31 Bit        Muxes := 8     
 	   2 Input   30 Bit        Muxes := 8     
 	   2 Input   29 Bit        Muxes := 8     
@@ -528,44 +600,45 @@ Detailed RTL Component Info :
 	   2 Input   10 Bit        Muxes := 8     
 	   2 Input    9 Bit        Muxes := 8     
 	   7 Input    9 Bit        Muxes := 1     
-	   2 Input    8 Bit        Muxes := 15    
-	   5 Input    8 Bit        Muxes := 2     
+	   2 Input    8 Bit        Muxes := 17    
+	   5 Input    8 Bit        Muxes := 3     
 	   2 Input    7 Bit        Muxes := 9     
 	   2 Input    6 Bit        Muxes := 9     
 	   6 Input    6 Bit        Muxes := 1     
 	  42 Input    6 Bit        Muxes := 1     
 	   5 Input    6 Bit        Muxes := 1     
-	   2 Input    5 Bit        Muxes := 18    
+	   2 Input    5 Bit        Muxes := 25    
 	   5 Input    5 Bit        Muxes := 5     
-	   3 Input    5 Bit        Muxes := 4     
+	   3 Input    5 Bit        Muxes := 6     
 	  11 Input    5 Bit        Muxes := 2     
-	   2 Input    4 Bit        Muxes := 35    
+	   2 Input    4 Bit        Muxes := 32    
 	   3 Input    4 Bit        Muxes := 6     
 	   8 Input    4 Bit        Muxes := 1     
-	   4 Input    4 Bit        Muxes := 4     
-	   2 Input    3 Bit        Muxes := 26    
+	   4 Input    4 Bit        Muxes := 6     
+	   2 Input    3 Bit        Muxes := 31    
 	   6 Input    3 Bit        Muxes := 2     
 	   3 Input    3 Bit        Muxes := 4     
 	  11 Input    3 Bit        Muxes := 2     
 	   7 Input    3 Bit        Muxes := 1     
 	   9 Input    3 Bit        Muxes := 1     
 	   4 Input    3 Bit        Muxes := 2     
-	   5 Input    3 Bit        Muxes := 2     
-	   2 Input    2 Bit        Muxes := 18    
+	   5 Input    3 Bit        Muxes := 4     
+	   2 Input    2 Bit        Muxes := 40    
+	   7 Input    2 Bit        Muxes := 1     
 	   6 Input    2 Bit        Muxes := 2     
 	  11 Input    2 Bit        Muxes := 1     
-	   3 Input    2 Bit        Muxes := 4     
-	   4 Input    2 Bit        Muxes := 3     
+	   3 Input    2 Bit        Muxes := 6     
+	   4 Input    2 Bit        Muxes := 8     
 	  38 Input    2 Bit        Muxes := 4     
-	   2 Input    1 Bit        Muxes := 143   
-	   3 Input    1 Bit        Muxes := 11    
+	   2 Input    1 Bit        Muxes := 273   
+	   8 Input    1 Bit        Muxes := 5     
+	   3 Input    1 Bit        Muxes := 59    
 	  11 Input    1 Bit        Muxes := 10    
 	  10 Input    1 Bit        Muxes := 1     
-	   8 Input    1 Bit        Muxes := 1     
 	   6 Input    1 Bit        Muxes := 8     
 	  38 Input    1 Bit        Muxes := 2     
-	   5 Input    1 Bit        Muxes := 19    
-	   4 Input    1 Bit        Muxes := 7     
+	   5 Input    1 Bit        Muxes := 36    
+	   4 Input    1 Bit        Muxes := 21    
 ---------------------------------------------------------------------------------
 Finished RTL Component Statistics 
 ---------------------------------------------------------------------------------
@@ -598,19 +671,19 @@ WARNING: [Synth 8-6841] Block RAM (even_mem_reg) originally specified as a Byte 
 WARNING: [Synth 8-6841] Block RAM (odd_mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
 (address width (14) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:03:55 ; elapsed = 00:05:37 . Memory (MB): peak = 1368.906 ; gain = 345.941
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:05:15 ; elapsed = 00:05:32 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
 ---------------------------------------------------------------------------------
 
 Block RAM: Preliminary Mapping	Report (see note below)
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|Module Name | RTL Object   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|i_0/u_bram  | even_mem_reg | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
-|i_0/u_bram  | odd_mem_reg  | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name     | RTL Object   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|u_soci_2/u_bram | even_mem_reg | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
+|u_soci_2/u_bram | odd_mem_reg  | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
 
 Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
 
@@ -632,25 +705,25 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:04:11 ; elapsed = 00:05:57 . Memory (MB): peak = 1368.906 ; gain = 345.941
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:05:33 ; elapsed = 00:05:51 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:04:14 ; elapsed = 00:06:01 . Memory (MB): peak = 1368.906 ; gain = 345.941
+Finished Timing Optimization : Time (s): cpu = 00:05:38 ; elapsed = 00:05:57 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
 ---------------------------------------------------------------------------------
 
 Block RAM: Final Mapping	Report
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|Module Name | RTL Object   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|i_0/u_bram  | even_mem_reg | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
-|i_0/u_bram  | odd_mem_reg  | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
-+------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name     | RTL Object   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|u_soci_2/u_bram | even_mem_reg | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
+|u_soci_2/u_bram | odd_mem_reg  | 16 K x 32(READ_FIRST)  | W | R | 16 K x 32(WRITE_FIRST) |   | R | Port A and B     | 0      | 16     | 
++----------------+--------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
 
 ---------------------------------------------------------------------------------
 Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -658,72 +731,72 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 ---------------------------------------------------------------------------------
 Start Technology Mapping
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/even_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
-INFO: [Synth 8-7052] The timing for the instance u_bram/odd_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/even_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_0_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_1_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_2_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_soc/u_bram/odd_mem_reg_3_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:04:26 ; elapsed = 00:06:14 . Memory (MB): peak = 1387.066 ; gain = 364.102
+Finished Technology Mapping : Time (s): cpu = 00:05:50 ; elapsed = 00:06:10 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -741,37 +814,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:04:33 ; elapsed = 00:06:23 . Memory (MB): peak = 1401.375 ; gain = 378.410
+Finished IO Insertion : Time (s): cpu = 00:05:58 ; elapsed = 00:06:19 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:04:33 ; elapsed = 00:06:23 . Memory (MB): peak = 1401.375 ; gain = 378.410
+Finished Renaming Generated Instances : Time (s): cpu = 00:05:59 ; elapsed = 00:06:19 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:04:35 ; elapsed = 00:06:26 . Memory (MB): peak = 1401.375 ; gain = 378.410
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:06:02 ; elapsed = 00:06:23 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:04:35 ; elapsed = 00:06:27 . Memory (MB): peak = 1401.375 ; gain = 378.410
+Finished Renaming Generated Ports : Time (s): cpu = 00:06:02 ; elapsed = 00:06:23 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:04:36 ; elapsed = 00:06:27 . Memory (MB): peak = 1401.758 ; gain = 378.793
+Finished Handling Custom Attributes : Time (s): cpu = 00:06:03 ; elapsed = 00:06:24 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:04:36 ; elapsed = 00:06:27 . Memory (MB): peak = 1401.758 ; gain = 378.793
+Finished Renaming Generated Nets : Time (s): cpu = 00:06:03 ; elapsed = 00:06:24 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -789,46 +862,46 @@ Report Cell Usage:
 |      |Cell      |Count |
 +------+----------+------+
 |1     |clk_wiz   |     1|
-|2     |CARRY4    |   481|
+|2     |CARRY4    |   552|
 |3     |DSP48E1   |     4|
-|5     |LUT1      |   185|
-|6     |LUT2      |  1283|
-|7     |LUT3      |   627|
-|8     |LUT4      |  1385|
-|9     |LUT5      |   933|
-|10    |LUT6      |  3839|
-|11    |MUXF7     |   517|
-|12    |MUXF8     |   208|
+|5     |LUT1      |   242|
+|6     |LUT2      |  1555|
+|7     |LUT3      |   747|
+|8     |LUT4      |  1529|
+|9     |LUT5      |  1179|
+|10    |LUT6      |  4176|
+|11    |MUXF7     |   489|
+|12    |MUXF8     |   210|
 |13    |RAMB36E1  |    32|
 |29    |STARTUPE2 |     1|
-|30    |FDCE      |  4018|
-|31    |FDPE      |    99|
+|30    |FDCE      |  4897|
+|31    |FDPE      |   103|
 |32    |FDRE      |   197|
 |33    |IBUF      |     3|
 |34    |OBUF      |     6|
 |35    |OBUFT     |     1|
 +------+----------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:04:36 ; elapsed = 00:06:28 . Memory (MB): peak = 1401.758 ; gain = 378.793
+Finished Writing Synthesis Report : Time (s): cpu = 00:06:03 ; elapsed = 00:06:24 . Memory (MB): peak = 1452.980 ; gain = 426.234
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 4 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:04:15 ; elapsed = 00:06:19 . Memory (MB): peak = 1401.758 ; gain = 238.680
-Synthesis Optimization Complete : Time (s): cpu = 00:04:36 ; elapsed = 00:06:28 . Memory (MB): peak = 1401.758 ; gain = 378.793
+Synthesis Optimization Runtime : Time (s): cpu = 00:05:35 ; elapsed = 00:06:14 . Memory (MB): peak = 1452.980 ; gain = 291.832
+Synthesis Optimization Complete : Time (s): cpu = 00:06:03 ; elapsed = 00:06:24 . Memory (MB): peak = 1452.980 ; gain = 426.234
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.331 . Memory (MB): peak = 1401.758 ; gain = 0.000
-INFO: [Netlist 29-17] Analyzing 1243 Unisim elements for replacement
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.280 . Memory (MB): peak = 1452.980 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 1288 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 1 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.004 . Memory (MB): peak = 1414.785 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.005 . Memory (MB): peak = 1452.980 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
 INFO: [Common 17-83] Releasing license: Synthesis
-141 Infos, 90 Warnings, 0 Critical Warnings and 0 Errors encountered.
+153 Infos, 95 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:04:51 ; elapsed = 00:06:50 . Memory (MB): peak = 1414.785 ; gain = 391.820
+synth_design: Time (s): cpu = 00:06:19 ; elapsed = 00:06:43 . Memory (MB): peak = 1452.980 ; gain = 426.234
 INFO: [Common 17-1381] The checkpoint 'C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/synth_1/soc_top.dcp' has been generated.
-write_checkpoint: Time (s): cpu = 00:00:05 ; elapsed = 00:00:05 . Memory (MB): peak = 1414.785 ; gain = 0.000
+write_checkpoint: Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 1452.980 ; gain = 0.000
 INFO: [runtcl-4] Executing : report_utilization -file soc_top_utilization_synth.rpt -pb soc_top_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Fri Oct 16 11:14:36 2026...
+INFO: [Common 17-206] Exiting Vivado at Sun Oct 18 17:37:48 2026...

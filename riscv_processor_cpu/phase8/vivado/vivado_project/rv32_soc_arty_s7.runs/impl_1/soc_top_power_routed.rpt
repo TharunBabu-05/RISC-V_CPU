@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date             : Fri Oct 16 11:21:29 2026
+| Date             : Sun Oct 18 17:45:17 2026
 | Host             : tharun running 64-bit major release  (build 9200)
 | Command          : report_power -file soc_top_power_routed.rpt -pb soc_top_power_summary_routed.pb -rpx soc_top_power_routed.rpx
 | Design           : soc_top
@@ -30,10 +30,10 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 0.216        |
+| Total On-Chip Power (W)  | 0.215        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 0.143        |
+| Dynamic (W)              | 0.142        |
 | Device Static (W)        | 0.073        |
 | Effective TJA (C/W)      | 4.9          |
 | Max Ambient (C)          | 83.9         |
@@ -53,19 +53,19 @@ Table of Contents
 | On-Chip        | Power (W) | Used     | Available | Utilization (%) |
 +----------------+-----------+----------+-----------+-----------------+
 | Clocks         |     0.004 |        8 |       --- |             --- |
-| Slice Logic    |     0.004 |    13795 |       --- |             --- |
-|   LUT as Logic |     0.004 |     6733 |     32600 |           20.65 |
-|   CARRY4       |    <0.001 |      481 |      8150 |            5.90 |
-|   Register     |    <0.001 |     4315 |     65200 |            6.62 |
-|   F7/F8 Muxes  |    <0.001 |      725 |     32600 |            2.22 |
-|   Others       |     0.000 |       33 |       --- |             --- |
-| Signals        |     0.007 |    11029 |       --- |             --- |
+| Slice Logic    |     0.004 |    15818 |       --- |             --- |
+|   LUT as Logic |     0.003 |     7642 |     32600 |           23.44 |
+|   CARRY4       |    <0.001 |      552 |      8150 |            6.77 |
+|   F7/F8 Muxes  |    <0.001 |      699 |     32600 |            2.14 |
+|   Register     |    <0.001 |     5198 |     65200 |            7.97 |
+|   Others       |     0.000 |       39 |       --- |             --- |
+| Signals        |     0.006 |    12531 |       --- |             --- |
 | Block RAM      |     0.024 |       32 |        75 |           42.67 |
 | MMCM           |     0.104 |        1 |         5 |           20.00 |
 | DSPs           |    <0.001 |        4 |       120 |            3.33 |
 | I/O            |    <0.001 |       11 |       210 |            5.24 |
 | Static Power   |     0.073 |          |           |                 |
-| Total          |     0.216 |          |           |                 |
+| Total          |     0.215 |          |           |                 |
 +----------------+-----------+----------+-----------+-----------------+
 
 
@@ -75,7 +75,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.047 |       0.037 |      0.011 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.046 |       0.036 |      0.011 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.070 |       0.058 |      0.013 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.001 |       0.000 |      0.001 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -144,19 +144,20 @@ Table of Contents
 3.1 By Hierarchy
 ----------------
 
-+----------------+-----------+
-| Name           | Power (W) |
-+----------------+-----------+
-| soc_top        |     0.143 |
-|   u_bram       |     0.025 |
-|   u_cpu        |     0.013 |
-|     u_bpred    |     0.001 |
-|     u_csr      |     0.004 |
-|     u_muldiv   |     0.002 |
-|     u_pmp_data |     0.001 |
-|     u_regfile  |     0.002 |
-|   u_pll        |     0.104 |
-|     inst       |     0.104 |
-+----------------+-----------+
++---------------------+-----------+
+| Name                | Power (W) |
++---------------------+-----------+
+| soc_top             |     0.142 |
+|   u_pll             |     0.104 |
+|     inst            |     0.104 |
+|   u_soc             |     0.038 |
+|     u_bram          |     0.024 |
+|     u_cpu           |     0.012 |
+|       gen_mmu.u_mmu |     0.001 |
+|       u_bpred       |     0.001 |
+|       u_csr         |     0.003 |
+|       u_muldiv      |     0.001 |
+|       u_regfile     |     0.002 |
++---------------------+-----------+
 
 
