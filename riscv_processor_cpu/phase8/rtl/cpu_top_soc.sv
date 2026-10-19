@@ -16,11 +16,12 @@ module cpu_top_soc #(
     parameter bit HAS_FPU = 1'b0,
     parameter bit ENABLE_MMU = 1'b1,
     // Keep code in the dual-port BRAM instruction TCM at full pipeline speed.
-    // Set to 0 when instruction fetches must traverse an external bus/cache.
+    // Fetches outside LOCAL_MEM_BYTES always use the transaction bus.
     parameter bit FAST_LOCAL_IMEM = 1'b1,
     // Local BRAM data uses the synchronous DTCM port. MMIO, translated memory
     // and external memory continue to use the request/response transaction bus.
-    parameter bit FAST_LOCAL_DMEM = 1'b1
+    parameter bit FAST_LOCAL_DMEM = 1'b1,
+    parameter integer LOCAL_MEM_BYTES = 65_536
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -192,30 +193,36 @@ module cpu_top_soc #(
     // buffer and tag an outstanding response as stale.
     logic        ifetch_pending;
     logic        ifetch_valid;
-    logic        ifetch_epoch;
-    logic        ifetch_pending_epoch;
+    logic        ifetch_request;
+    logic        ifetch_killed;
+    logic        if_fast_local;
+    logic [31:0] ifetch_addr;
     logic        ifetch_bus_error;
     logic [31:0] ifetch_pc;
     logic [31:0] ifetch_data;
     logic        fetch_consumed;
 
-    assign ibus_req_valid = !FAST_LOCAL_IMEM && rst_n && inst_ready && !inst_fault &&
-                            !ifetch_pending && !ifetch_valid;
-    assign ibus_req_addr  = inst_paddr[31:0];
+    assign if_fast_local = FAST_LOCAL_IMEM && (pc < LOCAL_MEM_BYTES) &&
+                           !ex_csr_satp[31];
+    // A redirect cannot cancel a request already presented to the arbiter.
+    // Hold its address until accepted and drain its response if killed.
+    assign ibus_req_valid = ifetch_request && rst_n && !flush_if_id;
+    assign ibus_req_addr  = ifetch_addr;
     assign ibus_req_write = 1'b0;
     assign ibus_req_wstrb = 4'b0000;
     assign ibus_req_wdata = 32'b0;
     assign ibus_req_size  = 2'd2;
     assign ibus_rsp_ready = ifetch_pending;
-    assign if_instr       = FAST_LOCAL_IMEM ? imem_rdata : ifetch_data;
-    assign fetch_consumed = if_id_write && !flush_if_id && ifetch_valid;
+    assign if_instr       = if_fast_local ? imem_rdata : ifetch_data;
+    assign fetch_consumed = if_id_write && !flush_if_id && !if_fast_local && ifetch_valid;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ifetch_pending       <= 1'b0;
             ifetch_valid         <= 1'b0;
-            ifetch_epoch         <= 1'b0;
-            ifetch_pending_epoch <= 1'b0;
+            ifetch_request       <= 1'b0;
+            ifetch_killed        <= 1'b0;
+            ifetch_addr          <= 32'b0;
             ifetch_bus_error     <= 1'b0;
             ifetch_pc            <= 32'b0;
             ifetch_data          <= 32'h0000_0013;
@@ -223,21 +230,30 @@ module cpu_top_soc #(
             if (flush_if_id) begin
                 ifetch_valid     <= 1'b0;
                 ifetch_bus_error <= 1'b0;
-                ifetch_epoch     <= ~ifetch_epoch;
+                ifetch_killed    <= 1'b1;
+                if (!ifetch_pending)
+                    ifetch_request <= 1'b0;
             end else if (fetch_consumed) begin
                 ifetch_valid     <= 1'b0;
                 ifetch_bus_error <= 1'b0;
             end
 
+            if (!if_fast_local && rst_n && inst_ready && !inst_fault &&
+                !ifetch_request && !ifetch_pending && !ifetch_valid && !flush_if_id) begin
+                ifetch_request <= 1'b1;
+                ifetch_killed  <= 1'b0;
+                ifetch_addr    <= inst_paddr[31:0];
+                ifetch_pc      <= pc[31:0];
+            end
+
             if (ibus_req_valid && ibus_req_ready) begin
-                ifetch_pending       <= 1'b1;
-                ifetch_pending_epoch <= ifetch_epoch;
-                ifetch_pc            <= pc[31:0];
+                ifetch_request <= 1'b0;
+                ifetch_pending <= 1'b1;
             end
 
             if (ibus_rsp_valid && ibus_rsp_ready) begin
                 ifetch_pending <= 1'b0;
-                if (!flush_if_id && (ifetch_pending_epoch == ifetch_epoch)) begin
+                if (!flush_if_id && !ifetch_killed) begin
                     ifetch_valid     <= 1'b1;
                     ifetch_data      <= ibus_rsp_err ? 32'h0000_0013 : ibus_rsp_rdata;
                     ifetch_bus_error <= ibus_rsp_err;
@@ -292,8 +308,8 @@ module cpu_top_soc #(
                 if_id_pc    <= pc;
                 if_id_bus_error <= 1'b0;
 `else
-                if_id_pc    <= FAST_LOCAL_IMEM ? pc : ifetch_pc;
-                if_id_bus_error <= FAST_LOCAL_IMEM ? 1'b0 : ifetch_bus_error;
+                if_id_pc    <= if_fast_local ? pc : ifetch_pc;
+                if_id_bus_error <= if_fast_local ? 1'b0 : ifetch_bus_error;
 `endif
                 if_id_pred_target <= predict_target;
                 if_id_pred_taken  <= predict_valid && predict_taken;
@@ -527,7 +543,7 @@ module cpu_top_soc #(
 `ifdef RISCV_FORMAL
     assign frontend_ready = 1'b1;
 `else
-    assign frontend_ready = FAST_LOCAL_IMEM ? 1'b1 : ifetch_valid;
+    assign frontend_ready = if_fast_local ? 1'b1 : ifetch_valid;
 `endif
     // A redirect is allowed to update the PC immediately. Normal sequential
     // progress consumes exactly one buffered transaction response.
@@ -1335,7 +1351,9 @@ module cpu_top_soc #(
     // one-cycle data path. Paged accesses stay on the MMU/transaction path.
     assign ex_fast_local_data = FAST_LOCAL_DMEM && id_ex_valid &&
                                 (id_ex_mem_read || id_ex_mem_write) &&
-                                (ex_result[31:16] == 16'h0000) &&
+                                ({1'b0, ex_result[31:0]} +
+                                 ((id_ex_funct3[1:0] == 0) ? 33'd1 :
+                                  (id_ex_funct3[1:0] == 1) ? 33'd2 : 33'd4) <= LOCAL_MEM_BYTES) &&
                                 !ex_csr_satp[31] && pmp_data_allow &&
                                 !ex_f_illegal;
 
@@ -1555,8 +1573,8 @@ module cpu_top_soc #(
 
     assign mem_access = ex_mem_valid && (ex_mem_mem_read || ex_mem_mem_write);
     assign local_mem_access = mem_access && ex_mem_fast_local_data;
-    assign fetch_translation_req = !FAST_LOCAL_IMEM && rst_n &&
-                                   !ifetch_pending && !ifetch_valid;
+    assign fetch_translation_req = !if_fast_local && rst_n &&
+                                   !ifetch_request && !ifetch_pending && !ifetch_valid;
 
     generate
         if (ENABLE_MMU) begin : gen_mmu

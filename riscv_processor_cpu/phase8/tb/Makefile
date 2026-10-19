@@ -107,3 +107,30 @@ portable: | $(BUILD)
 
 clean:
 	rm -rf $(BUILD)
+
+.PHONY: axi128 ddr_soc ddr
+axi128: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_axi128 -o $(BUILD)/tb_axi128 \
+		tb_axi128.sv axi128_ram_model.sv $(SOC_RTL)/rv_bus_to_axi128.sv
+	$(VVP) $(BUILD)/tb_axi128
+
+ddr_soc: | $(BUILD)
+	$(MAKE) -C ../software ddr_test
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_ddr_soc -o $(BUILD)/tb_ddr_soc \
+		tb_ddr_soc.sv axi128_ram_model.sv $(SOC_RTL)/rv_bus_to_axi128.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_ddr_soc
+
+ddr: axi128 ddr_soc
+
+.PHONY: ddr_loader_sim
+ddr_loader_sim: | $(BUILD)
+	$(MAKE) -C ../software ddr_loader ddr_app_test
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_ddr_soc -Ptb_ddr_soc.LOADER_MODE=1 \
+		-Ptb_ddr_soc.FIRMWARE_FILE=\"../software/build/ddr_loader.vmem\" \
+		-o $(BUILD)/tb_ddr_loader tb_ddr_soc.sv axi128_ram_model.sv \
+		$(SOC_RTL)/rv_bus_to_axi128.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_ddr_loader $(DDR_LOADER_SIM_ARGS)
+
+.PHONY: ddr_loader_deferred
+ddr_loader_deferred:
+	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+DEFERRED_RUN

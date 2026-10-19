@@ -649,8 +649,8 @@ UART LED blink rate measures traffic timing, not CPU throughput.
 | --- | --- | --- |
 | 0. Baseline | Preserve verified source/bitstream and Snake boot | Existing recovery and performance remain reproducible |
 | 1. Terminal transport | High-speed UART, TX/RX queues, input parser and synthetic ANSI frames | Sustained bidirectional byte test, no drops; measured full-screen bytes and latency |
-| 2. Physical DDR | Board MIG wrapper, calibration, safe clock crossing and diagnostics | Calibration and walking-bit/address/random tests, byte lanes, first/last addresses and repeated resets pass on hardware |
-| 3. CPU DDR access | DDR target, region-aware fetch and data routing | C code executes from DDR; simultaneous TCM/DDR/MMIO operations have correct results |
+| 2. Physical DDR | Board MIG wrapper, calibration, safe clock crossing and diagnostics | Board report: DDR calibrated and `DDR:ADDRESS`, `DDR:LANES`, `DDR:PATTERN`, `DDR:PASS` printed in PuTTY on October 19, 2026 |
+| 3. CPU DDR access | DDR target, region-aware fetch and data routing | Board report: `DDR:DMA PASS` and `DDR:EXEC PASS`; separate Vivado DDR build closed timing with +0.345 ns setup WNS |
 | 4. Cache path | Real I/D caches, maintenance and DMA ownership | Directed/random miss/backpressure/error tests; code reload and DMA visibility pass |
 | 5. Large firmware | DDR linker/runtime, versioned loader, IWAD transfer | Executable and WAD CRC/readback pass; corrupt/truncated/out-of-range images recover safely |
 | 6. Engine boot | Pinned full engine and platform hooks, initially no sound | WAD parses, first real E1M1 framebuffer is nonblank and matches an engine reference |
@@ -688,6 +688,37 @@ Reproduce the serial calculations from the repository root:
 powershell -NoProfile -ExecutionPolicy Bypass -File riscv_processor_cpu/docs/doom_budget.ps1
 ```
 
-The first hardware foundation to implement is the Arty DDR3L memory path.
-The first useful software prototype is the direct ANSI renderer and input
-parser. Together they address the actual barriers to full DOOM on this CPU.
+The Arty DDR3L foundation has a separate bring-up project, a 128-bit MIG AXI
+bridge, and a TCM-resident diagnostic. The user has now observed `DDR:PASS`
+on the physical board, including DMA and execution from DDR. A separate
+BRAM-resident `RDD1` UART loader and DDR-linked test application pass
+end-to-end CPU/UART/DDR simulation (`make ddr_loader_sim`). On October 19,
+2026 the user also reported `DDR_APP:PASS code/data/BSS from DDR` on the
+physical board after `make ddr_upload PORT=COM4 UPLOAD_DELAY=2 RUN=1`.
+This does not yet imply that DOOM, its IWAD,
+large-file transfer, caches, or terminal rendering work on this CPU.
+
+From `phase8/software`, `make ddr_loader ddr_app_test` builds the isolated
+images without replacing Snake or the DDR diagnostic. The generated Vivado
+project is at `phase8/vivado/ddr_project/arty_s7_ddr_loader/rv32_soc_arty_s7.xpr`;
+the user runs synthesis, implementation, and bitstream generation there.
+If recreating it in a fresh directory, use `make ddr_loader_project` after
+removing or renaming the old loader project yourself.
+After programming that bitstream and closing PuTTY, run
+`make ddr_upload PORT=COM4 UPLOAD_DELAY=2 RUN=1` to send the 1,168-byte
+test application. Successful board output is `RDD1:OK`, `RDD1:GO`, then
+`DDR_APP:PASS code/data/BSS from DDR`. Without `RUN=1`, reopen PuTTY and
+press `G`. The first version sends 16-byte acknowledged blocks with 2 ms
+host pacing and is not a practical multi-megabyte IWAD transport yet.
+
+For the PuTTY handoff, the uploader now queries `I` after verification and
+requires `LOADED` to match the image length before releasing COM4. Open
+PuTTY at 115200 baud, press uppercase `I` to inspect that state, then `G`
+to run. Do not reset, reprogram, or power-cycle between upload and `G`:
+startup clears the loader's verified-image state, and `G` then reports
+`RDD1:ERR NO_IMAGE`. Starting another upload also invalidates that state.
+An already visible startup banner in PuTTY does not establish when a reset
+occurred. If the uploader confirms `LOADED=1168` but PuTTY subsequently
+reports `LOADED=0`, the state changed during the handoff; investigate that
+transition before rebuilding hardware. `RUN=1` starts and captures the test
+output in the uploader, avoiding the terminal handoff.

@@ -251,3 +251,48 @@ $(BOOT_TEST_FLASH): $(BOOT_TEST_BIN) pack_flash_image.ps1
 		-InputFile $(BOOT_TEST_BIN) -OutputFile $(BOOT_TEST_FLASH)
 
 boot_test_flash: $(BOOT_TEST_FLASH)
+
+# Isolated DDR diagnostic image; deliberately never installs firmware.vmem.
+.PHONY: ddr_test ddr_project
+DDR_CFLAGS = -march=rv32im_zicsr_zifencei -mabi=ilp32 -Os -ffreestanding \
+	-nostdlib -fno-builtin -Wall -Wextra -I.
+$(BUILD)/ddr_test.elf: startup.S uart.c ddr_test.c ddr_probe.S soc.h uart.h link.ld | $(BUILD)
+	$(CC) $(DDR_CFLAGS) -T link.ld -o $@ startup.S uart.c ddr_test.c ddr_probe.S
+	$(SIZE) $@
+$(BUILD)/ddr_test.vmem: $(BUILD)/ddr_test.elf
+	$(OBJCOPY) -O verilog --verilog-data-width=4 $< $@
+ddr_test: $(BUILD)/ddr_test.vmem
+	@echo "DDR diagnostic built separately: $(BUILD)/ddr_test.vmem"
+
+ddr_project: ddr_test
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-source ../vivado/create_ddr_project.tcl
+	@echo "Open ../vivado/ddr_project/arty_s7_ddr_bringup/rv32_soc_arty_s7.xpr in Vivado."
+
+# Isolated DDR loader and executable. Does not change Snake or DDR diagnostic.
+.PHONY: ddr_loader ddr_app_test ddr_upload ddr_loader_project
+$(BUILD)/ddr_loader.elf: startup.S uart.c ddr_loader.c boot_link.ld | $(BUILD)
+	$(CC) $(DDR_CFLAGS) -T boot_link.ld -o $@ startup.S uart.c ddr_loader.c
+	$(SIZE) $@
+$(BUILD)/ddr_loader.vmem: $(BUILD)/ddr_loader.elf
+	$(OBJCOPY) -O verilog --verilog-data-width=4 $< $@
+ddr_loader: $(BUILD)/ddr_loader.vmem
+	@echo "Separate DDR loader built: $(BUILD)/ddr_loader.vmem"
+
+$(BUILD)/ddr_app_test.elf: startup.S uart.c ddr_app_test.c ddr_app_link.ld | $(BUILD)
+	$(CC) $(DDR_CFLAGS) -T ddr_app_link.ld -o $@ startup.S uart.c ddr_app_test.c
+	$(SIZE) $@
+$(BUILD)/ddr_app_test.bin: $(BUILD)/ddr_app_test.elf
+	$(OBJCOPY) -O binary $< $@
+ddr_app_test: $(BUILD)/ddr_app_test.bin
+	@echo "DDR-linked test application built: $(BUILD)/ddr_app_test.bin"
+
+ddr_upload: ddr_app_test
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ddr_upload.ps1 \
+		-Port $(PORT) -File $(BUILD)/ddr_app_test.bin -InterByteDelayMs $(UPLOAD_DELAY) $(UPLOAD_RUN)
+
+ddr_loader_project: ddr_loader
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-source ../vivado/create_ddr_project.tcl \
+		-tclargs ../vivado/ddr_project/arty_s7_ddr_loader $(BUILD)/ddr_loader.vmem
+	@echo "Open ../vivado/ddr_project/arty_s7_ddr_loader/rv32_soc_arty_s7.xpr in Vivado."

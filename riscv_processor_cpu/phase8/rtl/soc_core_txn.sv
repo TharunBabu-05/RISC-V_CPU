@@ -7,7 +7,10 @@ module soc_core #(
     parameter integer UART_BAUD = 115_200,
     parameter integer BRAM_SIZE_BYTES = 65_536,
     parameter bit FAST_LOCAL_IMEM = 1'b1,
-    parameter bit FAST_LOCAL_DMEM = 1'b1
+    parameter bit FAST_LOCAL_DMEM = 1'b1,
+    parameter bit ENABLE_EXT_MEM = 1'b0,
+    parameter logic [31:0] EXT_MEM_BASE = 32'h8000_0000,
+    parameter logic [31:0] EXT_MEM_BYTES = 32'h1000_0000
 ) (
     input  logic        clk_sys,
     input  logic        rst_n,
@@ -18,7 +21,20 @@ module soc_core #(
     output logic        qspi_dq0_o,
     output logic        qspi_dq0_oe,
     input  logic        qspi_dq1_i,
-    output logic [3:0]  status
+    output logic [3:0]  status,
+    // Optional external-memory target in clk_sys, shared by all four masters.
+    input  logic        ext_mem_ready,
+    output logic        ext_req_valid,
+    input  logic        ext_req_ready,
+    output logic [31:0] ext_req_addr,
+    output logic        ext_req_write,
+    output logic [3:0]  ext_req_wstrb,
+    output logic [31:0] ext_req_wdata,
+    output logic [1:0]  ext_req_size,
+    input  logic        ext_rsp_valid,
+    output logic        ext_rsp_ready,
+    input  logic [31:0] ext_rsp_rdata,
+    input  logic        ext_rsp_err
 `ifdef SIMULATION
     ,input logic        sim_bus_override
     ,input logic [31:0] sim_bus_addr
@@ -41,6 +57,7 @@ module soc_core #(
     localparam logic [31:0] CLINT_MASK = 32'h0000_FFFF;
     localparam logic [31:0] PLIC_BASE  = 32'h0C00_0000;
     localparam logic [31:0] PLIC_MASK  = 32'h003F_FFFF;
+    localparam logic [31:0] MEMINFO_BASE = 32'h1000_3000;
 
     logic [31:0] dbg_pc, dbg_instr, dbg_alu_result, dbg_reg_rd_data;
     logic [31:0] cpu_imem_addr, cpu_imem_rdata;
@@ -191,7 +208,7 @@ module soc_core #(
         .s_rsp_rdata(bus_rsp_rdata), .s_rsp_err(bus_rsp_err)
     );
 
-    logic sel_bram, sel_uart, sel_qspi, sel_dma, sel_clint, sel_plic;
+    logic sel_bram, sel_uart, sel_qspi, sel_dma, sel_clint, sel_plic, sel_ext, sel_meminfo;
     logic target_mapped, target_endpoint_ready, target_accept;
     logic uart_tx_ready, uart_rx_valid;
     assign sel_bram  = ((bus_req_addr & ~BRAM_MASK) == BRAM_BASE);
@@ -200,11 +217,17 @@ module soc_core #(
     assign sel_dma   = ((bus_req_addr & ~DMA_MASK) == DMA_BASE);
     assign sel_clint = ((bus_req_addr & ~CLINT_MASK) == CLINT_BASE);
     assign sel_plic  = ((bus_req_addr & ~PLIC_MASK) == PLIC_BASE);
-    assign target_mapped = sel_bram || sel_uart || sel_qspi || sel_dma || sel_clint || sel_plic;
+    assign sel_ext = ENABLE_EXT_MEM && (bus_req_addr >= EXT_MEM_BASE) &&
+                     ({1'b0, bus_req_addr} < {1'b0, EXT_MEM_BASE} + {1'b0, EXT_MEM_BYTES});
+    assign sel_meminfo = ((bus_req_addr & 32'hFFFF_FFF0) == MEMINFO_BASE);
+    assign target_mapped = sel_bram || sel_uart || sel_qspi || sel_dma || sel_clint || sel_plic ||
+                           sel_ext || sel_meminfo;
 
     always_comb begin
         target_endpoint_ready = 1'b1;
-        if (sel_bram && cpu_dtcm_access)
+        if (sel_ext && bus_req_size != 2'd3)
+            target_endpoint_ready = ext_mem_ready && ext_req_ready;
+        else if (sel_bram && cpu_dtcm_access)
             target_endpoint_ready = 1'b0;
         else if (sel_uart && bus_req_write && bus_req_addr[3:0] == 4'h0)
             target_endpoint_ready = uart_tx_ready;
@@ -212,7 +235,7 @@ module soc_core #(
             target_endpoint_ready = uart_rx_valid;
     end
 
-    typedef enum logic [1:0] {TARGET_IDLE, TARGET_WAIT, TARGET_RESPONSE} target_state_t;
+    typedef enum logic [1:0] {TARGET_IDLE, TARGET_WAIT, TARGET_RESPONSE, TARGET_EXTERNAL} target_state_t;
     target_state_t target_state;
     logic pending_bram_read;
     logic [31:0] target_read_hold;
@@ -224,6 +247,26 @@ module soc_core #(
     assign bus_rsp_valid = (target_state == TARGET_RESPONSE);
     assign bus_rsp_rdata = target_rsp_data;
     assign bus_rsp_err   = target_rsp_error;
+
+    assign ext_req_valid = ENABLE_EXT_MEM && target_state == TARGET_IDLE &&
+                           bus_req_valid && sel_ext && bus_req_size != 2'd3;
+    assign ext_req_addr = bus_req_addr;
+    assign ext_req_write = bus_req_write;
+    assign ext_req_wstrb = bus_req_wstrb;
+    assign ext_req_wdata = bus_req_wdata;
+    assign ext_req_size = bus_req_size;
+    assign ext_rsp_ready = ENABLE_EXT_MEM && target_state == TARGET_EXTERNAL;
+
+    logic [31:0] meminfo_rdata;
+    always_comb begin
+        case (bus_req_addr[3:0])
+            4'h0: meminfo_rdata = 32'h4444_5231; // DDR1
+            4'h4: meminfo_rdata = {30'b0, (ENABLE_EXT_MEM && ext_mem_ready), ENABLE_EXT_MEM};
+            4'h8: meminfo_rdata = EXT_MEM_BASE;
+            4'hC: meminfo_rdata = ENABLE_EXT_MEM ? EXT_MEM_BYTES : 32'b0;
+            default: meminfo_rdata = 32'b0;
+        endcase
+    end
 
     logic [31:0] bram_rdata, uart_rdata, qspi_rdata, dma_s_rdata, clint_rdata, plic_rdata;
 
@@ -246,11 +289,12 @@ module soc_core #(
                             else if (sel_dma)  target_read_hold <= dma_s_rdata;
                             else if (sel_clint)target_read_hold <= clint_rdata;
                             else if (sel_plic) target_read_hold <= plic_rdata;
+                            else if (sel_meminfo) target_read_hold <= meminfo_rdata;
                             else               target_read_hold <= 32'b0;
                         end else begin
                             target_read_hold <= 32'b0;
                         end
-                        target_state <= TARGET_WAIT;
+                        target_state <= (sel_ext && bus_req_size != 2'd3) ? TARGET_EXTERNAL : TARGET_WAIT;
                     end
                 end
                 TARGET_WAIT: begin
@@ -260,6 +304,13 @@ module soc_core #(
                 TARGET_RESPONSE: begin
                     if (bus_rsp_ready)
                         target_state <= TARGET_IDLE;
+                end
+                TARGET_EXTERNAL: begin
+                    if (ext_rsp_valid) begin
+                        target_rsp_data <= ext_rsp_rdata;
+                        target_rsp_error <= ext_rsp_err;
+                        target_state <= TARGET_RESPONSE;
+                    end
                 end
                 default: target_state <= TARGET_IDLE;
             endcase
@@ -344,7 +395,8 @@ module soc_core #(
         .XLEN(32),
         .ENABLE_MMU(1'b1),
         .FAST_LOCAL_IMEM(FAST_LOCAL_IMEM),
-        .FAST_LOCAL_DMEM(FAST_LOCAL_DMEM)
+        .FAST_LOCAL_DMEM(FAST_LOCAL_DMEM),
+        .LOCAL_MEM_BYTES(BRAM_SIZE_BYTES)
     ) u_cpu (
         .clk(clk_sys), .rst_n(rst_n), .ext_interrupt(plic_irq),
         .timer_interrupt(timer_irq), .software_interrupt(software_irq),
