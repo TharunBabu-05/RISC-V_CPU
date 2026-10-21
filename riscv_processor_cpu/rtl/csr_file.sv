@@ -28,7 +28,8 @@ module csr_file #(
     parameter int XLEN = 32,
     parameter bit HAS_FPU = 1'b1,
     parameter bit HAS_VEC = 1'b1,
-    parameter int VLEN    = 128
+    parameter int VLEN    = 128,
+    parameter bit DUAL_RETIRE = 1'b0
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -38,6 +39,7 @@ module csr_file #(
     input  logic        mret_exec,
     input  logic        sret_exec,
     input  logic        retire,
+    input  logic        retire_second,
     input  logic [11:0] csr_addr,
     input  logic [XLEN-1:0] csr_wdata,
     input  logic        csr_write_attempt,   // instruction would write (for legality)
@@ -227,7 +229,7 @@ module csr_file #(
             if (!(csr_write && (csr_addr == 12'hB00 || csr_addr == 12'hB80)))
                 mcycle <= mcycle + 64'd1;
             if (retire && !(csr_write && (csr_addr == 12'hB02 || csr_addr == 12'hB82)))
-                minstret <= minstret + 64'd1;
+                minstret <= minstret + ((DUAL_RETIRE && retire_second) ? 64'd2 : 64'd1);
 
             if (trap_write) begin
                 if (trap_to_s) begin

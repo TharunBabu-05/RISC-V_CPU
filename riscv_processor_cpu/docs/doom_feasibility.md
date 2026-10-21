@@ -95,9 +95,9 @@ flowchart LR
     KEYS["UART keyboard / mouse parser"] --> GAME
     TIME["CLINT: real elapsed time"] --> GAME
     GAME --> FB["320 x 200 indexed software framebuffer"]
-    FB --> ENCODE["Palette mapping + downsample + ANSI encoder"]
-    ENCODE --> TX["Queued bytes + DMA + UART"]
-    TX --> TERM["PuTTY: glyphs, colour, cursor control"]
+    FB --> ENCODE["Downsample + RGB332 binary packets"]
+    ENCODE --> TX["UART"]
+    TX --> TERM["PC framebuffer viewer on COM4"]
 ```
 
 | Engine subsystem | Source families in `linuxdoom-1.10/` | What it needs here |
@@ -461,15 +461,18 @@ reads avoids repeating the 32 command/address bits for every byte.
 
 At 115,200 baud that WAD alone takes at least 364.24 s to upload; at
 1,000,000 baud at least 41.96 s. Those exclude acknowledgements, pacing
-and processing. The current 2 ms/byte host pacing would add roughly
-2.33 hours for that asset, so a large-image uploader needs proper chunk
-flow control rather than reusing the current setting unchanged.
+and processing. On the board, even `UPLOAD_DELAY=0` took about 2.5 hours
+for this 4,196,020-byte WAD with the old 16-byte acknowledgement protocol.
+That is 262,252 serial request/response blocks, so zero inter-byte delay
+does not remove host/USB round-trip overhead. The new 1,024-byte WAD mode
+uses 4,098 blocks. Its real throughput still needs a board measurement.
 
 ## 9. Terminal Rendering And Its Hard Limits
 
-The processor will run the engine and convert its output. PuTTY will only
-display the received characters/colours and send input. No PC-side DOOM
-logic or binary-frame graphics viewer is necessary for this design.
+The processor runs the engine and converts its output. The current DOOM
+port sends binary RGB332 frames to a PC viewer. PuTTY is useful for loader
+diagnostics, but cannot display these frames. The PC viewer only displays
+pixels and returns keys; it does not execute DOOM game logic.
 
 ANSI cursor control is a text interface. It does not interpret a sequence
 of 64,000 palette bytes as a bitmap. The terminal backend must map pixels
@@ -491,6 +494,7 @@ Calculated examples:
 | --- | ---: | ---: | ---: | ---: |
 | Native 320x200 indexed binary, not ANSI | 64,000 | 0.180 | 1.440 | 1.563 |
 | Reference 64x32 binary + header, not ANSI | 2,058 | 5.598 | 44.781 | 48.591 |
+| Current 80x50 RGB332 + 12-byte header | 4,012 | 2.871 | 22.971 | 24.925 |
 | 80x25 ASCII luminance | 2,051 | 5.617 | 44.934 | 48.757 |
 | 80x40 ASCII luminance | 3,281 | 3.511 | 28.089 | 30.479 |
 | 80x20 UTF-8 cells, indexed foreground/background every cell | 40,041 | 0.288 | 2.302 | 2.497 |
@@ -652,7 +656,7 @@ UART LED blink rate measures traffic timing, not CPU throughput.
 | 2. Physical DDR | Board MIG wrapper, calibration, safe clock crossing and diagnostics | Board report: DDR calibrated and `DDR:ADDRESS`, `DDR:LANES`, `DDR:PATTERN`, `DDR:PASS` printed in PuTTY on October 19, 2026 |
 | 3. CPU DDR access | DDR target, region-aware fetch and data routing | Board report: `DDR:DMA PASS` and `DDR:EXEC PASS`; separate Vivado DDR build closed timing with +0.345 ns setup WNS |
 | 4. Cache path | Real I/D caches, maintenance and DMA ownership | Directed/random miss/backpressure/error tests; code reload and DMA visibility pass |
-| 5. Large firmware | DDR linker/runtime, versioned loader, IWAD transfer | Executable and WAD CRC/readback pass; corrupt/truncated/out-of-range images recover safely |
+| 5. Large firmware | DDR linker/runtime, versioned loader, IWAD transfer | Small executable and WAD lump read run on board; IWAD probe passes simulation; full IWAD on board and engine remain |
 | 6. Engine boot | Pinned full engine and platform hooks, initially no sound | WAD parses, first real E1M1 framebuffer is nonblank and matches an engine reference |
 | 7. Terminal gameplay | ANSI display, bounded output, terminal controls | Walking, turning, firing, doors, menus and quit work; measured displayed FPS and game rate reported |
 | 8. Optimization | Cache policy, render settings, baud/clock improvements as measurements justify | Repeatable timedemo with input and serial service active; timing re-closed for any clock change |
@@ -722,3 +726,468 @@ occurred. If the uploader confirms `LOADED=1168` but PuTTY subsequently
 reports `LOADED=0`, the state changed during the handoff; investigate that
 transition before rebuilding hardware. `RUN=1` starts and captures the test
 output in the uploader, avoiding the terminal handoff.
+
+### WAD staging milestone
+
+The next loader revision accepts `W` after a verified DDR application. Its
+`RDDW` transfer places an `IWAD` or `PWAD` at `0x82000000`, with a 32 MiB
+bound, CRC32 readback and directory/lump bounds checks. `J` reports whether
+the WAD was accepted. The host uploader accepts `-WadFile` and verifies its
+directory before transfer. An application upload invalidates any prior WAD.
+The separate `ddr_wad_test.bin` application reads a small `PWAD` fixture at
+that DDR address; it is a transport test, not a DOOM engine build.
+
+From `phase8/software`, build the revised loader and fixture with
+`make ddr_loader ddr_wad_test ddr_wad_fixture`. The generated loader project
+references `build/ddr_loader.vmem`; reset synthesis and regenerate the
+bitstream in Vivado so the changed BRAM image is included, then program the
+new loader bitstream. Close PuTTY and run
+`make ddr_wad_upload PORT=COM4 UPLOAD_DELAY=2`. Open PuTTY without pressing
+BTN0 and press `G`; the expected output is `WAD_APP:PASS DDR lump read`.
+`make ddr_wad_upload ... RUN=1` instead captures the output in the uploader.
+The test WAD is generated locally. No DOOM IWAD is bundled.
+
+If the uploader gets no reply to its WAD capability check, first check
+whether a previous application is still running after `G`. Close PuTTY and
+press BTN0 once to return to the loader before another upload. If the idle
+line still lacks `W=wad` and `J=wad-info`, compare the timestamps of
+`build/ddr_loader.vmem` and
+`arty_s7_ddr_loader/rv32_soc_arty_s7.runs/impl_1/arty_s7_ddr_top.bit`.
+The latter must be generated after the former: BRAM firmware is embedded during
+Vivado synthesis. Reset the loader project's synthesis and implementation runs,
+regenerate its bitstream, and program that new `.bit` file. A previously working
+`RDD1` upload does not prove the board has the newer `RDDW` command. Close
+PuTTY after checking the idle line. Do not press BTN0 between a successful
+upload and `G`; press it only before the next upload after the app has run.
+
+### IWAD directory probe
+
+The next loader revision writes a 16-byte handoff at `0x81FFF000` after WAD
+verification: magic, WAD base, byte length and CRC32. It clears the magic on
+startup and on every new app or WAD upload. This gives DDR applications a
+bounded WAD view without guessing its file size; it does not yet provide a
+filesystem or a DOOM engine. `ddr_wad_probe.bin` validates the handoff,
+walks every directory entry in DDR, checks lump bounds, samples each nonempty
+lump, and reports `E1M1`, `PLAYPAL` and `PNAMES` markers. The probe and the
+earlier lump test both pass end-to-end simulation.
+
+Because the handoff changes the BRAM loader, build it with `make ddr_loader`
+and **reset and rerun synthesis** in the separate `arty_s7_ddr_loader` Vivado
+project before implementation and bitstream generation. Reprogram that new
+`.bit`; simply regenerating implementation from the previous synthesized
+checkpoint leaves the old loader in BRAM.
+
+First check the faster, zero-delay host path with a generated 64 KiB PWAD:
+
+```powershell
+make ddr_wad_stress_upload PORT=COM4 UPLOAD_DELAY=0
+```
+
+Close PuTTY before uploading. After success, reopen it and press uppercase
+`G` without resetting; expect `WAD_PROBE:PASS type=PWAD lumps=1 bytes=65564`.
+The probe then stays in its final loop. Before the next upload, close PuTTY,
+press BTN0 once and wait for the loader's idle banner, then close PuTTY again.
+If the transfer reports `OVERFLOW` or a CRC error, retry at
+`UPLOAD_DELAY=1` or `2` and report which pacing worked. Zero delay is
+simulation-tested, not yet measured on this board.
+
+Then use the local, ignored reference checkout's shareware IWAD (or set
+`WAD` to another legally obtained IWAD path):
+
+```powershell
+make ddr_wad_probe_upload PORT=COM4 UPLOAD_DELAY=0
+```
+
+Reopen PuTTY and press `G` without pressing BTN0. For the inspected
+`doom1.wad`, expect `WAD_PROBE:PASS type=IWAD lumps=1264 bytes=4196020` and
+`E1M1=1 PLAYPAL=1 PNAMES=1`. The uploader checks the WAD directory on the
+host, and the loader checks CRC32 and bounds after DDR readback. This remains
+a transport/directory milestone, not DOOM running; engine and terminal
+platform hooks are the following stage. At 115200 baud, even ideal raw
+transfer of this IWAD takes at least about six minutes, with 16-byte ACKs
+adding overhead. The WAD is not copied into this repository.
+
+On October 19, 2026, the user reported the physical-board result
+`WAD_PROBE:PASS type=IWAD lumps=1264 bytes=4196020 E1M1=1 PLAYPAL=1 PNAMES=1`.
+This verifies that the CPU read the shareware IWAD directory and lump data
+from DDR. It does not mean the DOOM engine has started.
+
+### DOOM artwork in the terminal
+
+The title-image app decodes the real `TITLEPIC` column-post patch (320x200) and the
+first `PLAYPAL` palette from the uploaded IWAD. It samples the result into
+79x24 UTF-8 upper-half-block cells, using ANSI truecolor foreground and
+background. This is a static image and a terminal transport check, not a
+rendered game frame. The reader rejects out-of-bounds directories and patch
+posts. The host decoder test covers a synthetic patch and the local IWAD.
+
+The user verified the real IWAD title image on the physical board on October
+19, 2026: PuTTY displayed the artwork and `TITLEPIC:PASS DDR IWAD -> ANSI
+terminal`. This proves DDR-to-terminal image decoding, not DOOM gameplay.
+
+No new RTL or loader firmware is needed to repeat that result with the old
+transfer mode. To try the existing loader bitstream,
+close PuTTY, press BTN0 once to leave the previous probe app, and wait for
+`RDD1:IDLE`. With PuTTY closed, from `phase8/software` run:
+
+```powershell
+make doom_wad_art_test ddr_titlepic
+make ddr_titlepic_upload PORT=COM4 UPLOAD_DELAY=0
+```
+
+Open PuTTY at 115200 baud with UTF-8 character set and ANSI colors, then
+press uppercase `G` without resetting. Expect the DOOM title artwork and
+`TITLEPIC:PASS DDR IWAD -> ANSI terminal` on the bottom line. Press BTN0 only
+before a later upload. If the terminal lacks truecolor or UTF-8 support,
+color blocks may be wrong even if `TITLEPIC:PASS` appears.
+
+The upstream `doomgeneric` checkout used for engine integration is
+kept locally at `reference_doomgeneric/` (revision
+`e257a09527062bfb986b6e5e0780839b6cbd5b71`) and ignored by Git. It is
+compiled into a separate experimental DDR app, not copied into this project's
+tracked source. The original id source and assets remain separate, with their
+respective licenses and notices.
+
+### Faster WAD upload
+
+The slow upload is a transport bottleneck, not evidence that the CPU core is
+running slowly. The 2.5-hour run transferred the entire 4.0 MiB shareware
+IWAD, even though the title image itself uses only a fraction of it. The
+loader and uploader now support `F=fast-wad`, with one acknowledgement per
+1,024 payload bytes; application uploads and the old `W=wad` command retain
+their 16-byte behavior. The uploader prints the selected block size and the
+measured WAD payload rate. The fast mode and legacy mode passed CPU/UART/DDR
+simulation (`make ddr_fast_wad_sim` and `make ddr_wad_sim`). A 65,564-byte
+fast upload passed on the physical board at 9.9 KiB/s; the full IWAD later
+transferred at the same measured rate.
+
+The new loader firmware is embedded in FPGA BRAM, so regenerate the **loader**
+bitstream before using the fast command. From `phase8/software`, run
+`make ddr_loader`. In the `arty_s7_ddr_loader` Vivado project, reset
+`synth_1` and its dependent `impl_1`, then rerun synthesis, implementation,
+and bitstream generation. Program that project's new `arty_s7_ddr_top.bit`;
+rerunning implementation alone may keep stale BRAM firmware. With PuTTY
+briefly open, the loader idle line must contain `F=fast-wad K=caps`. Close
+PuTTY before uploading. If an application is running, press BTN0 **before**
+the upload to return to the loader, never between a successful upload and `G`.
+
+First test the 64 KiB fixture from `phase8/software`:
+
+```powershell
+make ddr_wad_stress_upload PORT=COM4 UPLOAD_DELAY=0
+```
+
+The uploader should say `WAD transfer: 1024-byte acknowledged blocks.`
+Reopen PuTTY and press uppercase `G`; expect `WAD_PROBE:PASS`. If this fails
+with `OVERFLOW`, `TIMEOUT`, or CRC errors, stop and report the exact output
+before trying the 4 MiB IWAD. After the test, close PuTTY and press BTN0
+once. Then run:
+
+```powershell
+make ddr_titlepic_upload PORT=COM4 UPLOAD_DELAY=0
+```
+
+Record the uploader's `WAD payload verified in ...` line to establish the
+actual throughput. Reopen PuTTY and press uppercase `G` without resetting to
+show the title again. If the board still has an older loader, the uploader
+will refuse a large WAD before transferring it; the explicit PowerShell
+`-LegacyWadTransfer` switch is available only when accepting the slow path.
+
+### Experimental DOOM engine app
+
+The user's October 19, 2026 screenshot verifies the fast WAD path on the
+board: a 65,564-byte test WAD transferred in 6.5 s (9.9 KiB/s), and the CPU
+printed `WAD_PROBE:PASS`. The subsequent experimental DOOM upload also
+completed: the loader confirmed a 495,048-byte app, and the 4,196,020-byte
+IWAD took 413.7 s (9.9 KiB/s) in the fast WAD phase. After `G`, the board
+printed `DOOM:BOOT DDR IWAD`, `DOOM:WAD_OK`, the DOOM Shareware startup
+banner, renderer initialization, and a terminal-rendered title image.
+This verifies engine startup and title rendering on the custom CPU.
+The first board test did not respond to the attempted controls. The port
+had sent AT scan codes even though DOOMGeneric's `TranslateKey` passes key
+values through unchanged, and it posted press and release in one input poll.
+Both were corrected; the rebuilt 495,080-byte app and IWAD were verified by
+the loader. Its grayscale ASCII display remained too abstract to judge the
+menu or gameplay. A later ANSI color experiment was likewise not a usable
+game display. On October 20, 2026, the binary-viewer build was verified on
+the physical board: the loader confirmed `LOADED=494148` for the app, the
+4,196,020-byte IWAD transferred and verified in 413.9 s, and the Python/Tk
+viewer displayed live color E1M1 frames with zero packet CRC errors. The
+screenshots show only about 0.2-0.3 FPS. Movement/input and a practical
+gameplay frame rate remain unverified. The user confirms that W/A changes
+the view and Escape opens the menu, but the low-resolution text is difficult
+to read. The current source has since been rebuilt at `-O2` and now reports
+average render and stream time every eight frames; this build is not yet on
+the board.
+
+`make ddr_doom` now cross-compiles the `reference_doomgeneric` engine for
+RV32IM and links a board port against the existing DDR loader protocol. The
+port maps `doom1.wad` to the WAD already uploaded at `0x82000000`, provides
+heap/time/serial file calls, reads held-key press/release events, and samples
+the 320x200 framebuffer to 80x50 RGB332 pixels. Each frame is sent as an
+`RVF1` packet: 4-byte magic, width and height bytes, 16-bit sequence, 32-bit
+little-endian CRC32 of the payload, then 4,000 pixel bytes. The Python/Tk
+viewer in `phase8/software/doom_viewer.py` decodes this stream and sends key
+events back. The experimental ELF's code and data fit
+below the 1 MiB application/stack boundary, with a separate heap below the
+WAD handoff area. Sound, persistent config/savegames, and network play are
+not implemented. The engine **boots on the physical board and renders E1M1**
+through the binary viewer. Gameplay control and useful frame rate are not
+yet verified.
+
+The pinned `reference_doomgeneric/doomgeneric` checkout and its GPL license
+must remain available locally to build this target. The included `doom1.wad`
+is the shareware IWAD, not the commercial full-game data.
+
+The onboard Arty S7 USB-UART already appears as COM4 and uses the existing
+FPGA UART pins. No further bitstream change is needed if the board still runs
+the fast-WAD-capable `arty_s7_ddr_loader`. The separate CP2102 is not used
+for this first test; routing a PMOD UART to it would require a new FPGA
+pin constraint and bitstream, and its signal logic must be 3.3 V.
+
+The Python viewer needs `pyserial`; install it in the workspace virtual
+environment with `../../../.venv/Scripts/python.exe -m pip install pyserial`.
+It uses Tk from Python and does not need Pillow. To try the binary viewer,
+close PuTTY, press BTN0 once if another application is still running, and
+from `phase8/software` run:
+
+```powershell
+make ddr_doom
+make ddr_doom_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_doom_view PORT=COM4
+```
+
+If the board has **already printed `DOOM:VIDEO RVF1` and is streaming frames**,
+do not reset or upload again. Close PuTTY and attach the viewer with
+`make ddr_doom_view PORT=COM4 VIEWER_ARGS=--no-go`. Opening binary frames in
+PuTTY produces unreadable characters; that is expected, not graphics.
+
+This is a roughly 484 KiB application upload plus the 4 MiB IWAD. The WAD
+uses 1,024-byte blocks; the current loader still acknowledges the app every
+16 bytes, so the first phase may take considerably longer than the stress
+test. Do not reset after the uploader reports success. The viewer opens COM4
+at 115200 baud, sends `G` automatically, and displays frames in a graphical
+window. Keep PuTTY closed while using it. The viewer logs loader and engine
+text to its Python console. `DOOM:TRAP cause=... pc=...` is an unexpected
+CPU trap; preserve that exact line for debugging. `DOOM:ERR WAD_OPEN` points
+to the WAD file shim. The build requests E1M1 directly with `-warp 1 1`.
+Use W/A/S/D or arrow keys for movement, F or Ctrl to fire, Space or E to use,
+Q or Escape for the menu, and Enter to select. Key-up is transmitted when a
+key is released, so held movement should work if the board receives both
+events. Run `make doom_stream_test doom_viewer_test` for host protocol tests.
+
+At 115200 baud and 8N1, the 4,012-byte packets have a **2.87 FPS ideal
+link ceiling**, before CPU rendering and serial overhead. The first board
+screenshots show only 0.2-0.3 FPS, well below that ceiling. This is a visual
+milestone, not yet a fluid-play target. The next performance step is to
+measure CPU render time versus UART transmit time before changing baud or
+frame encoding.
+
+### Measured Performance And The 100 MHz Question (2026-10-20)
+
+The user confirmed movement and menus on the physical board. The `-O2`
+build still displays about 0.2 FPS. Its reported eight-frame averages are
+`render_us=3457063..3983142` and `stream_us=649730..649747`; the later
+samples settle near 3.487 s between frame sends plus 0.650 s per send,
+or about 0.242 displayed FPS.
+
+Despite its name, `render_us` measures the interval from the preceding
+send's end to the next `DG_DrawFrame` entry. It includes game logic,
+rendering, engine waits and memory stalls; it is not a renderer-only
+profile. `stream_us` includes downsampling, CRC and blocking UART writes.
+The first report has only seven inter-frame intervals divided by eight.
+Use subsequent reports for steady-state comparisons.
+
+The author's [physical DE0-Nano write-up](https://mummanajagadeesh.github.io/blogs/doom-on-de0-nano-fpga/)
+describes a 50 MHz, five-stage, dual-issue CPU with a 1,024-word (4 KiB)
+instruction cache and a hardware frame streamer. It reports about 35.7
+FPS internally and serial display rates of about 5.75 FPS at 160x100 and
+1.44 FPS at 320x200. These are the author's reported results, not a
+benchmark reproduced here. The article also discloses remaining slow-corner
+setup violations. The repository's separate 45 FPS calculation uses
+64x32 packets and accounts for wire time only.
+
+Our CPU is already five-stage pipelined, with one instruction issue slot.
+The active FPGA source list does not instantiate the research I/D caches.
+DDR instructions use individual request/response fetches through the shared
+bus, AXI bridge and clock converter. The bridge reads a 128-bit beat but
+returns the requested word without retaining the other words as a cache.
+This is a concrete source of avoidable memory latency; its share of total
+frame time still needs counters or a controlled cached/uncached comparison.
+
+An illustrative clock-only extrapolation divides the 3.487 s interval by
+four at 100 MHz, giving 0.872 s before transmission. Even assuming only
+the ideal 0.348 s wire time for the existing 4,012-byte packet at 115200
+baud, this gives about 0.82 FPS. This is not a measured prediction:
+DDR latency does not scale with CPU frequency, and engine scheduling can
+change. It does show why a fourfold clock increase is not evidence for
+45 FPS.
+
+The loader's routed timing report dated 2026-10-19 reports a 40 ns CPU
+clock, +0.345 ns setup slack and a 39.085 ns path from
+`u_soc/u_cpu/u_csr/pmpaddr2_reg[0]` to the UART RX FIFO clock enable.
+100 MHz would allow only 10 ns. Changing the PLL frequency alone is
+therefore not a valid upgrade. The data path and bus control need retiming,
+followed by synthesis, routing and timing checks; UART dividers, software
+time conversion and CDC configuration must also match any new clock.
+
+The next performance work should measure memory wait cycles and implement
+a DDR instruction cache with verified code-upload invalidation, then
+evaluate data caching and higher clock targets. Higher-resolution video
+also needs more transport bandwidth or a direct display path. Keep the
+Python graphical viewer; returning to ANSI does not solve either limit.
+DOOM's 35 Hz game simulation and display refresh are separate quantities:
+a faster display need not change game speed, but additional smooth visual
+frames require appropriate render scheduling/interpolation.
+
+### Experimental Dual-Issue Performance Profile (2026-10-21)
+
+The separate `arty_s7_ddr_perf` project enables `ENABLE_ICACHE=1`,
+`DUAL_ISSUE=1`, and `UART_BAUD=921600`. The CPU remains at **25 MHz**;
+the original projects retain single-issue, uncached, 115200-baud defaults.
+This profile does not promise 45 FPS or change the video resolution.
+
+- Instruction cache: 8 KiB payload, direct mapped, 1,024 eight-byte lines,
+  with synchronous data/tag storage and two instruction words per hit.
+  Each miss uses two existing word transactions, not an AXI burst refill.
+  Reset, `FENCE.I`, and `SFENCE.VMA` invalidate it; an in-flight refill
+  cannot revalidate pre-fence bytes. It is instruction-only, not coherent
+  with DMA/stores: modified executable code requires `FENCE.I` before use.
+- Dual issue: two adjacent, aligned, independent RV32I integer ALU/LUI/AUIPC
+  instructions can execute together. RAW and WAW pairs are split; older
+  dependencies interlock. Memory, branch, CSR, trap and M-extension
+  instructions execute in the original lane. Both results write back;
+  `minstret` accounts for both and interrupt return skips the whole pair.
+  This is a restricted in-order second ALU lane, not arbitrary two-wide
+  execution or a sustained two-instructions-per-cycle frontend.
+- Cache/pair eligibility is limited to unpaged machine-mode DDR with PMP
+  disabled. TCM and protected/translated accesses keep single-word behavior.
+  Data accesses remain uncached. Existing one-channel RVFI covers only the
+  default single-issue configuration, not a formal proof of dual issue.
+- Both upload and Python viewer accept `DDR_BAUD=921600`. At 25 MHz the UART
+  uses a 27-cycle bit divider, about 925,926 baud (+0.47%). A simulation with
+  independent exact-921600 host timing verifies all 256 byte values both ways.
+
+Create the isolated project from `phase8/software` (only once):
+
+```powershell
+make ddr_perf_project
+```
+
+From `phase8/vivado`, build with the guarded script. It does not program
+hardware and stops before bitstream generation if routed setup or hold fails:
+
+```powershell
+& 'C:/Xilinx/Vivado/2020.2/bin/vivado.bat' -mode batch -source build_ddr_perf.tcl
+```
+
+Inspect `ddr_project/arty_s7_ddr_perf/validation/` and use only a successfully
+validated `arty_s7_ddr_perf/rv32_soc_arty_s7.runs/impl_1/arty_s7_ddr_top.bit`.
+Do not confuse it with the old loader bitstream. Rebuild synthesis after
+changing BRAM firmware or RTL; regenerating only the bitstream is insufficient.
+
+After programming that profile, close the viewer/PuTTY and reset to the loader
+**before** upload. First verify the small stress image at the new baud:
+
+```powershell
+make ddr_wad_stress_upload PORT=COM4 DDR_BAUD=921600 UPLOAD_DELAY=0
+```
+
+Run that text-only probe with `G` in a 921600-baud terminal and verify PASS.
+Then close the terminal and reset back to the loader before the DOOM upload:
+
+```powershell
+make ddr_perf_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_perf_view PORT=COM4
+```
+
+Do not reset between these last two commands. DOOM uses the Python graphical
+window, not PuTTY. The original `ddr_doom_*` commands still default to 115200;
+use the performance aliases or pass `DDR_BAUD=921600` explicitly.
+
+Regression entry points in `phase8/tb`: `make icache dual_issue uart_fast`,
+`make ddr_perf_sim`, and `make ddr_fast_wad_sim` with
+`DDR_CPU_ARGS="-Ptb_ddr_soc.ENABLE_ICACHE=1 -Ptb_ddr_soc.DUAL_ISSUE=1 -Ptb_ddr_soc.UART_BAUD=921600"`.
+Directed CPU checks include randomized ALU sequences against a sequential
+reference, serial fallback, branches, load-use, multiply, self-modifying code,
+exceptions, and interrupt return around a pair. Board FPS and input latency
+must still be measured after programming; simulation passes are not board results.
+
+At 921600 8N1, a 4,012-byte frame has an ideal wire ceiling of about 23 FPS
+at 80x50. A raw 320x200 eight-bit frame would be below 1.44 FPS. Faster CPU
+execution alone cannot deliver 45 displayed FPS at those sizes on this link;
+that also requires a different transport, compression, or direct video output.
+
+#### Verification Result (2026-10-21)
+
+Vivado 2020.2 completed synthesis, routing and bitstream generation for the
+performance profile. Routed setup WNS is **+0.603 ns**, hold WHS **+0.050 ns**,
+and pulse-width slack **+0.206 ns**, with zero failing endpoints in those
+categories. There are no unconstrained internal endpoints. Resource use is
+17,329 LUTs, 12,575 flip-flops, 35 RAMB36 and four DSP blocks. The instruction
+cache adds three RAMB36 blocks (including tags).
+
+This is not a warning-free signoff: the default DRC report lists 33 warnings,
+including cache RAM asynchronous-reset control warnings, DSP pipelining,
+MIG clock buffering and QSPI port buffering. Timing checks also report
+multiple-clock pins and one output without an output-delay constraint.
+Cache contents are invalidated on reset, but the RAM reset-control warnings
+remain a hardware-review item. Reports are retained in the profile's
+`validation` directory; no warning severity was lowered for this build.
+
+Passing simulations include three randomized dual-issue seeds, cached
+single-issue and uncached fallback, the cache unit test, exact-host-timing
+921600 UART tests, the DDR diagnostic (`DDR:PASS`), and a full app plus
+1,064-byte fast-block WAD upload ending in `WAD_PROBE:PASS` at 921600.
+The loader test now waits for protocol acknowledgements rather than relying
+on delays calibrated for a different baud rate. Existing peripheral/portable
+tests, shared CSR/interrupt/trap/RV64 tests, and graphical-viewer protocol
+self-tests also pass.
+
+Subsequent user board results confirm the performance image runs DOOM, but
+only at about 0.63 FPS: `render_us=1488435 stream_us=102297`. The former
+includes engine work and waiting, not just world rendering. This is not a
+playability milestone or evidence that dual issue sustains two IPC.
+
+#### Software-Only Direct Indexed Video Experiment
+
+The upstream presentation path converts all 64,000 indexed pixels into a
+32-bit RGB buffer, while the serial backend keeps only 4,000 samples. The
+separate `ddr_doom_direct.bin` bypasses that conversion using linker wrappers,
+samples the indexed framebuffer directly, and applies a gamma-corrected
+RGB332 palette. It preserves palette changes, the RVF1 protocol and the
+Python viewer. The world renderer still renders at 320x200; displayed
+resolution remains 80x50. CRC computation also uses a nibble lookup table.
+Neither change has a measured board speedup yet.
+
+The original `ddr_doom.bin` is not replaced by building this experiment.
+No FPGA rebuild is required. From `phase8/software`, close the viewer and
+press BTN0 once BEFORE uploading, then run:
+
+```powershell
+make ddr_perf_direct_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_perf_view PORT=COM4
+```
+
+Do not reset between upload and viewer. The new startup banner includes
+`DOOM:VIDEO_PATH DIRECT_INDEXED`. Capture at least three `DOOM:PERF` lines
+in the same E1M1 scene. Discard the first window, which includes startup
+and has only seven engine intervals. Subsequent eight-frame windows report:
+
+- `render_us`: total time between presentations, excluding diagnostic output.
+- `stream_us`: sampling, CRC and UART transmission time.
+- `view_us`: time inside `R_RenderPlayerView`, a subset of engine time.
+- `sleep_us`: measured time inside `DG_SleepMs`, also part of engine time.
+- `engine_cpi_x100`: cycles per retired instruction multiplied by 100.
+- `engine_instructions`: mean retired instructions per engine interval.
+
+Existing cycle/retirement CSRs supply these measurements. They do NOT
+separate fetch stalls, data stalls or paired retirements; those still require
+RTL instrumentation. Do not attribute high CPI to a particular memory path
+without those counters. Native tests compare complete indexed and RGB
+packets over multiple palettes and sequence wrap, using an independent CRC
+reference. Viewer protocol tests cover the unchanged wire format.
+
+This experiment removes known redundant work; it does not establish a
+45-FPS solution. Even zero engine time would not meet that display target
+with the current raw-frame serial transport.

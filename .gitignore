@@ -50,6 +50,7 @@ riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/.jobs/
 # Local upstream checkouts used for the DOOM architecture study
 /reference_doom/
 /reference_retro_computing_2026/
+/reference_doomgeneric/
 
 # Isolated DOOM DDR bring-up outputs (never replace the verified board image)
 /riscv_processor_cpu/phase8/vivado/ddr_project/
@@ -57,3 +58,14 @@ riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/.jobs/
 /riscv_processor_cpu/phase8/software/build/ddr_probe*
 /riscv_processor_cpu/phase8/software/build/ddr_loader*
 /riscv_processor_cpu/phase8/software/build/ddr_app_test*
+/riscv_processor_cpu/phase8/software/build/ddr_wad_test*
+/riscv_processor_cpu/phase8/software/build/ddr_test.wad
+/riscv_processor_cpu/phase8/software/build/ddr_wad_probe*
+/riscv_processor_cpu/phase8/software/build/ddr_stress.wad
+/riscv_processor_cpu/phase8/software/build/ddr_titlepic*
+/riscv_processor_cpu/phase8/software/build/doom_wad_art_test.exe
+/riscv_processor_cpu/phase8/software/build/ddr_fast_test.wad
+/riscv_processor_cpu/phase8/software/build/ddr_doom.*
+/riscv_processor_cpu/phase8/software/build/ddr_doom_direct.*
+/riscv_processor_cpu/phase8/software/build/doom_obj/
+/riscv_processor_cpu/phase8/software/build/doom_stream_test.exe

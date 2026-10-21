@@ -1,5 +1,5 @@
 // Simulation only. Independent AXI channel stalls and delayed responses.
-// Models 64 KiB, a 4 KiB DDR app stack, plus address probes of 256 MiB RAM.
+// Models 64 KiB, a 4 KiB DDR app stack, the WAD handoff/header pages, and address probes.
 `timescale 1ns/1ps
 module axi128_ram_model (
     input wire clk, rst_n,
@@ -42,7 +42,7 @@ module axi128_ram_model (
     output logic axi_rvalid,
     input wire axi_rready
 );
-    reg [127:0] mem [0:4383];
+    reg [127:0] mem [0:4639];
     reg have_aw, have_w, reading;
     reg [27:0] write_addr, read_addr;
     reg [127:0] write_data;
@@ -50,15 +50,18 @@ module axi128_ram_model (
     integer cycles, delay_read, delay_write;
     integer write_count = 0, read_count = 0;
     integer i;
-    initial for (i=0; i<4384; i=i+1) mem[i] = 0;
+    initial for (i=0; i<4640; i=i+1) mem[i] = 0;
     function automatic integer index_of(input [27:0] address);
         integer k;
         begin
             index_of = -1;
             if (address < 28'h10000) index_of = address >> 4;
             else if (address == 28'hFFFFFF0) index_of = 4096;
+            else if (address == 28'h1FFF000) index_of = 4120;
             else if (address >= 28'hFF000 && address < 28'h100000)
                 index_of = 4128 + ((address - 28'hFF000) >> 4);
+            else if (address >= 28'h2000000 && address < 28'h2001000)
+                index_of = 4384 + ((address - 28'h2000000) >> 4);
             else for (k=16; k<28; k=k+1)
                 if (address == (28'd1 << k)) index_of = 4097+k-16;
             if (index_of < 0) $fatal(1,"RAM model has no storage for %h",address);

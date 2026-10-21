@@ -1,6 +1,9 @@
 `timescale 1ns/1ps
 module tb_ddr_soc #(
     parameter LOADER_MODE=0,
+    parameter ENABLE_ICACHE=0,
+    parameter DUAL_ISSUE=0,
+    parameter UART_BAUD=2500000,
     parameter FIRMWARE_FILE="../software/build/ddr_test.vmem"
 );
     reg clk=0, rst_n=0, memory_ready=0, uart_rx=1;
@@ -51,7 +54,8 @@ module tb_ddr_soc #(
     wire axi_rvalid;
     wire axi_rready;
     soc_core #(.FIRMWARE_FILE(FIRMWARE_FILE),
-               .ENABLE_EXT_MEM(1), .UART_BAUD(2500000)) dut (
+               .ENABLE_EXT_MEM(1), .UART_BAUD(UART_BAUD),
+               .ENABLE_ICACHE(ENABLE_ICACHE), .DUAL_ISSUE(DUAL_ISSUE)) dut (
         .clk_sys(clk), .rst_n(rst_n), .uart_rx(uart_rx), .uart_tx(uart_tx),
         .qspi_dq1_i(1'b1), .status(status),
         .sim_bus_override(1'b0), .sim_bus_addr(32'b0), .sim_bus_wdata(32'b0),
@@ -152,23 +156,33 @@ module tb_ddr_soc #(
     integer good_pos=0, bad_pos=0, trap_pos=0;
     reg [7:0] ch;
     reg [7:0] image [0:4095];
+    reg [7:0] wad_image [0:2047];
     integer image_fd, image_size;
     reg [31:0] crc;
+    integer wad_fd, wad_size;
+    reg [31:0] wad_crc;
     string loader_line="";
-    reg upload_verified=0, info_verified=0;
+    reg upload_verified=0, info_verified=0, wad_verified=0;
+    reg caps_verified=0, wad_first_block_verified=0;
+    reg app_ready=0, app_header_ready=0, wad_ready=0, wad_header_ready=0;
+    integer app_ack=0, wad_ack=0, parsed_ack;
     task automatic send_uart(input reg [7:0] value);
         @(negedge clk); uart_rx=0;
-        repeat (10) @(negedge clk);
+        repeat (25000000/UART_BAUD) @(negedge clk);
         for (integer bit_index=0; bit_index<8; bit_index=bit_index+1) begin
             uart_rx=value[bit_index];
-            repeat (10) @(negedge clk);
+            repeat (25000000/UART_BAUD) @(negedge clk);
         end
         uart_rx=1;
-        repeat (10) @(negedge clk);
+        repeat (25000000/UART_BAUD) @(negedge clk);
     endtask
     initial if (LOADER_MODE) begin
-        good="DDR_APP:PASS";
-        image_fd=$fopen("../software/build/ddr_app_test.bin", "rb");
+        good=($test$plusargs("WAD_PROBE") || $test$plusargs("FAST_WAD")) ? "WAD_PROBE:PASS" :
+             ($test$plusargs("WAD_TEST") ? "WAD_APP:PASS" : "DDR_APP:PASS");
+        image_fd=$fopen(($test$plusargs("WAD_PROBE") || $test$plusargs("FAST_WAD")) ?
+            "../software/build/ddr_wad_probe.bin" :
+            ($test$plusargs("WAD_TEST") ? "../software/build/ddr_wad_test.bin" :
+             "../software/build/ddr_app_test.bin"), "rb");
         if (!image_fd) $fatal(1,"Missing DDR test app binary");
         image_size=$fread(image,image_fd);
         $fclose(image_fd);
@@ -182,18 +196,58 @@ module tb_ddr_soc #(
         crc=crc ^ 32'hffffffff;
         wait(memory_ready);
         repeat (10000) @(negedge clk);
-        send_uart($test$plusargs("DEFERRED_RUN") ? "U" : "A");
-        repeat (3000) @(negedge clk);
+        send_uart(($test$plusargs("DEFERRED_RUN") || $test$plusargs("WAD_TEST") ||
+                   $test$plusargs("WAD_PROBE") || $test$plusargs("FAST_WAD")) ? "U" : "A");
+        wait(app_ready);
         send_uart("R"); send_uart("D"); send_uart("D"); send_uart("1");
         for (integer i=0; i<4; i=i+1) send_uart((image_size >> (8*i)) & 8'hff);
         for (integer i=0; i<4; i=i+1) send_uart((crc >> (8*i)) & 8'hff);
-        repeat (3000) @(negedge clk);
+        wait(app_header_ready);
         for (integer i=0; i<image_size; i=i+1) begin
             send_uart(image[i]);
             if (((i+1) % 16) == 0 || i+1 == image_size)
-                repeat (2500) @(negedge clk);
+                wait(app_ack >= i+1);
         end
-        if ($test$plusargs("DEFERRED_RUN")) begin
+        if ($test$plusargs("WAD_TEST") || $test$plusargs("WAD_PROBE") ||
+            $test$plusargs("FAST_WAD")) begin
+            wad_fd=$fopen($test$plusargs("FAST_WAD") ?
+                "../software/build/ddr_fast_test.wad" :
+                "../software/build/ddr_test.wad", "rb");
+            if (!wad_fd) $fatal(1,"Missing test WAD");
+            wad_size=$fread(wad_image,wad_fd);
+            $fclose(wad_fd);
+            if (wad_size != ($test$plusargs("FAST_WAD") ? 1064 : 32))
+                $fatal(1,"Unexpected test WAD size");
+            wad_crc=32'hffffffff;
+            for (integer i=0; i<wad_size; i=i+1) begin
+                wad_crc=wad_crc ^ wad_image[i];
+                for (integer j=0; j<8; j=j+1)
+                    wad_crc=(wad_crc >> 1) ^ (wad_crc[0] ? 32'hedb88320 : 0);
+            end
+            wad_crc=wad_crc ^ 32'hffffffff;
+            wait(upload_verified);
+            repeat (2000) @(negedge clk);
+            if ($test$plusargs("FAST_WAD")) begin
+                send_uart("K");
+                wait(caps_verified);
+            end
+            send_uart($test$plusargs("FAST_WAD") ? "F" : "W");
+            wait(wad_ready);
+            send_uart("R"); send_uart("D"); send_uart("D"); send_uart("W");
+            for (integer i=0; i<4; i=i+1) send_uart((wad_size >> (8*i)) & 8'hff);
+            for (integer i=0; i<4; i=i+1) send_uart((wad_crc >> (8*i)) & 8'hff);
+            wait(wad_header_ready);
+            for (integer i=0; i<wad_size; i=i+1) begin
+                send_uart(wad_image[i]);
+                if ($test$plusargs("FAST_WAD") && i+1 == 1024)
+                    wait(wad_first_block_verified);
+                if (!$test$plusargs("FAST_WAD") && ((i+1) % 16) == 0)
+                    wait(wad_ack >= i+1);
+            end
+            wait(wad_verified);
+            repeat (2000) @(negedge clk);
+            send_uart("G");
+        end else if ($test$plusargs("DEFERRED_RUN")) begin
             wait(upload_verified);
             // Model the idle interval while the host releases the serial port.
             repeat (10000) @(negedge clk);
@@ -219,11 +273,25 @@ module tb_ddr_soc #(
             ch=dut.u_uart.tx_data; $write("%c",ch);
             if (LOADER_MODE) begin
                 if (ch == 10) begin
+                    $fflush();
+                    if (loader_line == "RDD1:READY") app_ready=1;
+                    if (loader_line == "RDD1:HEADER_OK") app_header_ready=1;
+                    if (loader_line == "RDDW:READY") wad_ready=1;
+                    if (loader_line == "RDDW:HEADER_OK") wad_header_ready=1;
+                    if ($sscanf(loader_line,"RDD1:NEXT %d",parsed_ack)==1) app_ack=parsed_ack;
+                    if ($sscanf(loader_line,"RDDW:NEXT %d",parsed_ack)==1) wad_ack=parsed_ack;
                     if (loader_line == "RDD1:OK") upload_verified=1;
+                    if (loader_line == "RDDW:OK") wad_verified=1;
+                    if (loader_line == "RDDW:CAPS FAST_BLOCK=1024") caps_verified=1;
+                    if (loader_line == "RDDW:NEXT 1024") wad_first_block_verified=1;
                     if (loader_line == $sformatf("RDD1:INFO BASE=80000000 MAX=4194304 LOADED=%0d", image_size))
                         info_verified=1;
                     if (loader_line == "RDD1:ERR NO_IMAGE")
                         $fatal(1,"Loader lost verified image before G");
+                    if (loader_line.substr(0,7) == "RDD1:ERR" ||
+                        loader_line.substr(0,7) == "RDDW:ERR" ||
+                        loader_line.substr(0,13) == "WAD_PROBE:FAIL")
+                        $fatal(1,"Loader rejected upload: %s",loader_line);
                     loader_line="";
                 end else if (ch != 13) loader_line={loader_line,ch};
             end
@@ -235,7 +303,11 @@ module tb_ddr_soc #(
             if(good_pos == good.len()) begin
                 if (LOADER_MODE && $test$plusargs("DEFERRED_RUN") && !info_verified)
                     $fatal(1,"Application ran without confirming retained image state");
-                if(external_fetches < (LOADER_MODE ? 1 : 50) || local_fetches < 100 || longest_fast_run < 8)
+                if (LOADER_MODE && ($test$plusargs("WAD_TEST") ||
+                                    $test$plusargs("WAD_PROBE") ||
+                                    $test$plusargs("FAST_WAD")) && !wad_verified)
+                    $fatal(1,"WAD app ran without verified WAD");
+                if(external_fetches < ((LOADER_MODE || ENABLE_ICACHE) ? 1 : 50) || local_fetches < 100 || longest_fast_run < 8)
                     $fatal(1,"Missing mixed execution or one-instruction-per-cycle TCM evidence");
                 $display("\nPASS: DDR firmware + CPU + DMA + AXI; external fetches=%0d local=%0d consecutive TCM=%0d",
                     external_fetches,local_fetches,longest_fast_run);

@@ -9,6 +9,8 @@ module soc_core #(
     parameter bit FAST_LOCAL_IMEM = 1'b1,
     parameter bit FAST_LOCAL_DMEM = 1'b1,
     parameter bit ENABLE_EXT_MEM = 1'b0,
+    parameter bit ENABLE_ICACHE = 1'b0,
+    parameter bit DUAL_ISSUE = 1'b0,
     parameter logic [31:0] EXT_MEM_BASE = 32'h8000_0000,
     parameter logic [31:0] EXT_MEM_BYTES = 32'h1000_0000
 ) (
@@ -394,6 +396,8 @@ module soc_core #(
     cpu_top_soc #(
         .XLEN(32),
         .ENABLE_MMU(1'b1),
+        .ENABLE_ICACHE(ENABLE_ICACHE),
+        .DUAL_ISSUE(DUAL_ISSUE),
         .FAST_LOCAL_IMEM(FAST_LOCAL_IMEM),
         .FAST_LOCAL_DMEM(FAST_LOCAL_DMEM),
         .LOCAL_MEM_BYTES(BRAM_SIZE_BYTES)

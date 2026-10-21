@@ -21,7 +21,9 @@ module cpu_top_soc #(
     // Local BRAM data uses the synchronous DTCM port. MMIO, translated memory
     // and external memory continue to use the request/response transaction bus.
     parameter bit FAST_LOCAL_DMEM = 1'b1,
-    parameter integer LOCAL_MEM_BYTES = 65_536
+    parameter integer LOCAL_MEM_BYTES = 65_536,
+    parameter bit ENABLE_ICACHE = 1'b0,
+    parameter bit DUAL_ISSUE = 1'b0
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -160,6 +162,13 @@ module cpu_top_soc #(
     logic            inst_ready, inst_fault;
     logic            predict_valid, predict_taken;
     logic [XLEN-1:0] predict_target;
+    logic fetch_pair;
+    logic if_id_pair, id_ex_pair, ex_mem_pair, wb_pair;
+    logic [31:0] if_id_second, id_ex_second;
+    logic [XLEN-1:0] pair_rs1, pair_rs2, pair_ex_rs1, pair_ex_rs2;
+    logic [31:0] pair_result, pair_mem_result, pair_wb_result;
+    logic [4:0] pair_mem_rd, pair_wb_rd;
+    logic pair_id_stall;
 
     // PC register
     always_ff @(posedge clk or negedge rst_n) begin
@@ -170,6 +179,7 @@ module cpu_top_soc #(
     assign pc_plus4 = pc + {{(XLEN-32){1'b0}}, 32'd4};
 
 `ifdef RISCV_FORMAL
+    assign fetch_pair = 1'b0;
     // ---- Formal fixed-latency instruction memory ----
     // To support synchronous BRAM with 1-cycle latency, we drive the
     // address from the COMBINATORIAL next PC. This way, the BRAM latches
@@ -201,20 +211,58 @@ module cpu_top_soc #(
     logic [31:0] ifetch_pc;
     logic [31:0] ifetch_data;
     logic        fetch_consumed;
+    logic fetch_req_ready, fetch_rsp_valid, fetch_rsp_error, fetch_rsp_pair;
+    logic [31:0] fetch_rsp_data, fetch_rsp_second, ifetch_second;
+    logic ifetch_pair, pair_eligible;
+    wire fetch_request_valid = ifetch_request && rst_n && !flush_if_id;
+    wire cache_invalidate = (id_ex_fencei || id_ex_sfence) && ex_redirect;
+    wire cacheable_fetch = current_priv == 2'b11 && ex_csr_pmpcfg0 == 0 &&
+        !ex_csr_satp[31] && ifetch_addr[31:28] == 4'h8 && ifetch_addr[1:0] == 0;
 
     assign if_fast_local = FAST_LOCAL_IMEM && (pc < LOCAL_MEM_BYTES) &&
                            !ex_csr_satp[31];
     // A redirect cannot cancel a request already presented to the arbiter.
     // Hold its address until accepted and drain its response if killed.
-    assign ibus_req_valid = ifetch_request && rst_n && !flush_if_id;
-    assign ibus_req_addr  = ifetch_addr;
     assign ibus_req_write = 1'b0;
     assign ibus_req_wstrb = 4'b0000;
     assign ibus_req_wdata = 32'b0;
     assign ibus_req_size  = 2'd2;
-    assign ibus_rsp_ready = ifetch_pending;
     assign if_instr       = if_fast_local ? imem_rdata : ifetch_data;
     assign fetch_consumed = if_id_write && !flush_if_id && !if_fast_local && ifetch_valid;
+
+    generate if (ENABLE_ICACHE) begin : g_icache
+        // Restrict speculative line fills to unpaged, unrestricted machine
+        // DDR. Other privilege/PMP/paging configurations keep single fetches.
+        rv_icache u_cache (
+            .clk(clk), .rst_n(rst_n),
+            .invalidate(cache_invalidate),
+            .req_valid(fetch_request_valid), .req_ready(fetch_req_ready),
+            .req_addr(ifetch_addr),
+            .req_cacheable(cacheable_fetch),
+            .rsp_valid(fetch_rsp_valid), .rsp_ready(ifetch_pending),
+            .rsp_data(fetch_rsp_data), .rsp_second(fetch_rsp_second),
+            .rsp_pair(fetch_rsp_pair), .rsp_err(fetch_rsp_error),
+            .mem_req_valid(ibus_req_valid), .mem_req_ready(ibus_req_ready),
+            .mem_req_addr(ibus_req_addr), .mem_rsp_valid(ibus_rsp_valid),
+            .mem_rsp_ready(ibus_rsp_ready), .mem_rsp_data(ibus_rsp_rdata),
+            .mem_rsp_err(ibus_rsp_err)
+        );
+    end else begin : g_no_icache
+        assign ibus_req_valid = fetch_request_valid;
+        assign ibus_req_addr = ifetch_addr;
+        assign ibus_rsp_ready = ifetch_pending;
+        assign fetch_req_ready = ibus_req_ready;
+        assign fetch_rsp_valid = ibus_rsp_valid;
+        assign fetch_rsp_data = ibus_rsp_rdata;
+        assign fetch_rsp_error = ibus_rsp_err;
+        assign fetch_rsp_second = 0;
+        assign fetch_rsp_pair = 0;
+    end endgenerate
+    rv_pair_decode u_pair_decode (.first(ifetch_data), .second(ifetch_second),
+                                  .eligible(pair_eligible));
+    assign fetch_pair = DUAL_ISSUE && ENABLE_ICACHE && !if_fast_local &&
+        ifetch_valid && ifetch_pair && pair_eligible && !ifetch_bus_error &&
+        !(predict_valid && predict_taken);
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -226,6 +274,8 @@ module cpu_top_soc #(
             ifetch_bus_error     <= 1'b0;
             ifetch_pc            <= 32'b0;
             ifetch_data          <= 32'h0000_0013;
+            ifetch_second        <= 32'h0000_0013;
+            ifetch_pair          <= 0;
         end else begin
             if (flush_if_id) begin
                 ifetch_valid     <= 1'b0;
@@ -246,17 +296,19 @@ module cpu_top_soc #(
                 ifetch_pc      <= pc[31:0];
             end
 
-            if (ibus_req_valid && ibus_req_ready) begin
+            if (fetch_request_valid && fetch_req_ready) begin
                 ifetch_request <= 1'b0;
                 ifetch_pending <= 1'b1;
             end
 
-            if (ibus_rsp_valid && ibus_rsp_ready) begin
+            if (fetch_rsp_valid && ifetch_pending) begin
                 ifetch_pending <= 1'b0;
                 if (!flush_if_id && !ifetch_killed) begin
                     ifetch_valid     <= 1'b1;
-                    ifetch_data      <= ibus_rsp_err ? 32'h0000_0013 : ibus_rsp_rdata;
-                    ifetch_bus_error <= ibus_rsp_err;
+                    ifetch_data      <= fetch_rsp_error ? 32'h0000_0013 : fetch_rsp_data;
+                    ifetch_bus_error <= fetch_rsp_error;
+                    ifetch_second    <= fetch_rsp_second;
+                    ifetch_pair      <= fetch_rsp_pair;
                 end
             end
         end
@@ -286,6 +338,18 @@ module cpu_top_soc #(
     logic        if_id_valid;   // 0 for reset/flush bubbles
     logic        if_id_bus_error;
     logic        decode_accept;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            if_id_pair <= 0;
+            if_id_second <= 32'h13;
+        end else if (if_id_write) begin
+            if_id_pair <= !flush_if_id && fetch_pair;
+`ifndef RISCV_FORMAL
+            if_id_second <= ifetch_second;
+`endif
+        end else if (decode_accept) if_id_pair <= 0;
+    end
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -347,7 +411,7 @@ module cpu_top_soc #(
     logic [4:0]  wb_rd_addr;
     logic        wb_reg_write;
 
-    regfile #(.XLEN(XLEN)) u_regfile (
+    regfile #(.XLEN(XLEN), .SECOND_PORT(DUAL_ISSUE)) u_regfile (
         .clk      (clk),
         .rst_n    (rst_n),
         .rs1_addr (id_rs1_addr),
@@ -356,7 +420,11 @@ module cpu_top_soc #(
         .rs2_data (id_rs2_data),
         .rd_addr  (wb_rd_addr),
         .rd_data  (wb_wr_data),
-        .reg_write(wb_reg_write)
+        .reg_write(wb_reg_write),
+        .rs1_second(if_id_second[19:15]), .rs2_second(if_id_second[24:20]),
+        .rs1_second_data(pair_rs1), .rs2_second_data(pair_rs2),
+        .rd_second(pair_wb_rd), .data_second(pair_wb_result),
+        .write_second(wb_pair)
     );
 
     generate
@@ -538,7 +606,25 @@ module cpu_top_soc #(
                            (id_f_src1 && fp_pend_rs1) || (id_f_src2 && fp_pend_rs2) || (id_f_src3 && fp_pend_rs3) ||
                            (id_v_src1 && vec_pend_rs1) || (id_v_src2 && vec_pend_rs2) ||
                            (id_v_srcd && vec_pend_rd)  || (id_v_src0 && vec_pend_v0));
-    assign id_stall = hazard_control_mux || ext_stall;
+    assign id_stall = hazard_control_mux || ext_stall || pair_id_stall;
+
+    // Lane 1 uses register-file operands. Interlock until older producers
+    // reach WB; the write-first bypass then supplies their final values.
+    function automatic pair_reads(input [31:0] insn, input [4:0] rd);
+        pair_reads = rd != 0 &&
+            (((insn[6:0] == 7'h13 || insn[6:0] == 7'h33) && insn[19:15] == rd) ||
+             (insn[6:0] == 7'h33 && insn[24:20] == rd));
+    endfunction
+    assign pair_id_stall = DUAL_ISSUE && if_id_valid && (
+        (id_ex_pair && id_ex_second[11:7] != 0 &&
+            (hazard_rs1 == id_ex_second[11:7] || hazard_rs2 == id_ex_second[11:7])) ||
+        (ex_mem_pair && pair_mem_rd != 0 &&
+            (hazard_rs1 == pair_mem_rd || hazard_rs2 == pair_mem_rd)) ||
+        (if_id_pair && (
+            (id_ex_valid && id_ex_reg_write && pair_reads(if_id_second, id_ex_rd)) ||
+            (ex_mem_valid && ex_mem_reg_write && pair_reads(if_id_second, ex_mem_rd)) ||
+            (id_ex_pair && pair_reads(if_id_second, id_ex_second[11:7])) ||
+            (ex_mem_pair && pair_reads(if_id_second, pair_mem_rd)))));
 
 `ifdef RISCV_FORMAL
     assign frontend_ready = 1'b1;
@@ -584,6 +670,49 @@ module cpu_top_soc #(
 
     assign id_ex_write = ~muldiv_stall && !fpu_stall && !vec_stall && !mem_stall && !mmu_stall;
     assign decode_accept = id_ex_write && !control_mux && if_id_valid;
+
+    rv_pair_alu u_pair_alu (.instr(id_ex_second), .pc(id_ex_pc[31:0] + 32'd4),
+        .rs1(pair_ex_rs1[31:0]), .rs2(pair_ex_rs2[31:0]), .result(pair_result));
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            id_ex_pair <= 0;
+            id_ex_second <= 32'h13;
+            pair_ex_rs1 <= 0;
+            pair_ex_rs2 <= 0;
+        end else if ((flush_ex && !mem_stall && !mmu_stall) ||
+                     (control_mux && id_ex_write) || (id_ex_write && !if_id_valid))
+            id_ex_pair <= 0;
+        else if (id_ex_write) begin
+            id_ex_pair <= if_id_pair && DUAL_ISSUE;
+            id_ex_second <= if_id_second;
+            pair_ex_rs1 <= pair_rs1;
+            pair_ex_rs2 <= pair_rs2;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ex_mem_pair <= 0;
+            pair_mem_rd <= 0;
+            pair_mem_result <= 0;
+            wb_pair <= 0;
+            pair_wb_rd <= 0;
+            pair_wb_result <= 0;
+        end else begin
+            if (!mem_stall && !mmu_stall) begin
+                ex_mem_pair <= id_ex_pair && !muldiv_stall && !fpu_stall &&
+                    !vec_stall && !ex_exc_taken && !flush_ex_mem &&
+                    !pmp_access_fault && !page_fault_exception;
+                pair_mem_rd <= id_ex_second[11:7];
+                pair_mem_result <= pair_result;
+            end
+            wb_pair <= ex_mem_pair && !mem_stall && !mmu_stall &&
+                !bus_data_fault && !mem_page_fault;
+            pair_wb_rd <= pair_mem_rd;
+            pair_wb_result <= pair_mem_result;
+        end
+    end
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -979,7 +1108,8 @@ module cpu_top_soc #(
     // FP / vector state updates from the instruction in EX
     logic ex_fp_flags_valid, ex_fs_dirty, ex_vcfg_write;
 
-    csr_file #(.XLEN(XLEN), .HAS_FPU(HAS_FPU), .HAS_VEC(HAS_VEC)) u_csr (
+    csr_file #(.XLEN(XLEN), .HAS_FPU(HAS_FPU), .HAS_VEC(HAS_VEC),
+               .DUAL_RETIRE(DUAL_ISSUE)) u_csr (
         .clk         (clk),
         .rst_n       (rst_n),
         .csr_write   (ex_csr_write && !mem_stall && !mmu_stall),
@@ -988,6 +1118,7 @@ module cpu_top_soc #(
         .mret_exec   (id_ex_mret_r && !mem_stall && !mmu_stall),
         .sret_exec   (id_ex_sret_r && !mem_stall && !mmu_stall),
         .retire      (wb_retire),
+        .retire_second(id_ex_pair),
         .csr_addr    (id_ex_csr_addr),
         .csr_wdata   (ex_csr_wdata),
         .csr_write_attempt(ex_csr_write_attempt),
@@ -1087,7 +1218,7 @@ module cpu_top_soc #(
     logic [XLEN-1:0] control_target, fallthrough_target;
     assign control_taken = branch_taken || id_ex_jump;
     assign control_target = (id_ex_jump && id_ex_opcode == OP_JALR) ? ex_jalr_target : ex_branch_target;
-    assign fallthrough_target = id_ex_pc + {{(XLEN-32){1'b0}}, 32'd4};
+    assign fallthrough_target = id_ex_pc + (id_ex_pair ? 8 : 4);
     // A taken prediction for an instruction that is not a branch/jump (a stale
     // BTB entry, e.g. after the code at that address was rewritten) is also a
     // misprediction: fetch must resume at the fall-through PC.
@@ -1117,7 +1248,7 @@ module cpu_top_soc #(
         else if (branch_taken)
             ex_ret_pc = ex_branch_target;
         else
-            ex_ret_pc = id_ex_pc + {{(XLEN-32){1'b0}}, 32'd4};
+            ex_ret_pc = fallthrough_target;
     end
 
     // MMU page-fault signals. The transaction-bus SoC can now run the shared
@@ -1323,7 +1454,7 @@ module cpu_top_soc #(
         else if (predict_valid && predict_taken)
             pc_next = predict_target;
         else
-            pc_next = pc_plus4;
+            pc_next = fetch_pair ? pc + 8 : pc_plus4;
     end
 
     // JAL/JALR link value  (PC+4 written to rd)

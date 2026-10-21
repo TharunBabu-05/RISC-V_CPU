@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Wed Oct 21 12:13:53 2026
+# Process ID: 17948
+# Current directory: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado
+# Command line: vivado.exe -mode batch -source build_ddr_perf.tcl -log ddr_perf_build.log -journal ddr_perf_build.jou
+# Log file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado/ddr_perf_build.log
+# Journal file: C:/Users/tharu/RISC-V_CPU/riscv_processor_cpu/phase8/vivado\ddr_perf_build.jou
+#-----------------------------------------------------------
+source build_ddr_perf.tcl

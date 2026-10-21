@@ -1,5 +1,6 @@
 IVERILOG ?= iverilog
 VVP ?= vvp
+DDR_CPU_ARGS ?=
 BUILD := build
 SOC_RTL := ../rtl
 CPU_RTL := ../../rtl
@@ -31,6 +32,8 @@ SOC_SRCS := \
 	$(SOC_RTL)/dma_controller.sv \
 	$(SOC_RTL)/qspi_reader.sv \
 	$(SOC_RTL)/cpu_top_soc.sv \
+	$(SOC_RTL)/rv_icache.sv \
+	$(SOC_RTL)/rv_pair_alu.sv \
 	$(CPU_SRCS)
 
 .PHONY: all boot_regress boot_banner clint plic dma dma_soc qspi qspi_boot qspi_corrupt uart_recovery interrupt_sources interrupt_map portable clean
@@ -116,7 +119,7 @@ axi128: | $(BUILD)
 
 ddr_soc: | $(BUILD)
 	$(MAKE) -C ../software ddr_test
-	$(IVERILOG) -g2012 -DSIMULATION -s tb_ddr_soc -o $(BUILD)/tb_ddr_soc \
+	$(IVERILOG) -g2012 -DSIMULATION $(DDR_CPU_ARGS) -s tb_ddr_soc -o $(BUILD)/tb_ddr_soc \
 		tb_ddr_soc.sv axi128_ram_model.sv $(SOC_RTL)/rv_bus_to_axi128.sv $(SOC_SRCS)
 	$(VVP) $(BUILD)/tb_ddr_soc
 
@@ -125,7 +128,7 @@ ddr: axi128 ddr_soc
 .PHONY: ddr_loader_sim
 ddr_loader_sim: | $(BUILD)
 	$(MAKE) -C ../software ddr_loader ddr_app_test
-	$(IVERILOG) -g2012 -DSIMULATION -s tb_ddr_soc -Ptb_ddr_soc.LOADER_MODE=1 \
+	$(IVERILOG) -g2012 -DSIMULATION $(DDR_CPU_ARGS) -s tb_ddr_soc -Ptb_ddr_soc.LOADER_MODE=1 \
 		-Ptb_ddr_soc.FIRMWARE_FILE=\"../software/build/ddr_loader.vmem\" \
 		-o $(BUILD)/tb_ddr_loader tb_ddr_soc.sv axi128_ram_model.sv \
 		$(SOC_RTL)/rv_bus_to_axi128.sv $(SOC_SRCS)
@@ -134,3 +137,41 @@ ddr_loader_sim: | $(BUILD)
 .PHONY: ddr_loader_deferred
 ddr_loader_deferred:
 	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+DEFERRED_RUN
+
+.PHONY: ddr_wad_sim
+ddr_wad_sim:
+	$(MAKE) -C ../software ddr_wad_test ddr_wad_fixture
+	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+WAD_TEST
+
+.PHONY: ddr_wad_probe_sim
+ddr_wad_probe_sim:
+	$(MAKE) -C ../software ddr_wad_probe ddr_wad_fixture
+	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+WAD_PROBE
+
+.PHONY: ddr_fast_wad_sim
+ddr_fast_wad_sim:
+	$(MAKE) -C ../software ddr_wad_probe build/ddr_fast_test.wad
+	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+FAST_WAD
+
+.PHONY: icache ddr_perf_sim
+icache: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_icache -o $(BUILD)/tb_icache tb_icache.sv $(SOC_RTL)/rv_icache.sv
+	$(VVP) $(BUILD)/tb_icache
+
+ddr_perf_sim:
+	$(MAKE) ddr_soc DDR_CPU_ARGS="-Ptb_ddr_soc.ENABLE_ICACHE=1 -Ptb_ddr_soc.DUAL_ISSUE=1 -Ptb_ddr_soc.UART_BAUD=921600"
+
+.PHONY: dual_issue uart_fast
+uart_fast: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_uart_fast -o $(BUILD)/tb_uart_fast tb_uart_fast.sv $(SOC_RTL)/uart_tx.sv $(SOC_RTL)/uart_rx.sv
+	$(VVP) $(BUILD)/tb_uart_fast
+
+dual_issue: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_dual_issue -o $(BUILD)/tb_dual_issue tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_dual_issue
+	$(VVP) $(BUILD)/tb_dual_issue +SEED=42
+	$(VVP) $(BUILD)/tb_dual_issue +SEED=2026
+	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.DUAL=0 -o $(BUILD)/tb_single_issue tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_single_issue
+	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.CACHE=0 -o $(BUILD)/tb_uncached tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_uncached

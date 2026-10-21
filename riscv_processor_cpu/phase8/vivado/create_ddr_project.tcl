@@ -13,6 +13,13 @@ if {[info exists argc] && $argc > 1} {
     set ddr_fw [file normalize [lindex $argv 1]]
 }
 if {![file exists $ddr_fw]} { error "First run make ddr_test in phase8/software" }
+set ddr_profile baseline
+if {[info exists argc] && $argc > 2} { set ddr_profile [lindex $argv 2] }
+if {$ddr_profile ni {baseline perf}} { error "Unknown DDR profile: $ddr_profile" }
+set ddr_generics "FIRMWARE_FILE=[file tail $ddr_fw]"
+if {$ddr_profile eq "perf"} {
+    append ddr_generics " ENABLE_ICACHE=1 DUAL_ISSUE=1 UART_BAUD=921600"
+}
 set ddr_preset [file join $ddr_script_dir ddr arty_s7_50_mig.prj]
 if {![file exists $ddr_preset]} { error "Missing Digilent MIG board preset: $ddr_preset" }
 
@@ -21,7 +28,7 @@ set argc 1
 set argv [list $ddr_project_dir]
 source [file join $ddr_script_dir create_project.tcl]
 set_property top arty_s7_ddr_top [current_fileset]
-set_property generic "FIRMWARE_FILE=[file tail $ddr_fw]" [current_fileset]
+set_property generic $ddr_generics [current_fileset]
 foreach name {rv_bus_to_axi128.sv arty_s7_ddr_top.sv} {
     add_files [file normalize [file join $ddr_script_dir ../rtl $name]]
 }
@@ -49,5 +56,5 @@ set_property -dict [list CONFIG.PROTOCOL AXI4 CONFIG.ADDR_WIDTH 28 \
 generate_target all [get_ips ddr_axi_cdc]
 update_compile_order -fileset sources_1
 puts "DDR_PROJECT=[get_property DIRECTORY [current_project]]"
-puts "TOP=arty_s7_ddr_top; firmware=[file tail $ddr_fw]; UART=115200"
+puts "TOP=arty_s7_ddr_top; profile=$ddr_profile; $ddr_generics"
 puts "Project/IP generation only. Run synthesis, implementation and bitstream manually."
