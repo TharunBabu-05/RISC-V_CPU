@@ -4,34 +4,41 @@
 
 <br>
 
-![Architecture](https://img.shields.io/badge/ISA-RV32IM%20Core-00f5ff?style=for-the-badge&logo=riscv&logoColor=white)
-![Pipeline](https://img.shields.io/badge/Pipeline-5%20Stage-ff2bd6?style=for-the-badge)
-![Board](https://img.shields.io/badge/FPGA-Arty%20S7--50-ffb000?style=for-the-badge&logo=xilinx&logoColor=white)
-![Clock](https://img.shields.io/badge/Clock-25%20MHz-31ff70?style=for-the-badge)
-![Firmware](https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge)
-![Boot](https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge)
-![DMA](https://img.shields.io/badge/DMA-Memory%20%2B%20UART-00c853?style=for-the-badge)
-![Bus](https://img.shields.io/badge/Bus-Valid%20%2F%20Ready-ff6b35?style=for-the-badge)
-![TCM](https://img.shields.io/badge/Local%20Memory-I--TCM%20%2B%20D--TCM-31ff70?style=for-the-badge)
-![Portable](https://img.shields.io/badge/RTL-Multi--FPGA%20Portable-7c3aed?style=for-the-badge&logo=verilog&logoColor=white)
-![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
+<p>
+<img src="https://img.shields.io/badge/ISA-RV32IM%20Core-00f5ff?style=for-the-badge&logo=riscv&logoColor=white" alt="ISA: RV32IM core">
+<img src="https://img.shields.io/badge/Pipeline-5%20Stage-ff2bd6?style=for-the-badge" alt="Pipeline: five stage">
+<img src="https://img.shields.io/badge/FPGA-Arty%20S7--50-ffb000?style=for-the-badge&logo=xilinx&logoColor=white" alt="FPGA: Arty S7-50">
+<img src="https://img.shields.io/badge/Clock-25%20MHz-31ff70?style=for-the-badge" alt="Clock: 25 MHz">
+</p>
+<p>
+<img src="https://img.shields.io/badge/Firmware-Hello%20%2B%20Snake-8a5cff?style=for-the-badge" alt="Firmware: Hello and Snake">
+<img src="https://img.shields.io/badge/Boot-QSPI%20Flash-ff6b35?style=for-the-badge" alt="Boot: QSPI flash">
+<img src="https://img.shields.io/badge/DMA-Memory%20%2B%20UART-00c853?style=for-the-badge" alt="DMA: memory and UART">
+<img src="https://img.shields.io/badge/Bus-Valid%20%2F%20Ready-ff6b35?style=for-the-badge" alt="Bus: valid and ready">
+</p>
+<p>
+<img src="https://img.shields.io/badge/Local%20Memory-I--TCM%20%2B%20D--TCM-31ff70?style=for-the-badge" alt="Local memory: I-TCM and D-TCM">
+<img src="https://img.shields.io/badge/RTL-Multi--FPGA%20Portable-7c3aed?style=for-the-badge&logo=verilog&logoColor=white" alt="RTL: multi-FPGA portable">
+<img src="https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge" alt="Status: end-to-end verified">
+</p>
+<p>
+<img src="https://img.shields.io/badge/CPU-Restricted%20Dual--Issue-ff2bd6?style=for-the-badge" alt="CPU: restricted dual issue">
+<img src="https://img.shields.io/badge/I--Cache-8%20KiB-00d9ff?style=for-the-badge" alt="Instruction cache: 8 KiB">
+<img src="https://img.shields.io/badge/D--Cache-8%20KiB-31ff70?style=for-the-badge" alt="Data cache: 8 KiB">
+</p>
+<p>
+<img src="https://img.shields.io/badge/DDR%20Writes-4--Entry%20Ordered%20Buffer-ffb000?style=for-the-badge" alt="DDR writes: four-entry ordered buffer">
+<img src="https://img.shields.io/badge/DOOM%20UART-921600%20baud-ff6b35?style=for-the-badge" alt="DOOM UART: 921600 baud">
+<img src="https://img.shields.io/badge/Display-Python%20RGB332%20Viewer-8a5cff?style=for-the-badge" alt="Display: Python RGB332 viewer">
+</p>
+<p>
+<img src="https://img.shields.io/badge/Output-200x150%20Experimental%20Profile-00c853?style=for-the-badge" alt="Output: experimental 200 by 150 profile">
+</p>
 
-<br>
+<h3>RISC-V RV32IM: from portable SoC to DOOM on DDR</h3>
 
-![CPU Issue](https://img.shields.io/badge/CPU-Restricted%20Dual--Issue-ff2bd6?style=for-the-badge)
-![I Cache](https://img.shields.io/badge/I--Cache-8%20KiB-00d9ff?style=for-the-badge)
-![D Cache](https://img.shields.io/badge/D--Cache-8%20KiB-31ff70?style=for-the-badge)
-![DDR Writes](https://img.shields.io/badge/DDR%20Writes-4--Entry%20Ordered%20Buffer-ffb000?style=for-the-badge)
-![DDR DOOM UART](https://img.shields.io/badge/DOOM%20UART-921600%20baud-ff6b35?style=for-the-badge)
-![Host Viewer](https://img.shields.io/badge/Display-Python%20RGB332%20Viewer-8a5cff?style=for-the-badge)
-![Output Profile](https://img.shields.io/badge/Output-200x150%20Experimental%20Profile-00c853?style=for-the-badge)
-
-<h3>Custom 32-bit RISC-V processor, portable across FPGA families and running Snake and a DDR-loaded DOOM port on real hardware.</h3>
-
-<b>One RV32IM core. A proven five-stage SoC. An experimental DDR throughput profile. Multiple FPGA ecosystems.</b>
-
-<br><br>
-<sub>Base FPGA firmware uses 115200-baud PuTTY. The separate DDR DOOM profile uses a Python graphical viewer over the onboard COM port at 921600 baud, 8N1; PuTTY is only for loader text.</sub>
+<p>Custom 32-bit processor, proven five-stage SoC, and an experimental Arty S7 DDR throughput profile.</p>
+<p><sub>Base firmware uses PuTTY at 115200 baud. DOOM uses a Python graphics window over onboard COM at 921600 baud, 8N1; PuTTY is only for loader text.</sub></p>
 
 </div>
 
@@ -57,7 +64,13 @@
 
 <div align="center">
 
-[![Watch the DOOM hardware demo from 00:10](https://img.shields.io/badge/▶_WATCH_DOOM_HARDWARE_DEMO-START_AT_00%3A10-FF2BD6?style=for-the-badge)](proof/video.mp4#t=10)
+<a href="proof/video.mp4#t=10">
+  <img src="proof/Video%20Project%202.gif" alt="DOOM gameplay running on the custom RISC-V CPU and Arty S7 DDR SoC" width="96%">
+</a>
+
+<br>
+
+<a href="proof/video.mp4#t=10">Open the DOOM video from 00:10</a>
 
 </div>
 
