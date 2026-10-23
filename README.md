@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+Multi-FPGA+Portable;One+CPU+Core+%7C+Many+FPGA+Families;Snake+Running+On+My+Own+Processor" alt="Animated project title" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Orbitron&weight=800&size=34&pause=900&color=00F5FF&center=true&vCenter=true&width=980&height=90&lines=RISC-V+RV32IM+CPU+Built+From+Scratch;5-Stage+Pipeline+%7C+Multi-FPGA+Portable;One+CPU+Core+%7C+Many+FPGA+Families;DOOM+Running+On+The+DDR+SoC" alt="Animated project title" />
 
 <br>
 
@@ -16,17 +16,22 @@
 ![Portable](https://img.shields.io/badge/RTL-Multi--FPGA%20Portable-7c3aed?style=for-the-badge&logo=verilog&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-End--to--End%20Verified-00d26a?style=for-the-badge)
 
-<h3>Custom 32-bit RISC-V processor, built as a portable FPGA architecture and proven on real hardware.</h3>
-
-<b>One RV32IM core. One clean SoC boundary. Multiple FPGA ecosystems.</b>
-
-<br><br>
-
-<img src="proof/snake_qspi_boot_hardware.png" alt="Snake running on the custom RISC-V CPU after QSPI flash boot" width="70%">
-
 <br>
 
-<sub>Real RV32 instructions, real FPGA hardware, real persistent firmware.</sub>
+![CPU Issue](https://img.shields.io/badge/CPU-Restricted%20Dual--Issue-ff2bd6?style=for-the-badge)
+![I Cache](https://img.shields.io/badge/I--Cache-8%20KiB-00d9ff?style=for-the-badge)
+![D Cache](https://img.shields.io/badge/D--Cache-8%20KiB-31ff70?style=for-the-badge)
+![DDR Writes](https://img.shields.io/badge/DDR%20Writes-4--Entry%20Ordered%20Buffer-ffb000?style=for-the-badge)
+![DDR DOOM UART](https://img.shields.io/badge/DOOM%20UART-921600%20baud-ff6b35?style=for-the-badge)
+![Host Viewer](https://img.shields.io/badge/Display-Python%20RGB332%20Viewer-8a5cff?style=for-the-badge)
+![Output Profile](https://img.shields.io/badge/Output-200x150%20Experimental%20Profile-00c853?style=for-the-badge)
+
+<h3>Custom 32-bit RISC-V processor, portable across FPGA families and running Snake and a DDR-loaded DOOM port on real hardware.</h3>
+
+<b>One RV32IM core. A proven five-stage SoC. An experimental DDR throughput profile. Multiple FPGA ecosystems.</b>
+
+<br><br>
+<sub>Base FPGA firmware uses 115200-baud PuTTY. The separate DDR DOOM profile uses a Python graphical viewer over the onboard COM port at 921600 baud, 8N1; PuTTY is only for loader text.</sub>
 
 </div>
 
@@ -37,9 +42,75 @@
 [![CPU Architecture](https://img.shields.io/badge/EXPLORE-CPU_ARCHITECTURE-00D9FF?style=flat-square)](#-core-architecture)
 [![FPGA Portability](https://img.shields.io/badge/EXPLORE-MULTI--FPGA_PORTABILITY-8B5CF6?style=flat-square)](#-multi-fpga-portability)
 [![Hardware Proof](https://img.shields.io/badge/VIEW-HARDWARE_PROOF-31FF70?style=flat-square)](#-persistent-boot-hardware-proof)
+[![DOOM Demo](https://img.shields.io/badge/PLAY-DOOM_DEMO-FF6B35?style=flat-square)](#-doom-on-the-ddr-soc)
 [![Run Snake](https://img.shields.io/badge/PLAY-RISC--V_SNAKE-FF2BD6?style=flat-square)](#-run-it-on-the-arty-s7-50)
 [![Porting Guide](https://img.shields.io/badge/GUIDE-PORT_A_NEW_BOARD-FFB000?style=flat-square)](riscv_processor_cpu/phase8/PORTING.md)
+[![Contributing](https://img.shields.io/badge/PROJECT-CONTRIBUTING-00C853?style=flat-square)](CONTRIBUTING.md)
+[![License](https://img.shields.io/badge/PROJECT-LICENSE-00D9FF?style=flat-square)](LICENSE)
+[![Security](https://img.shields.io/badge/PROJECT-SECURITY-FF2BD6?style=flat-square)](SECURITY.md)
 
+</div>
+
+---
+
+## 🎮 DOOM on the DDR SoC
+
+<div align="center">
+
+[![Watch the DOOM hardware demo from 00:10](https://img.shields.io/badge/▶_WATCH_DOOM_HARDWARE_DEMO-START_AT_00%3A10-FF2BD6?style=for-the-badge)](proof/video.mp4#t=10)
+
+</div>
+
+The DOOM port runs from DDR3 on a **separate experimental throughput bitstream**. The CPU remains at 25 MHz; its limited dual-issue mode is not a general two-wide pipeline. The game image is rendered at 320x200 inside the CPU, sampled to an RGB332 stream, and displayed in a Python window on the laptop. The viewer uses the board's onboard USB-UART connection; it is **not ANSI graphics in PuTTY** and does not require the CP2102 adapter.
+
+| Display / link | Current profile |
+| :--- | :--- |
+| Python graphical viewer | [`doom_viewer.py`](riscv_processor_cpu/phase8/software/doom_viewer.py), keyboard input returns over the same serial link |
+| Stream format | RGB332 RVF1/RVF2; RVF2 uses RLE when smaller and XOR deltas with periodic keyframes |
+| UART | `921600` baud, 8 data bits, no parity, 1 stop bit (8N1) |
+| Resolution | 80x50 baseline; configurable detail profile up to 200x150 sampled from the 320x200 engine framebuffer |
+| Board measurements | About 4.6 FPS at 80x50, 4.2 FPS at 120x75 and 2.2 FPS at 160x100 in reported runs; 200x150 is buildable but not yet board-validated |
+
+Focus the viewer window for controls: arrow keys or `W/A/S/D` move, `Ctrl`/`F` fires, `Space`/`E` uses, `Esc`/`Q` opens the menu, and `Enter` confirms.
+
+The output detail/FPS tradeoff is real: higher resolutions move and render more pixels, and 200x150 is **not** a 5-FPS or 45-FPS claim. See the full measurements and design notes in [`doom_feasibility.md`](riscv_processor_cpu/docs/doom_feasibility.md). The tracked build entry points are [`software/Makefile`](riscv_processor_cpu/phase8/software/Makefile), [`create_ddr_project.tcl`](riscv_processor_cpu/phase8/vivado/create_ddr_project.tcl), and [`build_ddr_throughput.tcl`](riscv_processor_cpu/phase8/vivado/build_ddr_throughput.tcl). Vivado projects, `.bit` files, generated `.bin` images, and the DOOM IWAD are local build/runtime inputs, not files committed to this repository.
+
+### Run DOOM on the Arty S7
+
+For a first build, from `riscv_processor_cpu/phase8/software` create the separate Vivado project and run its checked implementation/bitstream flow:
+
+```powershell
+make ddr_throughput_project
+make ddr_throughput_build
+```
+
+The build checks routed timing and blocking DRCs before writing a bitstream; it does not program the board. The generated project is under `riscv_processor_cpu/phase8/vivado/ddr_project/arty_s7_ddr_throughput/`; program `riscv_processor_cpu/phase8/vivado/ddr_project/arty_s7_ddr_throughput/rv32_soc_arty_s7.runs/impl_1/arty_s7_ddr_top.bit` in Hardware Manager. Keep PuTTY closed while uploading and viewing so only one program owns `COM4`.
+
+From `riscv_processor_cpu/phase8/software`, with the loader at its idle prompt and the local shareware IWAD at the Makefile's configured path:
+
+```powershell
+make ddr_throughput_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_doom_view PORT=COM4 DDR_BAUD=921600
+```
+
+The upload includes the application and WAD; wait for its success message, then start the viewer. Do not press BTN0 or reprogram between upload and opening the viewer. After the game exits, close the viewer and press BTN0 once before another upload. PuTTY can inspect the loader at **921600 baud** when the Python viewer is closed, but it cannot display the binary frame stream.
+
+To build and upload the higher-detail 200x150 profile instead:
+
+```powershell
+make ddr_throughput_detail_upload DOOM_DETAIL_WIDTH=200 DOOM_DETAIL_HEIGHT=150 PORT=COM4 UPLOAD_DELAY=0
+make ddr_doom_view PORT=COM4 DDR_BAUD=921600
+```
+
+The 200x150 path is an experimental resolution setting; expect lower or scene-dependent FPS. Close the viewer and return the board to the loader with BTN0 before uploading a different image.
+
+<a id="snake-hardware-proof"></a>
+### Snake Running on Its Own CPU
+
+<div align="center">
+  <img src="proof/snake_qspi_boot_hardware.png" alt="Snake running on the custom RISC-V CPU after persistent QSPI flash boot" width="70%">
+  <br>
+  <sub>Separate hardware proof: Snake boots from QSPI, is CRC-checked and executes from BRAM.</sub>
 </div>
 
 ---
@@ -54,6 +125,12 @@ in a browser.
 This repository contains a complete custom **RISC-V 32-bit CPU and FPGA SoC** project. The processor was designed from scratch in SystemVerilog, expanded through multiple architecture phases, deployed to a Digilent **Arty S7-50**, and verified with persistent firmware and a live UART application. The SoC logic is now separated from its board wrapper, so the same CPU can target other AMD/Xilinx, Intel/Altera, or Lattice FPGAs without carrying Arty-specific clock and startup primitives into the portable core.
 
 The current hardware milestone is fully physical: the FPGA configures from the board's QSPI flash, the resident Boot ROM validates an `RVF1` image with CRC-32, copies Snake into BRAM, executes `FENCE.I`, and starts the playable game over PuTTY. If flash is absent or damaged, the same loader enters UART recovery instead of executing an unsafe image.
+
+A second, separately built Arty S7 profile runs the DOOM shareware engine from
+DDR3. It combines the restricted dual-issue CPU configuration, instruction
+and data caches, an ordered write buffer, a fast UART video stream and the
+Python graphical viewer described at the top of this README. The Snake/QSPI
+proof and the DDR/DOOM proof are distinct builds and workflows.
 
 The current core combines two memory-performance domains: one-cycle
 instruction and data TCM paths keep the five-stage pipeline fast for local
@@ -224,6 +301,10 @@ PASS: vendor-neutral SoC wrapper at 20 MHz
 The full board checklist, QSPI caveats and vendor notes are in the
 **[FPGA Porting Guide](riscv_processor_cpu/phase8/PORTING.md)**.
 
+The portable-core claims above cover the vendor-neutral CPU and baseline SoC.
+The DDR3/MIG DOOM throughput profile is currently an Arty S7-specific board
+integration, not a claim that its external-memory PHY is portable.
+
 ---
 
 ## 🏆 What Is Working Now
@@ -247,7 +328,9 @@ The full board checklist, QSPI caveats and vendor notes are in the
 | UART bootloader | ✅ | CRC-32 checked application uploads to `0x0000_4000` without FPGA re-synthesis |
 | QSPI flash boot | ✅ | Persistent `RVF1` image, CRC-checked RAM copy, automatic start, and UART recovery verified on FPGA |
 | C firmware support | ✅ | `startup.S`, linker script, UART driver, aligned and cross-word byte/halfword/word accesses |
-| Cache hierarchy | ✅ | Direct-mapped L1 I/D and L2 caches with refill, invalidation, write-through stores, and counters |
+| Cache hierarchy | ✅ | Research core has L1 I/D plus L2; separate DDR FPGA profile has 8 KiB I/D caches with refill and coherent ordered writes |
+| DDR throughput profile | ✅ board-tested | Separate Arty S7 DDR3/MIG bitstream: 8 KiB I-cache, 8 KiB D-cache, restricted dual issue and an ordered four-entry write buffer |
+| DOOM graphical output | ✅ board-tested | Python RGB332/RVF2 viewer over onboard UART at 921600 baud; measured profiles and resolution limits are described above |
 | Snake firmware | ✅ | Playable in PuTTY using `W/A/S/D`, `Q`, `R` |
 | ISA compliance (riscv-tests) | ✅ | All applicable official tests pass: 66/66 FPGA, 77/77 research, 11/11 FPGA + FPU; zero N/A |
 | Formal verification (riscv-formal) | ✅ | 52/52 checks pass on the FPGA core: every RV32IM instruction proven against the ISA model |
@@ -290,7 +373,8 @@ QSPI @ 0x0040_0000 -> RVF1 header -> CRC-32 -> BRAM @ 0x0000_4000
 Vivado 2020.2 results for the hardened `rv32_soc_arty_s7` project
 (`xc7s50csga324-1`). The current QSPI-enabled build completes synthesis,
 implementation, bitstream generation, flash programming, and physical-board
-execution successfully.
+execution successfully. These measurements document the QSPI/TCM build, not
+the separate DDR-throughput project's resource or timing reports.
 
 ### Synthesis and implementation — final transaction-bus build
 
@@ -379,6 +463,19 @@ This is the first game running on the processor.
 | **MEM** | Data memory and memory-mapped peripheral access |
 | **WB** | Register file writeback and retirement |
 
+The verified base SoC uses a conventional in-order five-stage pipeline. A
+separate Arty S7 DDR-throughput profile adds an **8 KiB instruction cache** and
+an **8 KiB data cache**. Its limited dual-issue mode pairs only adjacent,
+aligned, independent simple RV32I integer ALU, `LUI`, or `AUIPC` instructions;
+it is not a general two-instruction-wide pipeline. Cache-miss fills and
+variable-latency DDR accesses still stall the core.
+
+The DDR profile also has a four-entry ordered posted-write buffer. It preserves
+store order and drains/invalidates around DMA and page-table-walker accesses so
+CPU and non-CPU DDR users do not observe stale data. These features are scoped
+to the separate throughput build; the base QSPI/Snake bitstream remains the
+five-stage TCM design.
+
 ### SoC Memory Map
 
 | Address Range | Device | Description |
@@ -389,6 +486,8 @@ This is the first game running on the processor.
 | `0x1000_0000` - `0x1000_000F` | UART | TX, RX, status registers |
 | `0x1000_1000` - `0x1000_100F` | QSPI reader | Flash address, byte data, control/status, peripheral ID |
 | `0x1000_2000` - `0x1000_201F` | DMA | Source, destination, length, control, status, progress, ID, remaining bytes |
+| `0x8000_0000` onward | DDR3 | Application image and runtime memory in the Arty S7 DDR throughput profile |
+| `0x8200_0000` onward | DDR3 WAD region | Uploaded DOOM IWAD handoff/data region in the DDR profile |
 
 ### DMA Data Movement
 
@@ -421,6 +520,13 @@ The active board deployment lives in:
 - [`riscv_processor_cpu/phase8/rtl/clint.sv`](riscv_processor_cpu/phase8/rtl/clint.sv)
 - [`riscv_processor_cpu/phase8/rtl/plic.sv`](riscv_processor_cpu/phase8/rtl/plic.sv)
 - [`riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc`](riscv_processor_cpu/phase8/constraints/arty_s7_50.xdc)
+
+The DDR-specific board wrapper, MIG interface, cache/fetch changes and stream
+transport are maintained as a separate generated Vivado project. Its tracked
+project-generation and build scripts are
+[`create_ddr_project.tcl`](riscv_processor_cpu/phase8/vivado/create_ddr_project.tcl)
+and [`build_ddr_throughput.tcl`](riscv_processor_cpu/phase8/vivado/build_ddr_throughput.tcl);
+the generated `.xpr` and `.bit` artifacts are intentionally not tracked.
 
 ---
 
@@ -500,7 +606,12 @@ transactional. This restored the original Snake speed on the physical FPGA.
 
 ### 10. Functional Cache Hierarchy
 
-The research core now has direct-mapped L1 instruction/data caches and a unified L2 with refill, write-through stores, invalidation and hit/miss counters. The backing DRAM controller is a synthesizable zero-wait model; a physical DDR PHY remains board-specific work.
+The research core has direct-mapped L1 instruction/data caches and a unified
+L2 with refill, write-through stores, invalidation and hit/miss counters. The
+Arty S7 DDR throughput profile is a distinct implementation: it adds an 8 KiB
+instruction cache, an 8 KiB data cache, a four-entry ordered posted-write
+buffer, and the board-specific DDR3/MIG path. Do not confuse the research
+core's DRAM model with the physical DDR3-backed board profile.
 
 ---
 
@@ -685,6 +796,7 @@ When directly replacing `firmware.vmem` or installing a new bootloader:
 | Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make program` | Interactive game on the custom CPU |
 | UART-loaded Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make app`, then `make upload PORT=COM4` | CRC-checked update without re-synthesis |
 | QSPI-persistent Snake | [`snake.c`](riscv_processor_cpu/phase8/software/snake.c) | `make flash_image`, then `make qspi_mcs` | Automatic CRC-checked boot after power-on |
+| DDR DOOM | [`doom_board.c`](riscv_processor_cpu/phase8/software/doom_board.c), [`doom_viewer.py`](riscv_processor_cpu/phase8/software/doom_viewer.py) | `make ddr_throughput_upload PORT=COM4 UPLOAD_DELAY=0`, then `make ddr_doom_view PORT=COM4 DDR_BAUD=921600` | DDR-loaded game, RGB332 frames in the Python graphical viewer |
 
 Snake controls:
 

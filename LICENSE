@@ -1,0 +1,15 @@
+Project-wide license status
+===========================
+
+No project-wide open-source license has been selected for this repository.
+This notice does not grant permission to use, modify, or redistribute original
+project material. Files that contain their own license or copyright notices
+remain governed by those notices.
+
+Third-party code, submodules, generated IP, and game assets retain their own
+licenses and terms. In particular, the DoomGeneric engine is GPL-licensed;
+consult its upstream source and notices before building or distributing a
+combined application. The DOOM IWAD is not included in this repository.
+
+The repository owner must choose and add a project-wide license before the
+original project code can be treated as openly licensed.
