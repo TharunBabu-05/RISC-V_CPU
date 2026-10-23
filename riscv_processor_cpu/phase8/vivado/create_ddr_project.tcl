@@ -15,10 +15,14 @@ if {[info exists argc] && $argc > 1} {
 if {![file exists $ddr_fw]} { error "First run make ddr_test in phase8/software" }
 set ddr_profile baseline
 if {[info exists argc] && $argc > 2} { set ddr_profile [lindex $argv 2] }
-if {$ddr_profile ni {baseline perf}} { error "Unknown DDR profile: $ddr_profile" }
+if {$ddr_profile ni {baseline perf dcache throughput}} { error "Unknown DDR profile: $ddr_profile" }
 set ddr_generics "FIRMWARE_FILE=[file tail $ddr_fw]"
-if {$ddr_profile eq "perf"} {
+if {$ddr_profile in {perf dcache throughput}} {
     append ddr_generics " ENABLE_ICACHE=1 DUAL_ISSUE=1 UART_BAUD=921600"
+}
+if {$ddr_profile in {dcache throughput}} { append ddr_generics " ENABLE_DCACHE=1" }
+if {$ddr_profile eq "throughput"} {
+    append ddr_generics " LOCAL_DCACHE=1 BUFFER_WRITES=1 STREAM_FETCH=1"
 }
 set ddr_preset [file join $ddr_script_dir ddr arty_s7_50_mig.prj]
 if {![file exists $ddr_preset]} { error "Missing Digilent MIG board preset: $ddr_preset" }

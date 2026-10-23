@@ -2,6 +2,8 @@
 module tb_ddr_soc #(
     parameter LOADER_MODE=0,
     parameter ENABLE_ICACHE=0,
+    parameter ENABLE_DCACHE=0,
+    parameter LOCAL_DCACHE=0, BUFFER_WRITES=0, STREAM_FETCH=0,
     parameter DUAL_ISSUE=0,
     parameter UART_BAUD=2500000,
     parameter FIRMWARE_FILE="../software/build/ddr_test.vmem"
@@ -15,6 +17,12 @@ module tb_ddr_soc #(
     wire uart_tx;
     integer external_fetches=0, local_fetches=0, fast_run=0, longest_fast_run=0;
     integer trace_cycles=0;
+    integer ddr_reads=0, backing_reads=0;
+    always @(posedge clk) if(rst_n) begin
+        if(dut.ddr_req_valid && dut.ddr_req_ready && !dut.bus_req_write)
+            ddr_reads <= ddr_reads+1;
+        if(req_valid && req_ready && !req_write) backing_reads <= backing_reads+1;
+    end
     reg [31:0] previous_pc=0;
     wire [3:0] axi_awid;
     wire [27:0] axi_awaddr;
@@ -55,7 +63,8 @@ module tb_ddr_soc #(
     wire axi_rready;
     soc_core #(.FIRMWARE_FILE(FIRMWARE_FILE),
                .ENABLE_EXT_MEM(1), .UART_BAUD(UART_BAUD),
-               .ENABLE_ICACHE(ENABLE_ICACHE), .DUAL_ISSUE(DUAL_ISSUE)) dut (
+               .ENABLE_ICACHE(ENABLE_ICACHE), .ENABLE_DCACHE(ENABLE_DCACHE), .DUAL_ISSUE(DUAL_ISSUE),
+               .LOCAL_DCACHE(LOCAL_DCACHE), .BUFFER_WRITES(BUFFER_WRITES), .STREAM_FETCH(STREAM_FETCH)) dut (
         .clk_sys(clk), .rst_n(rst_n), .uart_rx(uart_rx), .uart_tx(uart_tx),
         .qspi_dq1_i(1'b1), .status(status),
         .sim_bus_override(1'b0), .sim_bus_addr(32'b0), .sim_bus_wdata(32'b0),
@@ -311,6 +320,9 @@ module tb_ddr_soc #(
                     $fatal(1,"Missing mixed execution or one-instruction-per-cycle TCM evidence");
                 $display("\nPASS: DDR firmware + CPU + DMA + AXI; external fetches=%0d local=%0d consecutive TCM=%0d",
                     external_fetches,local_fetches,longest_fast_run);
+                if(ENABLE_DCACHE && !LOCAL_DCACHE && !LOADER_MODE && backing_reads >= ddr_reads)
+                    $fatal(1,"DDR cache produced no read hits");
+                $display("DDR read requests=%0d backing reads=%0d cache=%0d",ddr_reads,backing_reads,ENABLE_DCACHE);
                 $finish;
             end
         end

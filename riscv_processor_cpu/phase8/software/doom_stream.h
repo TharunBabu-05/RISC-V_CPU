@@ -3,8 +3,12 @@
 
 #include <stdint.h>
 
+#ifndef DOOM_STREAM_WIDTH
 #define DOOM_STREAM_WIDTH 80u
+#endif
+#ifndef DOOM_STREAM_HEIGHT
 #define DOOM_STREAM_HEIGHT 50u
+#endif
 #define DOOM_STREAM_PIXELS (DOOM_STREAM_WIDTH * DOOM_STREAM_HEIGHT)
 
 uint32_t doom_stream_crc32(const uint8_t *data, unsigned size);

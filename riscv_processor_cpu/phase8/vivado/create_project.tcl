@@ -70,6 +70,8 @@ set soc_files [list \
     "$phase8_rtl/rv_bus_to_axi_lite.sv" \
     "$phase8_rtl/cpu_top_soc.sv" \
     "$phase8_rtl/rv_icache.sv"   \
+    "$phase8_rtl/rv_ddr_cache.sv" \
+    "$phase8_rtl/rv_write_buffer.sv" \
     "$phase8_rtl/rv_pair_alu.sv" \
     "$phase8_rtl/uart_tx.sv"     \
     "$phase8_rtl/uart_rx.sv"     \

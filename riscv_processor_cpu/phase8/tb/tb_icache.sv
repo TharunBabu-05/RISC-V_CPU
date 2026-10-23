@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_icache;
+module tb_icache #(parameter STREAM=0);
     reg clk=0, rst_n=0, invalidate=0, req_valid=0, req_cacheable=1, rsp_ready=0;
     always #5 clk=~clk;
     reg [31:0] req_addr=0, mem_rsp_data=0;
@@ -9,7 +9,10 @@ module tb_icache;
     integer reads=0, ticks=0, wait_count=0;
     reg pending=0, inject_error=0;
     reg [31:0] saved, salt=0;
-    rv_icache dut(.*);
+    reg [31:0] stream_addr=0;
+    wire [31:0] stream_pc,stream_data,stream_second;
+    wire stream_hit,stream_pair;
+    rv_icache #(.STREAM(STREAM)) dut(.*);
     function automatic [31:0] value(input [31:0] addr);
         value = addr ^ 32'hdeadc000 ^ salt;
     endfunction
@@ -32,6 +35,14 @@ module tb_icache;
     task automatic fetch(input [31:0] addr, input bit pair_expected, input bit error_expected);
         reg [31:0] held;
         begin
+            if(STREAM) begin
+                @(negedge clk); stream_addr=addr;
+                @(posedge clk); #1;
+            end
+            if(STREAM && req_cacheable && stream_hit) begin
+                if(stream_data !== value(addr) || stream_pair !== pair_expected || error_expected)
+                    $fatal(1,"stream hit data/pair");
+            end else begin
             @(posedge clk); #1;
             req_addr=addr; req_valid=1;
             do @(posedge clk); while(!req_ready);
@@ -47,6 +58,7 @@ module tb_icache;
             end
             rsp_ready=1;
             @(posedge clk); #1 rsp_ready=0;
+            end
         end
     endtask
     task automatic fence;
@@ -82,6 +94,19 @@ module tb_icache;
         join
         fetch(32'h80000010,1,0);
         if(reads!=before_reads+4) $fatal(1,"inflight fence revalidated old line");
+        if(STREAM) begin
+            for(integer n=0;n<32;n=n+1) fetch(32'h80000100+n*8,1,0);
+            before_reads=reads;
+            for(integer n=0;n<64;n=n+1) begin
+                @(negedge clk); stream_addr=32'h80000100+n*4;
+                @(posedge clk); #1;
+                if(!stream_hit || stream_pc!==stream_addr || stream_data!==value(stream_addr))
+                    $fatal(1,"non-continuous stream at %h",stream_addr);
+            end
+            if(reads!=before_reads) $fatal(1,"stream hits accessed backing memory");
+            fence(); #1;
+            if(stream_hit) $fatal(1,"stale streamed data after fence");
+        end
         $display("PASS: 8 KiB cache hits/conflicts/bypass/errors/backpressure/inflight FENCE.I");
         $finish;
     end

@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_dual_issue #(parameter DUAL=1, CACHE=1);
+module tb_dual_issue #(parameter DUAL=1, CACHE=1, EARLY=1, STREAM=0);
     reg clk=0, rst_n=0;
     always #5 clk=~clk;
     wire iv, ir, iw, isv, isr, ise, dv, dr, dw, dsv, dsr;
@@ -17,6 +17,10 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
     reg [31:0] i_result=0,d_result=0;
     reg i_valid=0,d_valid=0;
     integer i_delay=0,d_delay=0,cycles=0,pairs=0,fetches=0;
+    integer counted_fetch=0,counted_data=0,counted_pair_wait=0;
+    integer counted_exec=0,counted_instructions=0;
+    integer early_requests=0,reused_words=0;
+    integer loop_begin=0,loop_end=0,loop_cycles=0,stream_run=0,longest_stream=0;
     reg d_write;
     reg [3:0] d_strobe;
     assign ir=!i_pending;
@@ -27,7 +31,7 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
     assign dsv=d_valid;
     assign rd=d_result;
     cpu_top_soc #(.ENABLE_MMU(0), .FAST_LOCAL_IMEM(0), .FAST_LOCAL_DMEM(0),
-        .ENABLE_ICACHE(CACHE), .DUAL_ISSUE(DUAL)) dut (
+        .ENABLE_ICACHE(CACHE), .DUAL_ISSUE(DUAL), .EARLY_FETCH(EARLY), .STREAM_FETCH(STREAM)) dut (
         .clk(clk), .rst_n(rst_n), .ext_interrupt(irq), .timer_interrupt(1'b0),
         .software_interrupt(1'b0), .imem_rdata(32'b0), .dtcm_rdata(32'b0),
         .ibus_req_valid(iv), .ibus_req_ready(ir), .ibus_req_addr(ia),
@@ -46,9 +50,34 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
         end else irq=0;
     end
     always @(posedge clk) if(rst_n) begin
+        if($test$plusargs("COMMITS") && dut.wb_retire && dut.id_ex_pc>=32'h800005a0)
+            $display("COMMIT pc=%h ins=%h pair=%b second=%h trap=%b cause=%h mepc=%h",dut.id_ex_pc,dut.id_ex_instr,dut.id_ex_pair,dut.id_ex_second,dut.trap_taken,dut.trap_mcause,dut.trap_mepc);
         if ($test$plusargs("trace") && cycles < 80)
             $display("c=%0d pc=%h req=%b/%b rsp=%b/%b pending=%b buffered=%b stall=%b/%b",cycles,debug_pc,iv,ir,isv,isr,dut.ifetch_pending,dut.ifetch_valid,dut.mem_stall,dut.mmu_stall);
         cycles<=cycles+1;
+        if(dut.fetch_consumed && dut.stream_usable) begin
+            stream_run<=stream_run+1;
+            if(stream_run+1>longest_stream) longest_stream<=stream_run+1;
+        end else stream_run<=0;
+        if(dut.wb_retire && dut.id_ex_pc==32'h80000004 && loop_begin==0) loop_begin<=cycles;
+        if(dut.wb_retire && dut.id_ex_pc==32'h80000000+loop_end && loop_cycles==0)
+            loop_cycles<=cycles-loop_begin;
+        if (dut.early_fetch && !dut.reuse_second && !dut.flush_if_id)
+            early_requests <= early_requests+1;
+        if (dut.reuse_second && !dut.flush_if_id) reused_words <= reused_words+1;
+        if (!dut.if_fast_local && !dut.fetch_available && !dut.flush_if_id)
+            counted_fetch <= counted_fetch+1;
+        if (dut.mem_stall) counted_data <= counted_data+1;
+        if (dut.pair_id_stall) counted_pair_wait <= counted_pair_wait+1;
+        if (dut.muldiv_stall || dut.fpu_stall || dut.vec_stall)
+            counted_exec <= counted_exec+1;
+        if (dut.wb_retire)
+            counted_instructions <= counted_instructions + ((DUAL && dut.id_ex_pair) ? 2 : 1);
+        if (dut.perf_cycles !== cycles || dut.perf_fetch !== counted_fetch ||
+            dut.perf_data !== counted_data || dut.perf_pair_wait !== counted_pair_wait ||
+            dut.perf_exec_wait !== counted_exec || dut.perf_pairs !== pairs ||
+            dut.perf_instructions !== counted_instructions)
+            $fatal(1,"Performance counter mismatch");
         if(dut.trap_taken) traps<=traps+1;
         if(dut.wb_retire && dut.id_ex_pair) pairs<=pairs+1;
         if(iv && ir) begin
@@ -87,7 +116,34 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
                 if(DUAL && CACHE && pairs<10) $fatal(1,"No meaningful dual execution");
                 if((!DUAL || !CACHE) && pairs!=0) $fatal(1,"paired when disabled");
                 if(traps!=4 || !irq_sent) $fatal(1,"Missing traps: %0d",traps);
+                if (EARLY && CACHE && !STREAM && (early_requests == 0 || reused_words == 0))
+                    $fatal(1,"Frontend optimization not exercised");
+                if ((!EARLY || !CACHE || STREAM) && (early_requests != 0 || reused_words != 0))
+                    $fatal(1,"Frontend optimization active when disabled");
                 $display("PASS dual=%0d cache=%0d cycles=%0d pairs=%0d bus_fetches=%0d",DUAL,CACHE,cycles,pairs,fetches);
+                $display("HOT_LOOP cycles=%0d (4096 ALU instructions + 256 loop instructions), consecutive_stream=%0d",loop_cycles,longest_stream);
+                if(STREAM && CACHE && longest_stream<12) $fatal(1,"continuous cached delivery untested");
+                $display("PERF fetch_empty=%0d data_wait=%0d pair_wait=%0d exec_wait=%0d instructions=%0d",
+                    counted_fetch,counted_data,counted_pair_wait,counted_exec,counted_instructions);
+                force dut.id_ex_csr_addr = 12'hFC0;
+                force dut.ex_csr_write_attempt = 0;
+                #1;
+                if (dut.ex_csr_illegal || dut.ex_csr_rdata !== 32'h50455231)
+                    $fatal(1,"PER1 signature CSR failed");
+                force dut.id_ex_csr_addr = 12'hFC6;
+                #1;
+                if (dut.ex_csr_rdata !== dut.perf_pairs)
+                    $fatal(1,"Paired-retirement CSR failed");
+                force dut.ex_csr_write_attempt = 1;
+                #1;
+                if (!dut.ex_csr_illegal) $fatal(1,"Counter write accepted");
+                force dut.ex_csr_write_attempt = 0;
+                force dut.current_priv = 0;
+                #1;
+                if (!dut.ex_csr_illegal) $fatal(1,"User counter read accepted");
+                release dut.current_priv;
+                release dut.ex_csr_write_attempt;
+                release dut.id_ex_csr_addr;
                 $finish;
             end
         end
@@ -105,6 +161,9 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
     function automatic [31:0] csr(input integer address, dst_n, src_n, f);
         csr={address[11:0],src_n[4:0],f[2:0],dst_n[4:0],7'h73};
     endfunction
+    function automatic [31:0] bne(input integer rs, offset);
+        bne={offset[12],offset[10:5],5'd0,rs[4:0],3'b001,offset[4:1],offset[11],7'h63};
+    endfunction
     integer at=0, seed=32'h12345678, dst,s1,s2,f,kind;
     reg [31:0] a,b,result;
     task automatic emit(input [31:0] insn);
@@ -116,6 +175,13 @@ module tb_dual_issue #(parameter DUAL=1, CACHE=1);
         for(integer n=0;n<256;n=n+1) data[n]=0;
         for(integer n=0;n<32;n=n+1) expected[n]=0;
         expected[1]=32'h80000000;
+        // Cache-resident independent ALU loop: expose frontend throughput,
+        // not cold refill latency. Registers are reinitialized below.
+        emit(imm(31,0,128,0));
+        for(integer n=0;n<32;n=n+1) emit(imm(2+n%29,2+n%29,1,0));
+        emit(imm(31,31,-1,0));
+        emit(bne(31,4-at*4));
+        loop_end=at*4;
         // Independent and dependent ALU pairs, WAW, x0 and WAR cases.
         for(integer n=2;n<31;n=n+1) begin
             emit(imm(n,0,n*3,0)); expected[n]=n*3;

@@ -33,6 +33,8 @@ SOC_SRCS := \
 	$(SOC_RTL)/qspi_reader.sv \
 	$(SOC_RTL)/cpu_top_soc.sv \
 	$(SOC_RTL)/rv_icache.sv \
+	$(SOC_RTL)/rv_ddr_cache.sv \
+	$(SOC_RTL)/rv_write_buffer.sv \
 	$(SOC_RTL)/rv_pair_alu.sv \
 	$(CPU_SRCS)
 
@@ -154,6 +156,19 @@ ddr_fast_wad_sim:
 	$(MAKE) ddr_loader_sim DDR_LOADER_SIM_ARGS=+FAST_WAD
 
 .PHONY: icache ddr_perf_sim
+.PHONY: dcache ddr_dcache_sim
+.PHONY: ddr_dcache_loader_sim
+ddr_dcache_loader_sim:
+	$(MAKE) ddr_fast_wad_sim DDR_CPU_ARGS="-Ptb_ddr_soc.ENABLE_ICACHE=1 -Ptb_ddr_soc.ENABLE_DCACHE=1 -Ptb_ddr_soc.DUAL_ISSUE=1 -Ptb_ddr_soc.UART_BAUD=921600"
+
+dcache: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_ddr_cache -o $(BUILD)/tb_ddr_cache tb_ddr_cache.sv $(SOC_RTL)/rv_ddr_cache.sv
+	$(VVP) $(BUILD)/tb_ddr_cache
+	$(IVERILOG) -g2012 -s tb_ddr_cache -Ptb_ddr_cache.FAST=1 -o $(BUILD)/tb_ddr_cache_fast tb_ddr_cache.sv $(SOC_RTL)/rv_ddr_cache.sv
+	$(VVP) $(BUILD)/tb_ddr_cache_fast
+
+ddr_dcache_sim:
+	$(MAKE) ddr_soc DDR_CPU_ARGS="-Ptb_ddr_soc.ENABLE_ICACHE=1 -Ptb_ddr_soc.ENABLE_DCACHE=1 -Ptb_ddr_soc.DUAL_ISSUE=1 -Ptb_ddr_soc.UART_BAUD=921600"
 icache: | $(BUILD)
 	$(IVERILOG) -g2012 -s tb_icache -o $(BUILD)/tb_icache tb_icache.sv $(SOC_RTL)/rv_icache.sv
 	$(VVP) $(BUILD)/tb_icache
@@ -175,3 +190,40 @@ dual_issue: | $(BUILD)
 	$(VVP) $(BUILD)/tb_single_issue
 	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.CACHE=0 -o $(BUILD)/tb_uncached tb_dual_issue.sv $(SOC_SRCS)
 	$(VVP) $(BUILD)/tb_uncached
+
+.PHONY: fetch_compare
+.PHONY: stream_cpu throughput_sim throughput_loader_sim
+.PHONY: stream_cache write_buffer
+.PHONY: cache_path
+cache_path: | $(BUILD)
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_cache_path -o $(BUILD)/tb_cache_path tb_cache_path.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_cache_path
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_cache_path -Ptb_cache_path.LOCAL=0 -o $(BUILD)/tb_cache_shared tb_cache_path.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_cache_shared
+	$(IVERILOG) -g2012 -DSIMULATION -s tb_cache_path -Ptb_cache_path.POSTED=0 -o $(BUILD)/tb_cache_unposted tb_cache_path.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_cache_unposted
+stream_cache: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_icache -Ptb_icache.STREAM=1 -o $(BUILD)/tb_stream_cache tb_icache.sv $(SOC_RTL)/rv_icache.sv
+	$(VVP) $(BUILD)/tb_stream_cache
+write_buffer: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_write_buffer -o $(BUILD)/tb_write_buffer tb_write_buffer.sv $(SOC_RTL)/rv_write_buffer.sv
+	$(VVP) $(BUILD)/tb_write_buffer
+stream_cpu: | $(BUILD)
+	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.STREAM=1 -o $(BUILD)/tb_stream_cpu tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_stream_cpu
+	$(VVP) $(BUILD)/tb_stream_cpu +SEED=42
+	$(VVP) $(BUILD)/tb_stream_cpu +SEED=2026
+	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.STREAM=1 -Ptb_dual_issue.DUAL=0 -o $(BUILD)/tb_stream_single tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_stream_single
+
+THROUGHPUT_ARGS = -Ptb_ddr_soc.ENABLE_ICACHE=1 -Ptb_ddr_soc.ENABLE_DCACHE=1 -Ptb_ddr_soc.DUAL_ISSUE=1 -Ptb_ddr_soc.UART_BAUD=921600 -Ptb_ddr_soc.LOCAL_DCACHE=1 -Ptb_ddr_soc.BUFFER_WRITES=1 -Ptb_ddr_soc.STREAM_FETCH=1
+throughput_sim:
+	$(MAKE) ddr_soc DDR_CPU_ARGS="$(THROUGHPUT_ARGS)"
+throughput_loader_sim:
+	$(MAKE) ddr_fast_wad_sim DDR_CPU_ARGS="$(THROUGHPUT_ARGS)"
+
+fetch_compare: dual_issue
+	$(IVERILOG) -g2012 -s tb_dual_issue -Ptb_dual_issue.EARLY=0 -o $(BUILD)/tb_fetch_baseline tb_dual_issue.sv $(SOC_SRCS)
+	$(VVP) $(BUILD)/tb_fetch_baseline
+	$(VVP) $(BUILD)/tb_fetch_baseline +SEED=42
+	$(VVP) $(BUILD)/tb_fetch_baseline +SEED=2026

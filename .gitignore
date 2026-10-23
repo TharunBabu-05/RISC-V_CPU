@@ -67,5 +67,8 @@ riscv_processor_cpu/phase8/vivado/vivado_project/rv32_soc_arty_s7.runs/.jobs/
 /riscv_processor_cpu/phase8/software/build/ddr_fast_test.wad
 /riscv_processor_cpu/phase8/software/build/ddr_doom.*
 /riscv_processor_cpu/phase8/software/build/ddr_doom_direct.*
+/riscv_processor_cpu/phase8/software/build/ddr_doom_profile.*
 /riscv_processor_cpu/phase8/software/build/doom_obj/
 /riscv_processor_cpu/phase8/software/build/doom_stream_test.exe
+/riscv_processor_cpu/phase8/software/build/ddr_throughput*.jou
+/riscv_processor_cpu/phase8/software/build/throughput_synth*.jou

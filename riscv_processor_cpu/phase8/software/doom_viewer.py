@@ -13,7 +13,7 @@ MAGIC = b"RVF1"
 WIDTH = 80
 HEIGHT = 50
 PIXELS = WIDTH * HEIGHT
-PACKET_BYTES = 12 + PIXELS
+V2_MAGIC = b"RVF2"
 RGB = tuple(
     bytes((((value >> 5) & 7) * 255 // 7,
            ((value >> 2) & 7) * 255 // 7,
@@ -32,7 +32,9 @@ class FrameParser:
         frames = []
         messages = []
         while True:
-            start = self.buffer.find(MAGIC)
+            starts = [pos for pos in (self.buffer.find(MAGIC),
+                                      self.buffer.find(V2_MAGIC)) if pos >= 0]
+            start = min(starts) if starts else -1
             if start < 0:
                 count = max(0, len(self.buffer) - 3)
                 messages.append(bytes(self.buffer[:count]))
@@ -41,20 +43,64 @@ class FrameParser:
             if start:
                 messages.append(bytes(self.buffer[:start]))
                 del self.buffer[:start]
-            if len(self.buffer) < PACKET_BYTES:
+            version = self.buffer[3:4]
+            header_size = 12 if version == b"1" else 18
+            if len(self.buffer) < header_size:
                 break
-            if self.buffer[4] != WIDTH or self.buffer[5] != HEIGHT:
+            width, height = self.buffer[4], self.buffer[5]
+            if not width or not height or width * height > 320 * 200:
                 del self.buffer[0]
                 continue
-            pixels = bytes(self.buffer[12:PACKET_BYTES])
-            crc = int.from_bytes(self.buffer[8:12], "little")
-            if zlib.crc32(pixels) != crc:
+            if version == b"1":
+                payload_size = width * height
+                encoding = 0
+                crc = int.from_bytes(self.buffer[8:12], "little")
+                payload_start = 12
+            else:
+                encoding = self.buffer[8]
+                if encoding not in (0, 1) or self.buffer[9] != 0:
+                    del self.buffer[0]
+                    continue
+                crc = int.from_bytes(self.buffer[10:14], "little")
+                payload_size = int.from_bytes(self.buffer[14:18], "little")
+                if payload_size > width * height:
+                    del self.buffer[0]
+                    continue
+                payload_start = 18
+            packet_size = payload_start + payload_size
+            if len(self.buffer) < packet_size:
+                break
+            payload = bytes(self.buffer[payload_start:packet_size])
+            if encoding == 0:
+                pixels = payload
+            else:
+                pixels = bytearray()
+                offset = 0
+                while offset < len(payload) and len(pixels) <= width * height:
+                    control = payload[offset]
+                    offset += 1
+                    count = (control & 0x7f) + 1
+                    if control & 0x80:
+                        if offset >= len(payload):
+                            break
+                        pixels.extend(payload[offset:offset + 1] * count)
+                        offset += 1
+                    else:
+                        if offset + count > len(payload):
+                            break
+                        pixels.extend(payload[offset:offset + count])
+                        offset += count
+                if offset != len(payload) or len(pixels) != width * height:
+                    del self.buffer[0]
+                    continue
+                pixels = bytes(pixels)
+            if len(pixels) != width * height or zlib.crc32(pixels) != crc:
                 self.bad_frames += 1
                 del self.buffer[0]
                 continue
             sequence = int.from_bytes(self.buffer[6:8], "little")
-            frames.append((sequence, pixels))
-            del self.buffer[:PACKET_BYTES]
+            frames.append((sequence, width, height, pixels))
+            del self.buffer[:packet_size]
         text = b"".join(messages)
         text = bytes(b for b in text if b in (9, 10, 13) or 32 <= b <= 126)
         return frames, text.decode("ascii")
@@ -72,11 +118,24 @@ def self_test():
         found, message = parser.feed(chunk)
         frames.extend(found)
         text += message
-    assert frames == [(0x1234, pixels)] and text == "RDD1:GO\r\n"
+    assert frames == [(0x1234, WIDTH, HEIGHT, pixels)] and text == "RDD1:GO\r\n"
     damaged = bytearray(packet)
     damaged[22] ^= 1
     found, _ = parser.feed(damaged + packet)
-    assert found == [(0x1234, pixels)] and parser.bad_frames == 1
+    assert found == [(0x1234, WIDTH, HEIGHT, pixels)] and parser.bad_frames == 1
+    raw = bytes(range(256))[:200]
+    packet_raw_v2 = (V2_MAGIC + bytes((20, 10)) + (8).to_bytes(2, "little")
+                     + b"\x00\x00" + zlib.crc32(raw).to_bytes(4, "little")
+                     + len(raw).to_bytes(4, "little") + raw)
+    found, _ = parser.feed(packet_raw_v2)
+    assert found == [(8, 20, 10, raw)]
+    repeated = bytes((7,)) * 200
+    encoded = bytes((0xff, 7, 0xc7, 7))
+    packet_v2 = (V2_MAGIC + bytes((20, 10)) + (9).to_bytes(2, "little")
+                 + b"\x01\x00" + zlib.crc32(repeated).to_bytes(4, "little")
+                 + len(encoded).to_bytes(4, "little") + encoded)
+    found, _ = parser.feed(packet_v2)
+    assert found == [(9, 20, 10, repeated)]
     assert zlib.crc32(b"123456789") == 0xCBF43926
     print("DOOM Python viewer protocol tests passed.")
 
@@ -118,8 +177,8 @@ class Viewer:
         self.root.title(f"RV32 DOOM - {port} - waiting for frames")
         self.root.configure(background="black")
         self.root.resizable(False, False)
-        self.canvas = tk.Canvas(self.root, width=WIDTH * scale,
-                                height=HEIGHT * scale, background="black",
+        self.canvas = tk.Canvas(self.root, width=800,
+                                height=500, background="black",
                                 highlightthickness=0)
         self.canvas.pack()
         self.root.bind("<KeyPress>", self.key_down)
@@ -164,10 +223,13 @@ class Viewer:
             latest = self.frames.get_nowait()
             self.frame_count += 1
         if latest is not None:
-            sequence, pixels = latest
-            ppm = b"P6\n80 50\n255\n" + b"".join(RGB[p] for p in pixels)
+            sequence, width, height, pixels = latest
+            scale = self.scale or max(1, min(800 // width, 500 // height))
+            ppm = (f"P6\n{width} {height}\n255\n".encode("ascii") +
+                   b"".join(RGB[p] for p in pixels))
             original = tk.PhotoImage(data=ppm, format="PPM")
-            self.picture = original.zoom(self.scale, self.scale)
+            self.picture = original.zoom(scale, scale)
+            self.canvas.configure(width=width * scale, height=height * scale)
             if self.image_id is None:
                 self.image_id = self.canvas.create_image(0, 0, anchor="nw",
                                                          image=self.picture)
@@ -176,7 +238,7 @@ class Viewer:
             elapsed = time.monotonic() - self.fps_start
             if elapsed >= 1:
                 fps = self.frame_count / elapsed
-                self.root.title(f"RV32 DOOM - {self.port} - {fps:.1f} FPS - "
+                self.root.title(f"RV32 DOOM - {self.port} - {width}x{height} - {fps:.1f} FPS - "
                                 f"frame {sequence} - CRC errors {self.parser.bad_frames}")
                 self.frame_count = 0
                 self.fps_start = time.monotonic()
@@ -251,7 +313,8 @@ def main():
     parser = argparse.ArgumentParser(description="RV32 DOOM binary framebuffer viewer")
     parser.add_argument("--port", default="COM4")
     parser.add_argument("--baud", type=int, default=115200)
-    parser.add_argument("--scale", type=int, default=10)
+    parser.add_argument("--scale", type=int, default=0,
+                        help="integer pixel scale; default fits the window")
     parser.add_argument("--no-go", action="store_true",
                         help="Attach to an already-running game")
     parser.add_argument("--self-test", action="store_true")
@@ -259,8 +322,8 @@ def main():
     if args.self_test:
         self_test()
         return
-    if not 1 <= args.scale <= 16:
-        parser.error("--scale must be between 1 and 16")
+    if not 0 <= args.scale <= 16:
+        parser.error("--scale must be 0 (auto) or between 1 and 16")
     try:
         Viewer(args.port, args.baud, args.scale, not args.no_go).run()
     except Exception as error:

@@ -361,6 +361,68 @@ ddr_loader_project: ddr_loader
 	@echo "Open ../vivado/ddr_project/arty_s7_ddr_loader/rv32_soc_arty_s7.xpr in Vivado."
 
 .PHONY: ddr_perf_project ddr_perf_upload ddr_perf_view
+.PHONY: ddr_dcache_project
+.PHONY: ddr_throughput_project ddr_throughput_upload
+.PHONY: ddr_throughput_build ddr_throughput_detail_upload
+ddr_throughput_build:
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-log $(BUILD)/ddr_throughput_build.log -journal $(BUILD)/ddr_throughput_build.jou \
+		-source ../vivado/build_ddr_throughput.tcl
+
+ddr_throughput_project: ddr_loader
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-log $(BUILD)/ddr_throughput_project.log -journal $(BUILD)/ddr_throughput_project.jou \
+		-source ../vivado/create_ddr_project.tcl \
+		-tclargs ../vivado/ddr_project/arty_s7_ddr_throughput $(BUILD)/ddr_loader.vmem throughput
+	@echo "Separate throughput project created. Routed timing is required before programming."
+
+ddr_throughput_upload: ddr_dcache_upload
+
+# Higher-detail RVF2 stream profile. Keep the known-good 80x50 image/build
+# products untouched so the user can fall back without a clean rebuild.
+DOOM_DETAIL_WIDTH ?= 120
+DOOM_DETAIL_HEIGHT ?= 75
+DOOM_DETAIL_TAG = $(DOOM_DETAIL_WIDTH)x$(DOOM_DETAIL_HEIGHT)
+$(BUILD)/doom_obj/doom_board_detail_profile_$(DOOM_DETAIL_TAG).o: doom_board.c doom_stream.h ddr_wad_handoff.h Makefile | $(BUILD)/doom_obj
+	$(CC) $(DOOM_BOARD_CFLAGS) -DDOOM_DIRECT_VIDEO=1 -DDOOM_HW_PERF=1 \
+		-DDOOM_STREAM_WIDTH=$(DOOM_DETAIL_WIDTH)u \
+		-DDOOM_STREAM_HEIGHT=$(DOOM_DETAIL_HEIGHT)u -c -o $@ $<
+
+$(BUILD)/doom_obj/doom_stream_detail_$(DOOM_DETAIL_TAG).o: doom_stream.c doom_stream.h uart.h Makefile | $(BUILD)/doom_obj
+	$(CC) $(DOOM_BOARD_CFLAGS) -DDOOM_STREAM_WIDTH=$(DOOM_DETAIL_WIDTH)u \
+		-DDOOM_STREAM_HEIGHT=$(DOOM_DETAIL_HEIGHT)u -c -o $@ $<
+
+$(BUILD)/ddr_doom_detail_profile_$(DOOM_DETAIL_TAG).elf: $(DOOM_ENGINE_OBJECTS) \
+	$(BUILD)/doom_obj/doom_board_detail_profile_$(DOOM_DETAIL_TAG).o \
+	$(BUILD)/doom_obj/doom_stream_detail_$(DOOM_DETAIL_TAG).o $(BUILD)/doom_obj/doom_board_syscalls.o \
+	$(BUILD)/doom_obj/uart.o $(BUILD)/doom_obj/startup.o doom_board_link.ld Makefile
+	$(CC) $(DOOM_BOARD_CFLAGS) -nostartfiles -T doom_board_link.ld -Wl,--gc-sections \
+		-Wl,--wrap=I_FinishUpdate,--wrap=I_SetPalette,--wrap=R_RenderPlayerView \
+		-specs=nosys.specs -o $@ $(DOOM_ENGINE_OBJECTS) \
+		$(BUILD)/doom_obj/doom_board_detail_profile_$(DOOM_DETAIL_TAG).o \
+		$(BUILD)/doom_obj/doom_stream_detail_$(DOOM_DETAIL_TAG).o $(BUILD)/doom_obj/doom_board_syscalls.o \
+		$(BUILD)/doom_obj/uart.o $(BUILD)/doom_obj/startup.o -lm
+	$(SIZE) $@
+
+$(BUILD)/ddr_doom_detail_profile_$(DOOM_DETAIL_TAG).bin: $(BUILD)/ddr_doom_detail_profile_$(DOOM_DETAIL_TAG).elf
+	$(OBJCOPY) -O binary $< $@
+
+.PHONY: ddr_doom_detail_profile ddr_throughput_detail_upload
+ddr_doom_detail_profile: $(BUILD)/ddr_doom_detail_profile_$(DOOM_DETAIL_TAG).bin
+	@echo "DOOM detailed stream image built ($(DOOM_DETAIL_WIDTH)x$(DOOM_DETAIL_HEIGHT)): $<"
+
+ddr_throughput_detail_upload: ddr_doom_detail_profile
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ddr_upload.ps1 \
+		-Port $(PORT) -Baud 921600 -GraphicalViewer -File $(BUILD)/ddr_doom_detail_profile_$(DOOM_DETAIL_TAG).bin \
+		-WadFile "$(WAD)" -InterByteDelayMs $(UPLOAD_DELAY)
+
+ddr_dcache_project: ddr_loader
+	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
+		-log $(BUILD)/ddr_dcache_project.log -journal $(BUILD)/ddr_dcache_project.jou \
+		-source ../vivado/create_ddr_project.tcl \
+		-tclargs ../vivado/ddr_project/arty_s7_ddr_dcache $(BUILD)/ddr_loader.vmem dcache
+	@echo "Separate DDR cache project created. Synthesize, implement, and verify timing before programming."
+
 ddr_perf_project: ddr_loader
 	"C:/Xilinx/Vivado/2020.2/bin/vivado.bat" -mode batch \
 		-source ../vivado/create_ddr_project.tcl \
@@ -449,6 +511,34 @@ $(BUILD)/ddr_doom_direct.bin: $(BUILD)/ddr_doom_direct.elf
 .PHONY: ddr_doom_direct ddr_perf_direct_upload
 ddr_doom_direct: $(BUILD)/ddr_doom_direct.bin
 
+# Requires PER1 CPU CSRs (0xfc0-0xfc7); NEVER upload to the old bitstream.
+$(BUILD)/doom_obj/doom_board_profile.o: doom_board.c doom_stream.h ddr_wad_handoff.h | $(BUILD)/doom_obj
+	$(CC) $(DOOM_BOARD_CFLAGS) -DDOOM_DIRECT_VIDEO=1 -DDOOM_HW_PERF=1 -c -o $@ $<
+
+$(BUILD)/ddr_doom_profile.elf: $(DOOM_ENGINE_OBJECTS) \
+	$(BUILD)/doom_obj/doom_board_profile.o $(BUILD)/doom_obj/doom_stream.o \
+	$(BUILD)/doom_obj/doom_board_syscalls.o $(BUILD)/doom_obj/uart.o \
+	$(BUILD)/doom_obj/startup.o doom_board_link.ld Makefile
+	$(CC) $(DOOM_BOARD_CFLAGS) -nostartfiles -T doom_board_link.ld -Wl,--gc-sections \
+		-Wl,--wrap=I_FinishUpdate,--wrap=I_SetPalette,--wrap=R_RenderPlayerView \
+		-specs=nosys.specs -o $@ $(DOOM_ENGINE_OBJECTS) \
+		$(BUILD)/doom_obj/doom_board_profile.o $(BUILD)/doom_obj/doom_stream.o \
+		$(BUILD)/doom_obj/doom_board_syscalls.o $(BUILD)/doom_obj/uart.o \
+		$(BUILD)/doom_obj/startup.o -lm
+
+$(BUILD)/ddr_doom_profile.bin: $(BUILD)/ddr_doom_profile.elf
+	$(OBJCOPY) -O binary $< $@
+
+.PHONY: ddr_doom_profile
+ddr_doom_profile: $(BUILD)/ddr_doom_profile.bin
+
+.PHONY: ddr_dcache_upload
+# Requires the newly built dcache bitstream, including PER1 counters.
+ddr_dcache_upload: ddr_doom_profile
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ddr_upload.ps1 \
+		-Port $(PORT) -Baud 921600 -GraphicalViewer -File $(BUILD)/ddr_doom_profile.bin \
+		-WadFile "$(WAD)" -InterByteDelayMs $(UPLOAD_DELAY)
+
 ddr_perf_direct_upload: ddr_doom_direct
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File ddr_upload.ps1 \
 		-Port $(PORT) -Baud 921600 -GraphicalViewer -File $(BUILD)/ddr_doom_direct.bin \
@@ -457,8 +547,18 @@ ddr_perf_direct_upload: ddr_doom_direct
 $(BUILD)/doom_stream_test.exe: doom_stream_test.c doom_stream.c doom_stream.h uart.h | $(BUILD)
 	gcc -std=c11 -O2 -Wall -Wextra -Werror -o $@ doom_stream_test.c doom_stream.c
 
+$(BUILD)/doom_stream_detail_test_$(DOOM_DETAIL_TAG).exe: doom_stream_test.c doom_stream.c doom_stream.h uart.h | $(BUILD)
+	gcc -std=c11 -O2 -Wall -Wextra -Werror \
+		-DDOOM_STREAM_WIDTH=$(DOOM_DETAIL_WIDTH)u \
+		-DDOOM_STREAM_HEIGHT=$(DOOM_DETAIL_HEIGHT)u \
+		-o $@ doom_stream_test.c doom_stream.c
+
 doom_stream_test: $(BUILD)/doom_stream_test.exe
 	$(BUILD)/doom_stream_test.exe
+
+.PHONY: doom_stream_detail_test
+doom_stream_detail_test: $(BUILD)/doom_stream_detail_test_$(DOOM_DETAIL_TAG).exe
+	$(BUILD)/doom_stream_detail_test_$(DOOM_DETAIL_TAG).exe
 
 doom_viewer_test:
 	$(PYTHON) doom_viewer.py --self-test

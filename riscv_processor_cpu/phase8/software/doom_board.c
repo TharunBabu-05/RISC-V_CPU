@@ -26,6 +26,18 @@ static uint32_t sleep_ticks_total, view_ticks_total;
 static uint32_t previous_cycle, previous_instret;
 static uint64_t engine_cycles_total, engine_instructions_total;
 static unsigned interval_count;
+#ifdef DOOM_HW_PERF
+static uint32_t hw_previous[6];
+static uint64_t hw_total[6];
+static void hw_read(uint32_t out[6]) {
+    __asm__ volatile ("csrr %0, 0xfc2" : "=r"(out[0]));
+    __asm__ volatile ("csrr %0, 0xfc3" : "=r"(out[1]));
+    __asm__ volatile ("csrr %0, 0xfc4" : "=r"(out[2]));
+    __asm__ volatile ("csrr %0, 0xfc5" : "=r"(out[3]));
+    __asm__ volatile ("csrr %0, 0xfc6" : "=r"(out[4]));
+    __asm__ volatile ("csrr %0, 0xfc7" : "=r"(out[5]));
+}
+#endif
 
 static uint32_t cpu_cycles(void) {
     uint32_t value;
@@ -60,7 +72,11 @@ static uint32_t ticks_ms(void) {
 }
 
 void DG_Init(void) {
-    uart_puts("DOOM:VIDEO RVF1 80x50 RGB332\r\n");
+    uart_puts("DOOM:VIDEO RVF2 ");
+    print_unsigned(DOOM_STREAM_WIDTH);
+    uart_putc('x');
+    print_unsigned(DOOM_STREAM_HEIGHT);
+    uart_puts(" RGB332 RLE\r\n");
 #ifdef DOOM_DIRECT_VIDEO
     uart_puts("DOOM:VIDEO_PATH DIRECT_INDEXED\r\n");
 #endif
@@ -68,6 +84,13 @@ void DG_Init(void) {
 
 void DG_DrawFrame(void) {
     uint32_t start = CLINT_MTIME_LO;
+#ifdef DOOM_HW_PERF
+    uint32_t hw_now[6];
+    hw_read(hw_now);
+    if (previous_frame_end != 0)
+        for (unsigned i = 0; i < 6; ++i)
+            hw_total[i] += (uint32_t)(hw_now[i] - hw_previous[i]);
+#endif
     if (previous_frame_end != 0) {
         render_ticks_total += start - previous_frame_end;
         engine_cycles_total += (uint32_t)(cpu_cycles() - previous_cycle);
@@ -98,6 +121,17 @@ void DG_DrawFrame(void) {
         print_unsigned(interval_count ?
             (uint32_t)(engine_instructions_total / interval_count) : 0);
         uart_puts(" (8-frame window)\r\n");
+#ifdef DOOM_HW_PERF
+        static const char *labels[6] = {" fetch_empty=", " data_wait=",
+            " pair_wait=", " exec_wait=", " pairs=", " instructions="};
+        uart_puts("DOOM:HW mean_engine_events");
+        for (unsigned i = 0; i < 6; ++i) {
+            uart_puts(labels[i]);
+            print_unsigned(interval_count ? (uint32_t)(hw_total[i] / interval_count) : 0);
+            hw_total[i] = 0;
+        }
+        uart_newline();
+#endif
         render_ticks_total = 0;
         stream_ticks_total = 0;
         sleep_ticks_total = 0;
@@ -110,6 +144,9 @@ void DG_DrawFrame(void) {
     previous_frame_end = CLINT_MTIME_LO;
     previous_cycle = cpu_cycles();
     previous_instret = cpu_instructions();
+#ifdef DOOM_HW_PERF
+    hw_read(hw_previous);
+#endif
 }
 
 #ifdef DOOM_DIRECT_VIDEO
@@ -187,6 +224,14 @@ int main(void) {
         for (;;) { }
     }
     uart_puts("DOOM:BOOT DDR IWAD\r\n");
+    // Optional cache/frontend flags read as zero on older bitstreams.
+    const volatile uint32_t *meminfo = (const volatile uint32_t *)0x10003000u;
+    uint32_t memory_flags = meminfo[1];
+    uart_puts(!(memory_flags & 4u) ? "DOOM:DCACHE DISABLED\r\n" :
+              (memory_flags & 8u) ? "DOOM:DCACHE 8192 CPU_LOCAL\r\n" :
+                                   "DOOM:DCACHE 8192 SHARED_WRITE_THROUGH\r\n");
+    if (memory_flags & 16u) uart_puts("DOOM:STORES ORDERED_BUFFER_4\r\n");
+    if (memory_flags & 64u) uart_puts("DOOM:FETCH STREAM\r\n");
     FILE *wad = fopen("doom1.wad", "rb");
     char magic[4];
     if (!wad || fread(magic, 1, sizeof(magic), wad) != sizeof(magic) ||

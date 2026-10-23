@@ -10,6 +10,10 @@ module soc_core #(
     parameter bit FAST_LOCAL_DMEM = 1'b1,
     parameter bit ENABLE_EXT_MEM = 1'b0,
     parameter bit ENABLE_ICACHE = 1'b0,
+    parameter bit ENABLE_DCACHE = 1'b0,
+    parameter bit LOCAL_DCACHE = 1'b0,
+    parameter bit BUFFER_WRITES = 1'b0,
+    parameter bit STREAM_FETCH = 1'b0,
     parameter bit DUAL_ISSUE = 1'b0,
     parameter logic [31:0] EXT_MEM_BASE = 32'h8000_0000,
     parameter logic [31:0] EXT_MEM_BYTES = 32'h1000_0000
@@ -181,24 +185,119 @@ module soc_core #(
     logic        bus_rsp_valid, bus_rsp_ready, bus_rsp_err;
     logic [31:0] bus_rsp_rdata;
 
+    logic ddr_req_valid, ddr_req_ready, ddr_rsp_valid, ddr_rsp_ready, ddr_rsp_err;
+    logic [31:0] ddr_rsp_rdata;
+    generate if (ENABLE_DCACHE && ENABLE_EXT_MEM && !LOCAL_DCACHE) begin : g_ddr_cache
+        // Cache at the shared physical DDR port: CPU, DMA, instruction fills
+        // and page-table reads observe the same ordered write-through data.
+        rv_ddr_cache #(.BASE_ADDR(EXT_MEM_BASE), .SIZE_BYTES(EXT_MEM_BYTES)) u_cache (
+            .clk(clk_sys), .rst_n(rst_n), .invalidate(!ext_mem_ready),
+            .req_valid(ddr_req_valid), .req_ready(ddr_req_ready),
+            .req_addr(bus_req_addr), .req_wdata(bus_req_wdata),
+            .req_write(bus_req_write), .req_wstrb(bus_req_wstrb), .req_size(bus_req_size),
+            .rsp_valid(ddr_rsp_valid), .rsp_ready(ddr_rsp_ready),
+            .rsp_rdata(ddr_rsp_rdata), .rsp_err(ddr_rsp_err),
+            .mem_req_valid(ext_req_valid), .mem_req_ready(ext_req_ready),
+            .mem_req_addr(ext_req_addr), .mem_req_wdata(ext_req_wdata),
+            .mem_req_write(ext_req_write), .mem_req_wstrb(ext_req_wstrb), .mem_req_size(ext_req_size),
+            .mem_rsp_valid(ext_rsp_valid), .mem_rsp_ready(ext_rsp_ready),
+            .mem_rsp_rdata(ext_rsp_rdata), .mem_rsp_err(ext_rsp_err)
+        );
+    end else begin : g_no_ddr_cache
+        assign ext_req_valid = ddr_req_valid;
+        assign ddr_req_ready = ext_req_ready;
+        assign ext_req_addr = bus_req_addr;
+        assign ext_req_write = bus_req_write;
+        assign ext_req_wstrb = bus_req_wstrb;
+        assign ext_req_wdata = bus_req_wdata;
+        assign ext_req_size = bus_req_size;
+        assign ddr_rsp_valid = ext_rsp_valid;
+        assign ddr_rsp_rdata = ext_rsp_rdata;
+        assign ddr_rsp_err = ext_rsp_err;
+        assign ext_rsp_ready = ddr_rsp_ready;
+    end endgenerate
+
+    logic f_valid, f_ready, f_write, f_rsp_valid, f_rsp_ready, f_rsp_err;
+    logic [31:0] f_addr, f_wdata, f_rdata;
+    logic [3:0] f_strobes;
+    logic [1:0] f_size;
+    logic agent_active;
+    // Exclusive DMA/PTW ownership: finish the current CPU access, drain
+    // posted stores, flush local lines, then hold CPU requests until release.
+    wire agent_pending = dma_req_valid || ptw_req_valid || agent_active;
+    wire local_enabled = ENABLE_DCACHE && ENABLE_EXT_MEM && LOCAL_DCACHE;
+    wire cache_idle, buffer_idle, buffer_fault;
+    wire [31:0] buffer_fault_addr;
+    wire agent_grant = !local_enabled || (cache_idle && buffer_idle && !buffer_fault);
+    wire instruction_grant = !local_enabled || (buffer_idle && !buffer_fault);
+    wire dma_f_ready, ptw_f_ready, instruction_f_ready;
+    assign dma_req_ready = dma_f_ready && agent_grant;
+    assign ptw_req_ready = ptw_f_ready && agent_grant;
+    assign cpu_i_req_ready = instruction_f_ready && instruction_grant;
+    always_ff @(posedge clk_sys or negedge rst_n) begin
+        if (!rst_n) agent_active <= 0;
+        else begin
+            if ((dma_req_valid && dma_req_ready) || (ptw_req_valid && ptw_req_ready))
+                agent_active <= 1;
+            if ((dma_rsp_valid && dma_rsp_ready) || (ptw_rsp_valid && ptw_rsp_ready))
+                agent_active <= 0;
+        end
+    end
+    generate if (ENABLE_DCACHE && ENABLE_EXT_MEM && LOCAL_DCACHE) begin : g_local_cache
+        wire cv, cr, cw, csv, csr, cse, front_ready, front_err;
+        wire [31:0] ca, cd, csd;
+        wire [3:0] cb;
+        wire [1:0] cz;
+        assign host_req_ready = front_ready && !agent_pending;
+        // Posted errors cannot be reported precisely to the retired store.
+        // Latch a fatal condition, discard cached data, and stop all bus work.
+        assign host_rsp_err = front_err || buffer_fault;
+        rv_ddr_cache #(.BASE_ADDR(EXT_MEM_BASE), .SIZE_BYTES(EXT_MEM_BYTES), .FAST_HIT(1)) u_cache (
+            .clk(clk_sys), .rst_n(rst_n),
+            .invalidate(agent_pending || !ext_mem_ready || buffer_fault), .idle(cache_idle),
+            .req_valid(host_req_valid && !agent_pending), .req_ready(front_ready),
+            .req_addr(host_req_addr), .req_wdata(host_req_wdata),
+            .req_write(host_req_write), .req_wstrb(host_req_wstrb), .req_size(host_req_size),
+            .rsp_valid(host_rsp_valid), .rsp_ready(host_rsp_ready),
+            .rsp_rdata(host_rsp_rdata), .rsp_err(front_err),
+            .mem_req_valid(cv), .mem_req_ready(cr), .mem_req_addr(ca), .mem_req_wdata(cd),
+            .mem_req_write(cw), .mem_req_wstrb(cb), .mem_req_size(cz),
+            .mem_rsp_valid(csv), .mem_rsp_ready(csr), .mem_rsp_rdata(csd), .mem_rsp_err(cse));
+        rv_write_buffer #(.ENABLE(BUFFER_WRITES), .BASE_ADDR(EXT_MEM_BASE), .SIZE_BYTES(EXT_MEM_BYTES)) u_buffer (
+            .clk(clk_sys), .rst_n(rst_n), .idle(buffer_idle), .fault(buffer_fault), .fault_addr(buffer_fault_addr),
+            .req_valid(cv), .req_ready(cr), .req_addr(ca), .req_wdata(cd),
+            .req_write(cw), .req_wstrb(cb), .req_size(cz),
+            .rsp_valid(csv), .rsp_ready(csr), .rsp_rdata(csd), .rsp_err(cse),
+            .mem_req_valid(f_valid), .mem_req_ready(f_ready), .mem_req_addr(f_addr), .mem_req_wdata(f_wdata),
+            .mem_req_write(f_write), .mem_req_wstrb(f_strobes), .mem_req_size(f_size),
+            .mem_rsp_valid(f_rsp_valid), .mem_rsp_ready(f_rsp_ready), .mem_rsp_rdata(f_rdata), .mem_rsp_err(f_rsp_err));
+    end else begin : g_direct_data
+        assign f_valid=host_req_valid; assign host_req_ready=f_ready;
+        assign f_addr=host_req_addr; assign f_wdata=host_req_wdata;
+        assign f_write=host_req_write; assign f_strobes=host_req_wstrb; assign f_size=host_req_size;
+        assign host_rsp_valid=f_rsp_valid; assign f_rsp_ready=host_rsp_ready;
+        assign host_rsp_rdata=f_rdata; assign host_rsp_err=f_rsp_err;
+        assign cache_idle=1; assign buffer_idle=1; assign buffer_fault=0; assign buffer_fault_addr=0;
+    end endgenerate
+
     rv_bus_arbiter u_bus_arbiter (
         .clk(clk_sys), .rst_n(rst_n),
-        .m0_req_valid(host_req_valid), .m0_req_ready(host_req_ready),
-        .m0_req_addr(host_req_addr), .m0_req_write(host_req_write),
-        .m0_req_wstrb(host_req_wstrb), .m0_req_wdata(host_req_wdata), .m0_req_size(host_req_size),
-        .m0_rsp_valid(host_rsp_valid), .m0_rsp_ready(host_rsp_ready),
-        .m0_rsp_rdata(host_rsp_rdata), .m0_rsp_err(host_rsp_err),
-        .m1_req_valid(ptw_req_valid), .m1_req_ready(ptw_req_ready),
+        .m0_req_valid(f_valid), .m0_req_ready(f_ready),
+        .m0_req_addr(f_addr), .m0_req_write(f_write),
+        .m0_req_wstrb(f_strobes), .m0_req_wdata(f_wdata), .m0_req_size(f_size),
+        .m0_rsp_valid(f_rsp_valid), .m0_rsp_ready(f_rsp_ready),
+        .m0_rsp_rdata(f_rdata), .m0_rsp_err(f_rsp_err),
+        .m1_req_valid(ptw_req_valid && agent_grant), .m1_req_ready(ptw_f_ready),
         .m1_req_addr(ptw_req_addr), .m1_req_write(ptw_req_write),
         .m1_req_wstrb(ptw_req_wstrb), .m1_req_wdata(ptw_req_wdata), .m1_req_size(ptw_req_size),
         .m1_rsp_valid(ptw_rsp_valid), .m1_rsp_ready(ptw_rsp_ready),
         .m1_rsp_rdata(ptw_rsp_rdata), .m1_rsp_err(ptw_rsp_err),
-        .m2_req_valid(cpu_i_req_valid), .m2_req_ready(cpu_i_req_ready),
+        .m2_req_valid(cpu_i_req_valid && instruction_grant), .m2_req_ready(instruction_f_ready),
         .m2_req_addr(cpu_i_req_addr), .m2_req_write(cpu_i_req_write),
         .m2_req_wstrb(cpu_i_req_wstrb), .m2_req_wdata(cpu_i_req_wdata), .m2_req_size(cpu_i_req_size),
         .m2_rsp_valid(cpu_i_rsp_valid), .m2_rsp_ready(cpu_i_rsp_ready),
         .m2_rsp_rdata(cpu_i_rsp_rdata), .m2_rsp_err(cpu_i_rsp_err),
-        .m3_req_valid(dma_req_valid), .m3_req_ready(dma_req_ready),
+        .m3_req_valid(dma_req_valid && agent_grant), .m3_req_ready(dma_f_ready),
         .m3_req_addr(dma_req_addr), .m3_req_write(dma_req_write),
         .m3_req_wstrb(dma_req_wstrb), .m3_req_wdata(dma_req_wdata), .m3_req_size(dma_req_size),
         .m3_rsp_valid(dma_rsp_valid), .m3_rsp_ready(dma_rsp_ready),
@@ -228,7 +327,7 @@ module soc_core #(
     always_comb begin
         target_endpoint_ready = 1'b1;
         if (sel_ext && bus_req_size != 2'd3)
-            target_endpoint_ready = ext_mem_ready && ext_req_ready;
+            target_endpoint_ready = ext_mem_ready && ddr_req_ready;
         else if (sel_bram && cpu_dtcm_access)
             target_endpoint_ready = 1'b0;
         else if (sel_uart && bus_req_write && bus_req_addr[3:0] == 4'h0)
@@ -250,20 +349,17 @@ module soc_core #(
     assign bus_rsp_rdata = target_rsp_data;
     assign bus_rsp_err   = target_rsp_error;
 
-    assign ext_req_valid = ENABLE_EXT_MEM && target_state == TARGET_IDLE &&
+    assign ddr_req_valid = ENABLE_EXT_MEM && ext_mem_ready && target_state == TARGET_IDLE &&
                            bus_req_valid && sel_ext && bus_req_size != 2'd3;
-    assign ext_req_addr = bus_req_addr;
-    assign ext_req_write = bus_req_write;
-    assign ext_req_wstrb = bus_req_wstrb;
-    assign ext_req_wdata = bus_req_wdata;
-    assign ext_req_size = bus_req_size;
-    assign ext_rsp_ready = ENABLE_EXT_MEM && target_state == TARGET_EXTERNAL;
+    assign ddr_rsp_ready = ENABLE_EXT_MEM && target_state == TARGET_EXTERNAL;
 
     logic [31:0] meminfo_rdata;
     always_comb begin
         case (bus_req_addr[3:0])
             4'h0: meminfo_rdata = 32'h4444_5231; // DDR1
-            4'h4: meminfo_rdata = {30'b0, (ENABLE_EXT_MEM && ext_mem_ready), ENABLE_EXT_MEM};
+            4'h4: meminfo_rdata = {25'b0, (ENABLE_ICACHE && STREAM_FETCH), buffer_fault, (local_enabled && BUFFER_WRITES), local_enabled,
+                                  (ENABLE_EXT_MEM && ENABLE_DCACHE),
+                                  (ENABLE_EXT_MEM && ext_mem_ready), ENABLE_EXT_MEM};
             4'h8: meminfo_rdata = EXT_MEM_BASE;
             4'hC: meminfo_rdata = ENABLE_EXT_MEM ? EXT_MEM_BYTES : 32'b0;
             default: meminfo_rdata = 32'b0;
@@ -308,9 +404,9 @@ module soc_core #(
                         target_state <= TARGET_IDLE;
                 end
                 TARGET_EXTERNAL: begin
-                    if (ext_rsp_valid) begin
-                        target_rsp_data <= ext_rsp_rdata;
-                        target_rsp_error <= ext_rsp_err;
+                    if (ddr_rsp_valid) begin
+                        target_rsp_data <= ddr_rsp_rdata;
+                        target_rsp_error <= ddr_rsp_err;
                         target_state <= TARGET_RESPONSE;
                     end
                 end
@@ -397,6 +493,7 @@ module soc_core #(
         .XLEN(32),
         .ENABLE_MMU(1'b1),
         .ENABLE_ICACHE(ENABLE_ICACHE),
+        .STREAM_FETCH(STREAM_FETCH),
         .DUAL_ISSUE(DUAL_ISSUE),
         .FAST_LOCAL_IMEM(FAST_LOCAL_IMEM),
         .FAST_LOCAL_DMEM(FAST_LOCAL_DMEM),
@@ -428,7 +525,7 @@ module soc_core #(
     );
 
     assign status[0] = rst_n;
-    assign status[1] = 1'b1;
+    assign status[1] = !buffer_fault;
     assign status[2] = ~uart_tx;
     assign status[3] = ~uart_rx;
 endmodule

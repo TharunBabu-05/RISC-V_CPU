@@ -2,8 +2,11 @@
 // Two synchronous data banks provide an aligned instruction pair on a hit.
 // The caller authorizes the whole line before asserting req_cacheable.
 `timescale 1ns/1ps
-module rv_icache (
+module rv_icache #(parameter bit STREAM = 0) (
     input wire clk, rst_n, invalidate,
+    input wire [31:0] stream_addr,
+    output wire [31:0] stream_pc, stream_data, stream_second,
+    output wire stream_hit, stream_pair,
     input wire req_valid,
     output wire req_ready,
     input wire [31:0] req_addr,
@@ -31,7 +34,16 @@ module rv_icache (
     reg [31:0] even_q, odd_q;
     reg [18:0] tag_q;
     reg valid_q;
+    reg [31:0] lookup_pc;
+    wire [31:0] lookup_addr = STREAM ? stream_addr : req_addr;
     wire [9:0] index = address[12:3];
+
+    assign stream_pc = lookup_pc;
+    assign stream_hit = STREAM && rst_n && !invalidate && valid_q &&
+        valid[lookup_pc[12:3]] && tag_q == lookup_pc[31:13];
+    assign stream_data = lookup_pc[2] ? odd_q : even_q;
+    assign stream_second = odd_q;
+    assign stream_pair = !lookup_pc[2];
 
     assign req_ready = state == IDLE && !invalidate && rst_n;
     assign rsp_valid = state == RESPONSE;
@@ -41,10 +53,10 @@ module rv_icache (
 
     // No reset on the memories so Vivado can infer BRAM. Valid bits own reset.
     always @(posedge clk) begin
-        if (req_valid && req_ready) begin
-            even_q <= even_data[req_addr[12:3]];
-            odd_q <= odd_data[req_addr[12:3]];
-            tag_q <= tags[req_addr[12:3]];
+        if (STREAM || (req_valid && req_ready)) begin
+            even_q <= even_data[lookup_addr[12:3]];
+            odd_q <= odd_data[lookup_addr[12:3]];
+            tag_q <= tags[lookup_addr[12:3]];
         end
         if (state == WAIT_DATA && mem_rsp_valid && cacheable) begin
             if (second) odd_data[index] <= mem_rsp_data;
@@ -58,6 +70,7 @@ module rv_icache (
             state <= IDLE;
             valid <= 0;
             valid_q <= 0;
+            lookup_pc <= 0;
             address <= 0;
             cacheable <= 0;
             second <= 0;
@@ -69,16 +82,22 @@ module rv_icache (
             rsp_pair <= 0;
             rsp_err <= 0;
         end else begin
+            if (STREAM || (req_valid && req_ready)) begin
+                lookup_pc <= lookup_addr;
+                valid_q <= valid[lookup_addr[12:3]];
+            end
             case (state)
                 IDLE: if (req_valid && req_ready) begin
                     address <= req_addr;
                     cacheable <= req_cacheable;
-                    valid_q <= valid[req_addr[12:3]];
                     second <= 0;
                     poisoned <= 0;
                     rsp_pair <= 0;
                     rsp_err <= 0;
-                    state <= req_cacheable ? LOOKUP : SEND;
+                    // Streaming hits bypass transactions entirely. Requests
+                    // on this mode are misses or non-cacheable fetches.
+                    if (STREAM && req_cacheable) valid[req_addr[12:3]] <= 0;
+                    state <= req_cacheable && !STREAM ? LOOKUP : SEND;
                 end
                 LOOKUP: begin
                     if (valid_q && tag_q == address[31:13] && !invalidate) begin

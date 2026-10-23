@@ -5,6 +5,10 @@ module arty_s7_ddr_top #(
     parameter FIRMWARE_FILE = "ddr_test.vmem",
     parameter integer UART_BAUD = 115200,
     parameter bit ENABLE_ICACHE = 1'b0,
+    parameter bit ENABLE_DCACHE = 1'b0,
+    parameter bit LOCAL_DCACHE = 1'b0,
+    parameter bit BUFFER_WRITES = 1'b0,
+    parameter bit STREAM_FETCH = 1'b0,
     parameter bit DUAL_ISSUE = 1'b0
 ) (
     input wire clk_12mhz, sys_clk_i, rst_btn,
@@ -61,7 +65,8 @@ module arty_s7_ddr_top #(
         .USRDONEO(1'b1), .USRDONETS(1'b1));
 
     soc_core #(.FIRMWARE_FILE(FIRMWARE_FILE), .ENABLE_EXT_MEM(1'b1),
-               .ENABLE_ICACHE(ENABLE_ICACHE), .DUAL_ISSUE(DUAL_ISSUE),
+               .ENABLE_ICACHE(ENABLE_ICACHE), .ENABLE_DCACHE(ENABLE_DCACHE), .DUAL_ISSUE(DUAL_ISSUE),
+               .LOCAL_DCACHE(LOCAL_DCACHE), .BUFFER_WRITES(BUFFER_WRITES), .STREAM_FETCH(STREAM_FETCH),
                .UART_BAUD(UART_BAUD)) u_soc (
         .clk_sys(clk_sys), .rst_n(soc_rst_n), .uart_tx(uart_tx), .uart_rx(uart_rx),
         .qspi_cs(qspi_cs), .qspi_sck(qspi_sck), .qspi_dq0_o(dq0_o),

@@ -22,6 +22,8 @@ riscv_processor_cpu/phase8/rtl/rv_bus_arbiter.sv
 riscv_processor_cpu/phase8/rtl/rv_bus_to_axi_lite.sv
 riscv_processor_cpu/phase8/rtl/cpu_top_soc.sv
 riscv_processor_cpu/phase8/rtl/rv_icache.sv
+riscv_processor_cpu/phase8/rtl/rv_ddr_cache.sv
+riscv_processor_cpu/phase8/rtl/rv_write_buffer.sv
 riscv_processor_cpu/phase8/rtl/rv_pair_alu.sv
 riscv_processor_cpu/phase8/rtl/soc_core_txn.sv
 riscv_processor_cpu/phase8/rtl/soc_top.sv

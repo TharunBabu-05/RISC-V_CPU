@@ -93,7 +93,18 @@ static void run_tests(void) {
     uart_puts("DDR:PATTERN PASS\r\n");
 
     for (unsigned i = 0; i < 64; ++i) { dma_source[i] = i ^ 0xC001D00D; dma_dest[i] = 0; }
+    // Warm destination lines before DMA replaces them. CPU reads must see
+    // DMA writes without a software flush at the shared DDR cache port.
+    volatile uint32_t *dma_ddr = (volatile uint32_t *)0x80004000u;
+    for (unsigned i = 0; i < 64; ++i) dma_ddr[i] = 0xA5A5A5A5;
+    for (unsigned i = 0; i < 64; ++i) check(dma_ddr + i, 0xA5A5A5A5);
     dma_copy((uint32_t)dma_source, 0x80004000);
+    for (unsigned i = 0; i < 64; ++i) check(dma_ddr + i, dma_source[i]);
+    // Reverse direction: CPU stores into warm lines followed by DMA reads.
+    for (unsigned i = 0; i < 64; ++i) {
+        dma_source[i] ^= 0x12345678;
+        dma_ddr[i] = dma_source[i];
+    }
     dma_copy(0x80004000, (uint32_t)dma_dest);
     for (unsigned i = 0; i < 64; ++i) check(dma_dest + i, dma_source[i]);
     uart_puts("DDR:DMA PASS\r\n");

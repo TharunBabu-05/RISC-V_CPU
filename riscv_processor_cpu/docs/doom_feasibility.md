@@ -1191,3 +1191,320 @@ reference. Viewer protocol tests cover the unchanged wire format.
 This experiment removes known redundant work; it does not establish a
 45-FPS solution. Even zero engine time would not meet that display target
 with the current raw-frame serial transport.
+
+#### CPU Event Instrumentation (2026-10-22)
+
+`cpu_top_soc` now implements machine-only read-only custom CSRs:
+
+| CSR | Meaning |
+| --- | --- |
+| 0xFC0 | Signature 0x50455231 (`PER1`) |
+| 0xFC1 | Clock cycles since reset |
+| 0xFC2 | Non-local frontend empty cycles, excluding redirects |
+| 0xFC3 | `mem_stall` cycles (transactional data-access waiting) |
+| 0xFC4 | Second-lane dependency interlock cycles |
+| 0xFC5 | Multiply/divide, FPU or vector execution-wait cycles |
+| 0xFC6 | Retired pairs, counted once per pair |
+| 0xFC7 | Retired instructions, counted twice per pair |
+
+All counters are 32-bit, reset to zero and wrap modulo 2^32. Events overlap;
+do not add their percentages. Frontend-empty time includes pipeline
+sequencing and cache refill, not only instruction-cache misses. Retirement
+uses the existing EX-completion event, matching the current `instret` semantics.
+Read counters as interval deltas, not absolute lifetime values. Sequential
+CSR reads are not an atomic snapshot and have small sampling overhead.
+
+`make ddr_doom_profile` builds a separate direct-video image that emits
+`DOOM:HW mean_engine_events` after each timing window. Its six values match
+0xFC2-0xFC7 and exclude streaming and diagnostic output. No default upload
+target selects this image. **Do not upload it to the old bitstream:** the old
+CPU does not implement these CSRs and will trap. The ordinary direct image
+remains compatible with the already-programmed CPU.
+
+The dual-issue regression checks counter totals cycle-by-cycle, signature
+and paired-counter CSR reads, write rejection and user-mode rejection.
+Three randomized dual-issue seeds, cached single issue and uncached fallback
+pass. These synthetic programs are not a representative DOOM profile.
+The instrumented RTL has not yet been synthesized, timing-qualified or
+programmed. This update enables diagnosis; it does not itself increase FPS.
+
+#### CP2102 Is Not A Different Video Transport
+
+The classic CP2102 is a USB-to-UART bridge with a maximum UART rate of
+1 Mbps, not an SPI or I2C bridge. Pmod is a connector: routing UART onto it
+does not remove the serial bandwidth limit. Its 12 Mbps USB bus rating is
+not the rate available on its UART pins. See the
+[Silicon Labs CP2102/9 datasheet](https://www.silabs.com/documents/public/data-sheets/CP2102-9.pdf).
+
+Raw 320x200 RGB332 at 45 FPS requires 2,880,000 payload bytes/s, or at least
+28.8 Mbps with UART 8N1 framing before packet overhead. A genuinely different
+display link needs a compatible receiver/display and FPGA controller, not
+just different FPGA pins. No SPI/I2C-to-CP2102 wiring or pin changes were made.
+
+#### Frontend Throughput Changes (2026-10-22)
+
+`EARLY_FETCH=1` (CPU default) removes the request-generation bubble when a
+cached DDR instruction is consumed. It also retains the already-fetched
+second word for sequential single issue when a bundle cannot execute as a
+pair. Redirects still invalidate buffered instructions; FENCE.I still drains
+and invalidates stale fills. The shortcut is restricted to unrestricted
+machine-mode, untranslated DDR, with aligned next PCs. Local BRAM and
+uncached configurations keep the original path. `EARLY_FETCH=0` restores
+the original frontend for A/B testing.
+
+`make fetch_compare` in `phase8/tb` runs identical register-scoreboard
+programs against both frontends, including dependencies, loads, branches,
+self-modifying code, exceptions and interrupts. Both execute 397 retired
+instructions in each seed:
+
+| Seed | Original cycles | Updated cycles | Cycle reduction |
+| --- | ---: | ---: | ---: |
+| Default | 3704 | 3260 | 12.0% |
+| 42 | 3666 | 3280 | 10.5% |
+| 2026 | 3636 | 3247 | 10.7% |
+
+The synthetic memory model varies response latency with cycle number;
+these results include that interaction and some extra speculative fetches.
+They are not a DOOM benchmark or a claim of equivalent board FPS gains.
+The cache, single-issue, uncached and portable-wrapper regressions pass.
+New synthesis and routed timing are still required before this RTL can
+replace the working bitstream; no board was programmed by these tests.
+
+#### 8 KiB Shared DDR Data Cache (2026-10-22)
+
+`rv_ddr_cache.sv` implements 8,192 bytes of cached data in 2,048 direct-mapped
+four-byte lines, with separate tags and valid bits. It is a blocking,
+write-through, no-write-allocate cache. A read miss fills one aligned word;
+byte/halfword reads extract right-justified data from it. Stores retain their
+exact addresses and byte strobes and are acknowledged only after the backing
+DDR response. A successful write hit merges the affected bytes; a failed
+write leaves the line invalid. Failed reads never allocate.
+
+The cache sits at the shared physical DDR port AFTER arbitration, not inside
+the CPU. CPU data, DMA, instruction-cache fills and page-table reads all pass
+through it. This avoids stale CPU data after DMA/loader writes without
+software data-cache flushes. There are no dirty lines. The existing private
+instruction cache still requires `FENCE.I` after modifying executable code.
+Any future DDR master that bypasses this shared port needs a coherence design.
+
+BRAM and MMIO bypass the cache entirely in the SoC. Cross-word DDR accesses
+pass through unchanged; cross-word stores conservatively invalidate all
+lines, including on downstream errors. Reset and loss of DDR readiness also
+invalidate all lines. Invalidating an outstanding refill prevents its later
+allocation. Requests/responses remain stable through backpressure.
+
+`ENABLE_DCACHE` defaults to zero, preserving existing project configurations.
+MEMINFO at `0x10003004` now reports bit 2 when the DDR cache is enabled; bits
+0 and 1 are unchanged. Rebuilt DOOM firmware prints
+`DOOM:DCACHE 8192 SHARED_WRITE_THROUGH` or `DOOM:DCACHE DISABLED` at startup.
+
+Validation commands in `phase8/tb`:
+
+```powershell
+make dcache
+make ddr_dcache_sim
+make ddr_dcache_loader_sim
+make portable fetch_compare
+```
+
+The unit test covers all 8 KiB simultaneously, byte/halfword/word loads,
+sparse and zero-strobe stores, write misses, conflicting tags, cross-word
+operations, non-DDR bypass, errors, invalidation during refill, reset and
+400 randomized read/write/read sequences. A warm read takes 7 test cycles
+versus 18 for the first cold read, including artificial response backpressure;
+this is not a CPU/DOOM speedup estimate. The DDR diagnostic passes with CPU,
+DMA and AXI, explicitly warming lines before DMA overwrites and testing CPU
+stores followed by DMA reads. It reports 12,628 DDR read requests and 12,395
+backing reads; its streaming/address-test workload is not representative of
+DOOM locality.
+
+The 921600-baud fast-WAD simulation also passes application upload, WAD CRC
+verification and execution (`WAD_PROBE:PASS`): 3,385 shared DDR read requests
+produce 956 backing reads in that test. This validates the loader path but
+is not a DOOM frame-rate measurement.
+
+`check_ddr_cache.tcl` performs standalone out-of-context synthesis only.
+Vivado inferred three RAMB36 and one RAMB18 for data/tags. Valid bits and
+control use additional logic (standalone synthesis reports 2,245 registers
+and about 5,000 LUT primitives). This is NOT full-design timing signoff.
+
+The separate project is created by `make ddr_dcache_project` in
+`phase8/software` (the script refuses to overwrite an existing directory):
+
+```text
+phase8/vivado/ddr_project/arty_s7_ddr_dcache/rv32_soc_arty_s7.xpr
+```
+
+It enables the existing 8 KiB instruction cache, dual issue, 921600-baud UART
+and the new DDR data cache, at the existing 25 MHz CPU clock. The old
+`arty_s7_ddr_perf` project and its bitstream are not overwritten. Run synthesis
+and implementation in the NEW project and check routed setup, hold and
+pulse-width timing plus DRC before generating/programming its bitstream.
+No full-board implementation or hardware programming has been performed for
+this cache yet. Keep the verified old bitstream for rollback.
+
+After programming the NEW, timing-qualified image, close the viewer/PuTTY,
+press BTN0 before the upload, then run from `phase8/software`:
+
+```powershell
+make ddr_dcache_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_perf_view PORT=COM4
+```
+
+Do not reset between those commands. Verify the cache-enabled startup banner,
+then compare at least three `DOOM:PERF`/`DOOM:HW` windows in the same E1M1
+scene, discarding the first. Write-through stores and the shared arbitration
+path still impose latency; this first cache does not promise 45 FPS and does
+not change the 80x50 display or serial bandwidth.
+
+### Streaming Fetch, Local Data Hits, and Ordered Posted Writes
+
+The user subsequently measured approximately **2.3 FPS** with the shared
+cache on the board. That result does not meet the gameplay target. The next
+configuration is opt-in and separate from `arty_s7_ddr_dcache`:
+
+```text
+phase8/vivado/ddr_project/arty_s7_ddr_throughput/rv32_soc_arty_s7.xpr
+```
+
+The `throughput` profile retains the 25 MHz clock, 8 KiB instruction cache,
+8 KiB data cache, restricted integer dual issue, and 921600-baud UART. It adds:
+
+- `STREAM_FETCH=1`: synchronous instruction-cache lookup follows the next PC.
+  Warm hits feed IF/ID directly without a request/response FSM round trip.
+  Misses, exceptions, restricted privilege/PMP configurations and translated
+  fetches retain transactional handling. Refills invalidated by FENCE.I cannot
+  revalidate stale instructions. This is not two independent CPU cores.
+- `LOCAL_DCACHE=1`: CPU DDR hits complete before shared arbitration. The BRAM
+  lookup result is returned directly, with a holding register for backpressure.
+  MMIO and non-DDR requests bypass caching; the pipeline still interlocks on
+  loads, and this is not a fully nonblocking data cache.
+- `BUFFER_WRITES=1`: four ordered posted DDR stores. Stores retain their exact
+  byte address, size and strobes; no write combining is used. Reads that reach
+  backing memory, instruction refills, and MMIO wait for older writes to drain.
+  A cache-hit load sees the updated cached value of an earlier hit store.
+  CPU loads/stores cannot overtake pending DMA/PTW ownership: the local cache
+  is invalidated and the queue drained before those masters access memory.
+  CPU access resumes after their response. This conservative whole-cache
+  invalidation can reduce performance during frequent DMA activity.
+
+**Error contract:** posted stores retire before the downstream response.
+A late write error latches a fail-stop condition, invalidates local cached
+data, stops new CPU/DMA/instruction transactions, and deasserts `status[1]`.
+It does not synthesize a precise exception for an already retired store or
+retry it silently. Reset is required; the failing address is retained in
+`buffer_fault_addr` for RTL/debug inspection. Non-posted errors propagate as
+ordinary transaction errors. This mode is experimental, not a general-purpose
+precise-store-exception implementation.
+
+MEMINFO flags at `0x10003004` preserve bits 0-2 and add bit 3 (CPU-local cache),
+bit 4 (posted stores), bit 5 (sticky delayed-write fault), and bit 6 (streaming
+instruction fetch). Because a posted fault stops CPU requests, software cannot
+rely on reading that fault bit after failure; use the status output/debugger.
+Rebuilt profiling firmware identifies the configuration at startup:
+
+```text
+DOOM:DCACHE 8192 CPU_LOCAL
+DOOM:STORES ORDERED_BUFFER_4
+DOOM:FETCH STREAM
+```
+
+Validation commands in `phase8/tb`:
+
+```powershell
+make stream_cpu fetch_compare icache stream_cache dcache write_buffer cache_path
+make throughput_sim throughput_loader_sim portable
+```
+
+Measured simulation results (not board FPS):
+
+| Test | Previous shared-cache configuration | New configuration |
+|---|---:|---:|
+| Hot loop, 4096 independent ALU + 256 loop instructions | 9148 cycles | 2542 cycles |
+| Host request to warm data-hit response, including host response register | 4 cycles | 2 cycles |
+| CPU acknowledgements for 16 stores with identical synthetic backing-memory delay | 312 cycles | 221 cycles |
+
+The posted-store figure ends at the last CPU acknowledgement, not the last
+DDR completion. Buffering allows useful CPU work to overlap the remaining
+writes; it does not increase the backing memory's sustained write bandwidth.
+
+The frontend test observes 18 consecutive cached bundle deliveries in dual
+issue. It checks register results across three randomized seeds plus single
+issue, branches, interrupts, self-modifying code and exceptions. A new
+alignment exposed an existing error: a younger EX instruction could commit
+on an older load's access fault, then execute again after `mret`. Exception
+squashing now also suppresses that younger instruction and its paired lane.
+
+Cache tests cover capacity, partial writes, conflicts, errors, backpressure
+and invalidation. Buffer tests cover queue-full backpressure, simultaneous
+push/pop, read/MMIO ordering, delayed errors and reset. SoC-level tests cover
+CPU/DMA transfers in both directions, PTW invalidation, instruction refill
+ordering and fail-stop behavior. The full CPU/DMA/AXI diagnostic and fast-WAD
+loader/upload/CRC/execution test are also run with the new configuration.
+
+Create the isolated project with `make ddr_throughput_project` from
+`phase8/software`; creation refuses to overwrite an existing project.
+`check_throughput.tcl` checks SoC synthesis and inferred BRAM without MIG or
+board I/O; it is **not routed board timing signoff**. The new board build must
+pass setup, hold, pulse-width timing and DRC before programming. Existing
+bitstreams are not replaced by creating this project.
+
+The SoC-only synthesis check completed: 18,516 LUTs, 10,054 registers,
+38.5 BRAM tiles and 4 DSPs, excluding MIG/CDC/board I/O. The streaming
+instruction cache inferred three RAMB36 primitives; the local data cache
+inferred three RAMB36 plus one RAMB18. DRC reports warnings for asynchronous
+BRAM controls and unpipelined DSP inputs, as well as missing board voltage
+properties in this out-of-context design. These are not a clean board DRC
+or timing result. Reports are under `ddr_project/throughput_synthesis_check`.
+
+`make ddr_throughput_build` builds only the isolated throughput project,
+checks routed setup/hold/pulse-width timing and blocking DRC violations, and
+only then generates a bitstream. It never programs hardware and refuses to
+overwrite an existing throughput bitstream. Board reports are written into
+that project's `validation` directory.
+
+After that separate project is built, timing-qualified and programmed, close
+the viewer and press BTN0 **before** uploading:
+
+```powershell
+make ddr_throughput_upload PORT=COM4 UPLOAD_DELAY=0
+make ddr_perf_view PORT=COM4
+```
+
+Do not reset between these commands. Compare `DOOM:PERF` and `DOOM:HW` windows
+in the same scene. No DOOM speedup, 45 FPS, higher resolution, or routed timing
+is claimed from these synthetic benchmarks. Video transport is unchanged.
+
+### Higher-detail UART viewer profile
+
+The separate software target `ddr_doom_detail_profile` builds a 120x75 RGB332
+frame stream while leaving Doom's internal 320x200 renderer and the existing
+80x50 image intact. RVF2 frames select PackBits-style RLE only when it makes a
+frame smaller; otherwise the payload is raw. The frame header carries the
+dimensions, encoding, byte count and CRC of the decoded pixels. The graphical
+viewer accepts both the legacy RVF1 80x50 stream and RVF2, and auto-scales the
+received dimensions to fit its window.
+
+On the already timing-qualified throughput bitstream, close the viewer and
+press BTN0 once before uploading. Uploading the IWAD takes about 80 seconds at
+the observed 921600-baud rate. Then run:
+
+```powershell
+make ddr_throughput_detail_upload DOOM_DETAIL_WIDTH=160 DOOM_DETAIL_HEIGHT=100 PORT=COM4 UPLOAD_DELAY=0
+make ddr_doom_view PORT=COM4 DDR_BAUD=921600
+```
+
+This is a board experiment, not a promise of 5 FPS: the 120x75 frame carries
+2.25 times as many pixels as 80x50, and achieved FPS depends on per-frame RLE
+ratio plus CPU rendering and host display time. For a clearer 160x100 image
+(4 times the original pixel count), use
+`DOOM_DETAIL_WIDTH=160 DOOM_DETAIL_HEIGHT=100` on the upload make command.
+For a smoother but less detailed comparison, use 96x60. Record the viewer FPS
+and `DOOM:PERF stream_us` for each size.
+
+Host/C tests:
+
+```powershell
+make doom_stream_test doom_stream_detail_test
+make doom_viewer_test
+```
