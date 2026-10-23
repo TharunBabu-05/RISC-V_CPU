@@ -15,5 +15,7 @@ uint32_t doom_stream_crc32(const uint8_t *data, unsigned size);
 void doom_stream_send(const uint32_t *framebuffer, uint16_t sequence);
 void doom_stream_send_indexed(const uint8_t *framebuffer,
                               const uint8_t palette[256], uint16_t sequence);
+void doom_stream_reset(void);
+unsigned doom_stream_last_bytes(void);
 
 #endif

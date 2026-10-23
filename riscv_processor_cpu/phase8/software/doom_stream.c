@@ -1,17 +1,21 @@
 #include "doom_stream.h"
 #include "uart.h"
+#include <string.h>
 
 #define SOURCE_WIDTH 320u
 #define SOURCE_HEIGHT 200u
 
 static uint8_t payload[DOOM_STREAM_PIXELS];
+static uint8_t delta_payload[DOOM_STREAM_PIXELS];
+static uint8_t previous_payload[DOOM_STREAM_PIXELS];
+static int have_previous;
+static unsigned last_wire_bytes;
 
-static unsigned rle_size(void) {
+static unsigned rle_size(const uint8_t *data, unsigned size) {
     unsigned encoded = 0;
-    for (unsigned i = 0; i < DOOM_STREAM_PIXELS;) {
+    for (unsigned i = 0; i < size;) {
         unsigned run = 1;
-        while (i + run < DOOM_STREAM_PIXELS && run < 128u &&
-               payload[i + run] == payload[i])
+        while (i + run < size && run < 128u && data[i + run] == data[i])
             ++run;
         if (run >= 3u) {
             encoded += 2u;
@@ -20,10 +24,9 @@ static unsigned rle_size(void) {
         }
 
         unsigned literal = 0;
-        while (i < DOOM_STREAM_PIXELS && literal < 128u) {
+        while (i < size && literal < 128u) {
             run = 1;
-            while (i + run < DOOM_STREAM_PIXELS && run < 128u &&
-                   payload[i + run] == payload[i])
+            while (i + run < size && run < 128u && data[i + run] == data[i])
                 ++run;
             if (run >= 3u && literal != 0u) break;
             unsigned take = run >= 3u ? run : 1u;
@@ -36,25 +39,23 @@ static unsigned rle_size(void) {
     return encoded;
 }
 
-static void send_rle(void) {
-    for (unsigned i = 0; i < DOOM_STREAM_PIXELS;) {
+static void send_rle(const uint8_t *data, unsigned size) {
+    for (unsigned i = 0; i < size;) {
         unsigned run = 1;
-        while (i + run < DOOM_STREAM_PIXELS && run < 128u &&
-               payload[i + run] == payload[i])
+        while (i + run < size && run < 128u && data[i + run] == data[i])
             ++run;
         if (run >= 3u) {
             uart_putc((char)(0x80u | (run - 1u)));
-            uart_putc((char)payload[i]);
+            uart_putc((char)data[i]);
             i += run;
             continue;
         }
 
         unsigned begin = i;
         unsigned literal = 0;
-        while (i < DOOM_STREAM_PIXELS && literal < 128u) {
+        while (i < size && literal < 128u) {
             run = 1;
-            while (i + run < DOOM_STREAM_PIXELS && run < 128u &&
-                   payload[i + run] == payload[i])
+            while (i + run < size && run < 128u && data[i + run] == data[i])
                 ++run;
             if (run >= 3u && literal != 0u) break;
             unsigned take = run >= 3u ? run : 1u;
@@ -64,7 +65,7 @@ static void send_rle(void) {
         }
         uart_putc((char)(literal - 1u));
         for (unsigned j = 0; j < literal; ++j)
-            uart_putc((char)payload[begin + j]);
+            uart_putc((char)data[begin + j]);
     }
 }
 
@@ -96,20 +97,44 @@ static void send_u32(uint32_t value) {
 
 static void send_payload(uint16_t sequence) {
     uint32_t crc = doom_stream_crc32(payload, DOOM_STREAM_PIXELS);
-    unsigned compressed_size = rle_size();
+    const uint8_t *source = payload;
+    unsigned delta = have_previous && (sequence & 15u) != 0u;
+    if (delta) {
+        for (unsigned i = 0; i < DOOM_STREAM_PIXELS; ++i)
+            delta_payload[i] = payload[i] ^ previous_payload[i];
+        source = delta_payload;
+    }
+    unsigned compressed_size = rle_size(source, DOOM_STREAM_PIXELS);
     unsigned compressed = compressed_size < DOOM_STREAM_PIXELS;
+    if (delta && !compressed) {
+        source = payload;
+        delta = 0;
+        compressed_size = rle_size(source, DOOM_STREAM_PIXELS);
+        compressed = compressed_size < DOOM_STREAM_PIXELS;
+    }
     unsigned wire_size = compressed ? compressed_size : DOOM_STREAM_PIXELS;
+    last_wire_bytes = 18u + wire_size;
     uart_putc('R'); uart_putc('V'); uart_putc('F'); uart_putc('2');
     uart_putc((char)DOOM_STREAM_WIDTH);
     uart_putc((char)DOOM_STREAM_HEIGHT);
     send_u16(sequence);
-    uart_putc((char)compressed);
+    uart_putc((char)(compressed | (delta << 1)));
     uart_putc(0);
     send_u32(crc);
     send_u32(wire_size);
-    if (compressed) send_rle();
+    if (compressed) send_rle(source, DOOM_STREAM_PIXELS);
     else for (unsigned i = 0; i < DOOM_STREAM_PIXELS; ++i)
-        uart_putc((char)payload[i]);
+        uart_putc((char)source[i]);
+    memcpy(previous_payload, payload, DOOM_STREAM_PIXELS);
+    have_previous = 1;
+}
+
+void doom_stream_reset(void) {
+    have_previous = 0;
+}
+
+unsigned doom_stream_last_bytes(void) {
+    return last_wire_bytes;
 }
 
 void doom_stream_send_indexed(const uint8_t *framebuffer,

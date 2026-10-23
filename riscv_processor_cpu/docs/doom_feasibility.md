@@ -1480,10 +1480,12 @@ is claimed from these synthetic benchmarks. Video transport is unchanged.
 The separate software target `ddr_doom_detail_profile` builds a 120x75 RGB332
 frame stream while leaving Doom's internal 320x200 renderer and the existing
 80x50 image intact. RVF2 frames select PackBits-style RLE only when it makes a
-frame smaller; otherwise the payload is raw. The frame header carries the
-dimensions, encoding, byte count and CRC of the decoded pixels. The graphical
-viewer accepts both the legacy RVF1 80x50 stream and RVF2, and auto-scales the
-received dimensions to fit its window.
+frame smaller; otherwise the payload is raw. Consecutive frames can encode
+XOR deltas from the prior frame, with a full keyframe every 16 frames and
+whenever delta compression is not smaller. The frame header carries dimensions,
+encoding flags, byte count and CRC of the reconstructed pixels. The graphical
+viewer accepts RVF1 and RVF2, and rejects deltas after a sequence gap until a
+keyframe restores synchronization.
 
 On the already timing-qualified throughput bitstream, close the viewer and
 press BTN0 once before uploading. Uploading the IWAD takes about 80 seconds at
@@ -1494,13 +1496,24 @@ make ddr_throughput_detail_upload DOOM_DETAIL_WIDTH=160 DOOM_DETAIL_HEIGHT=100 P
 make ddr_doom_view PORT=COM4 DDR_BAUD=921600
 ```
 
+For the requested 200x150 output, use:
+
+```powershell
+make ddr_throughput_detail_upload DOOM_DETAIL_WIDTH=200 DOOM_DETAIL_HEIGHT=150 PORT=COM4 UPLOAD_DELAY=0
+```
+
+It is a 4:3 output sampled from the engine's 320x200 framebuffer and may not
+hold 5 FPS over UART.
+
 This is a board experiment, not a promise of 5 FPS: the 120x75 frame carries
 2.25 times as many pixels as 80x50, and achieved FPS depends on per-frame RLE
 ratio plus CPU rendering and host display time. For a clearer 160x100 image
 (4 times the original pixel count), use
 `DOOM_DETAIL_WIDTH=160 DOOM_DETAIL_HEIGHT=100` on the upload make command.
 For a smoother but less detailed comparison, use 96x60. Record the viewer FPS
-and `DOOM:PERF stream_us` for each size.
+and `DOOM:PERF stream_us` plus `stream_bytes` for each size. `stream_bytes` is
+the latest wire-frame size including the RVF2 header; delta frames can be very
+small in a static scene but approach full-frame size during camera movement.
 
 Host/C tests:
 

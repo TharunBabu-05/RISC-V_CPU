@@ -22,6 +22,7 @@ static int release_prefix;
 static uint32_t previous_frame_end;
 static uint32_t render_ticks_total;
 static uint32_t stream_ticks_total;
+static uint32_t last_stream_bytes;
 static uint32_t sleep_ticks_total, view_ticks_total;
 static uint32_t previous_cycle, previous_instret;
 static uint64_t engine_cycles_total, engine_instructions_total;
@@ -102,6 +103,7 @@ void DG_DrawFrame(void) {
 #else
     doom_stream_send(DG_ScreenBuffer, frame_sequence++);
 #endif
+    last_stream_bytes = doom_stream_last_bytes();
     uint32_t end = CLINT_MTIME_LO;
     stream_ticks_total += end - start;
     previous_frame_end = end;
@@ -110,6 +112,8 @@ void DG_DrawFrame(void) {
         print_unsigned(interval_count ? render_ticks_total / (25u * interval_count) : 0);
         uart_puts(" stream_us=");
         print_unsigned(stream_ticks_total / 200u);
+        uart_puts(" stream_bytes=");
+        print_unsigned(last_stream_bytes);
         uart_puts(" view_us=");
         print_unsigned(view_ticks_total / 200u);
         uart_puts(" sleep_us=");

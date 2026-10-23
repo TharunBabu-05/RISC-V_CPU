@@ -1,4 +1,4 @@
-"""Graphical receiver for the RV32 DOOM RVF1 framebuffer stream."""
+"""Graphical receiver for RV32 DOOM RVF1/RVF2 framebuffer streams."""
 
 import argparse
 import queue
@@ -26,6 +26,10 @@ class FrameParser:
     def __init__(self):
         self.buffer = bytearray()
         self.bad_frames = 0
+        self.delta_valid = False
+        self.last_sequence = None
+        self.last_dimensions = None
+        self.last_pixels = None
 
     def feed(self, chunk):
         self.buffer.extend(chunk)
@@ -49,21 +53,24 @@ class FrameParser:
                 break
             width, height = self.buffer[4], self.buffer[5]
             if not width or not height or width * height > 320 * 200:
+                self.delta_valid = False
                 del self.buffer[0]
                 continue
             if version == b"1":
                 payload_size = width * height
-                encoding = 0
+                flags = 0
                 crc = int.from_bytes(self.buffer[8:12], "little")
                 payload_start = 12
             else:
-                encoding = self.buffer[8]
-                if encoding not in (0, 1) or self.buffer[9] != 0:
+                flags = self.buffer[8]
+                if flags & ~3 or self.buffer[9] != 0:
+                    self.delta_valid = False
                     del self.buffer[0]
                     continue
                 crc = int.from_bytes(self.buffer[10:14], "little")
                 payload_size = int.from_bytes(self.buffer[14:18], "little")
                 if payload_size > width * height:
+                    self.delta_valid = False
                     del self.buffer[0]
                     continue
                 payload_start = 18
@@ -71,34 +78,54 @@ class FrameParser:
             if len(self.buffer) < packet_size:
                 break
             payload = bytes(self.buffer[payload_start:packet_size])
-            if encoding == 0:
-                pixels = payload
-            else:
-                pixels = bytearray()
+            if flags & 1:
+                decoded = bytearray()
                 offset = 0
-                while offset < len(payload) and len(pixels) <= width * height:
+                while offset < len(payload) and len(decoded) <= width * height:
                     control = payload[offset]
                     offset += 1
                     count = (control & 0x7f) + 1
                     if control & 0x80:
                         if offset >= len(payload):
                             break
-                        pixels.extend(payload[offset:offset + 1] * count)
+                        decoded.extend(payload[offset:offset + 1] * count)
                         offset += 1
                     else:
                         if offset + count > len(payload):
                             break
-                        pixels.extend(payload[offset:offset + count])
+                        decoded.extend(payload[offset:offset + count])
                         offset += count
-                if offset != len(payload) or len(pixels) != width * height:
-                    del self.buffer[0]
+                if offset != len(payload) or len(decoded) != width * height:
+                    self.bad_frames += 1
+                    self.delta_valid = False
+                    del self.buffer[:packet_size]
                     continue
-                pixels = bytes(pixels)
+                decoded = bytes(decoded)
+            else:
+                decoded = payload
+            sequence = int.from_bytes(self.buffer[6:8], "little")
+            dimensions = (width, height)
+            is_delta = bool(flags & 2)
+            if is_delta:
+                expected_sequence = ((self.last_sequence + 1) & 0xffff
+                                     if self.last_sequence is not None else None)
+                if (not self.delta_valid or sequence != expected_sequence or
+                        dimensions != self.last_dimensions):
+                    self.delta_valid = False
+                    del self.buffer[:packet_size]
+                    continue
+                pixels = bytes(a ^ b for a, b in zip(decoded, self.last_pixels))
+            else:
+                pixels = decoded
             if len(pixels) != width * height or zlib.crc32(pixels) != crc:
                 self.bad_frames += 1
-                del self.buffer[0]
+                self.delta_valid = False
+                del self.buffer[:packet_size]
                 continue
-            sequence = int.from_bytes(self.buffer[6:8], "little")
+            self.delta_valid = True
+            self.last_sequence = sequence
+            self.last_dimensions = dimensions
+            self.last_pixels = pixels
             frames.append((sequence, width, height, pixels))
             del self.buffer[:packet_size]
         text = b"".join(messages)
@@ -129,13 +156,25 @@ def self_test():
                      + len(raw).to_bytes(4, "little") + raw)
     found, _ = parser.feed(packet_raw_v2)
     assert found == [(8, 20, 10, raw)]
+    changed = bytes(value ^ 0x5a for value in raw)
+    diff_rle = bytes((0xff, 0x5a, 0xc7, 0x5a))
+    packet_delta = (V2_MAGIC + bytes((20, 10)) + (9).to_bytes(2, "little")
+                    + b"\x03\x00" + zlib.crc32(changed).to_bytes(4, "little")
+                    + len(diff_rle).to_bytes(4, "little") + diff_rle)
+    found, _ = parser.feed(packet_delta)
+    assert found == [(9, 20, 10, changed)]
+    packet_gap = (V2_MAGIC + bytes((20, 10)) + (11).to_bytes(2, "little")
+                  + b"\x02\x00" + zlib.crc32(changed).to_bytes(4, "little")
+                  + len(raw).to_bytes(4, "little") + raw)
+    found, _ = parser.feed(packet_gap)
+    assert found == [] and not parser.delta_valid
     repeated = bytes((7,)) * 200
     encoded = bytes((0xff, 7, 0xc7, 7))
-    packet_v2 = (V2_MAGIC + bytes((20, 10)) + (9).to_bytes(2, "little")
+    packet_v2 = (V2_MAGIC + bytes((20, 10)) + (16).to_bytes(2, "little")
                  + b"\x01\x00" + zlib.crc32(repeated).to_bytes(4, "little")
                  + len(encoded).to_bytes(4, "little") + encoded)
     found, _ = parser.feed(packet_v2)
-    assert found == [(9, 20, 10, repeated)]
+    assert found == [(16, 20, 10, repeated)]
     assert zlib.crc32(b"123456789") == 0xCBF43926
     print("DOOM Python viewer protocol tests passed.")
 

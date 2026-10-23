@@ -24,7 +24,7 @@ dist/
 out/
 
 obj/
-
+tiny_desk_readme.md
 # Generated verification outputs
 riscv_processor_cpu/phase5/compliance/build/
 riscv_processor_cpu/formal/riscv-formal/.riscv-formal/
