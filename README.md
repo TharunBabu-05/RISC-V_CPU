@@ -53,7 +53,7 @@
 [![Run Snake](https://img.shields.io/badge/PLAY-RISC--V_SNAKE-FF2BD6?style=flat-square)](#-run-it-on-the-arty-s7-50)
 [![Porting Guide](https://img.shields.io/badge/GUIDE-PORT_A_NEW_BOARD-FFB000?style=flat-square)](riscv_processor_cpu/phase8/PORTING.md)
 [![Contributing](https://img.shields.io/badge/PROJECT-CONTRIBUTING-00C853?style=flat-square)](CONTRIBUTING.md)
-[![License](https://img.shields.io/badge/PROJECT-LICENSE-00D9FF?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/PROJECT-MIT_LICENSE-00D9FF?style=flat-square)](LICENSE)
 [![Security](https://img.shields.io/badge/PROJECT-SECURITY-FF2BD6?style=flat-square)](SECURITY.md)
 
 </div>
@@ -937,6 +937,10 @@ Idea -> RTL -> Pipeline -> ISA -> Verification -> SoC -> FPGA -> Firmware -> Gam
 ```
 
 ---
+
+## License
+
+Original project source and documentation are released under the [MIT License](LICENSE), copyright 2026 Tharun Babu. Files carrying their own copyright or license notices are excluded from that grant. Third-party code, submodules, vendor-generated IP, and game assets remain subject to their respective terms. In particular, DoomGeneric is GPL-licensed; the DOOM IWAD is not included in this repository.
 
 ## 🙌 Credits
 
